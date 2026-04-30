@@ -1,0 +1,380 @@
+- generic [ref=e3]:
+  - complementary [ref=e4]:
+    - generic [ref=e5]: BB
+    - generic [ref=e6]:
+      - button "WALL" [ref=e7] [cursor=pointer]:
+        - img [ref=e9]
+        - generic [ref=e11]: WALL
+      - button "SYS" [ref=e12] [cursor=pointer]:
+        - img [ref=e14]
+        - generic [ref=e19]: SYS
+      - button "RACK" [ref=e20] [cursor=pointer]:
+        - img [ref=e22]
+        - generic [ref=e24]: RACK
+      - button "INV" [ref=e25] [cursor=pointer]:
+        - img [ref=e27]
+        - generic [ref=e31]: INV
+      - button "DOCS" [ref=e32] [cursor=pointer]:
+        - img [ref=e34]
+        - generic [ref=e37]: DOCS
+    - button "SET" [ref=e40] [cursor=pointer]:
+      - img [ref=e42]
+      - generic [ref=e45]: SET
+  - banner [ref=e46]:
+    - generic [ref=e47]:
+      - generic [ref=e48]: PRJ-2451
+      - generic [ref=e49]: Atrium Lobby Wall
+      - generic [ref=e50]: Northwind HQ
+    - generic [ref=e51]:
+      - generic [ref=e52]: PROJECTS
+      - generic [ref=e53]: /
+      - generic [ref=e54]: PRJ-2451
+      - generic [ref=e55]: /
+      - generic [ref=e56]: LED Wall Builder
+    - generic [ref=e58]:
+      - generic [ref=e59]:
+        - img [ref=e60]
+        - generic [ref=e63]: Search assets, docs, panels…
+        - generic [ref=e64]: ⌘K
+      - button "Export" [ref=e65] [cursor=pointer]:
+        - img [ref=e66]
+        - text: Export
+      - button "Save Rev" [ref=e68] [cursor=pointer]:
+        - img [ref=e69]
+        - text: Save Rev
+      - generic [ref=e72]: MR
+  - main [ref=e73]:
+    - generic [ref=e74]:
+      - generic [ref=e75]:
+        - generic [ref=e76]: WALLS
+        - button "New wall" [ref=e77] [cursor=pointer]:
+          - img [ref=e78]
+      - generic [ref=e80]:
+        - generic [ref=e81] [cursor=pointer]:
+          - img [ref=e82]
+          - generic [ref=e84]: Main Lobby Wall
+          - generic [ref=e85]: 18×8
+        - generic [ref=e86] [cursor=pointer]:
+          - img [ref=e87]
+          - generic [ref=e89]: Reception Stripe
+          - generic [ref=e90]: 24×3
+        - generic [ref=e91] [cursor=pointer]:
+          - img [ref=e92]
+          - generic [ref=e94]: Curved Backdrop (Stage)
+          - generic [ref=e95]: 14×6
+      - generic [ref=e96]:
+        - generic [ref=e97]: PANEL LIBRARY
+        - generic [ref=e98]: "5"
+      - generic [ref=e99]:
+        - img [ref=e100]
+        - textbox "Filter by pitch, model…" [ref=e103]
+      - generic [ref=e104]:
+        - generic [ref=e105] [cursor=pointer]:
+          - generic [ref=e107]: ROE Carbon CB5
+          - generic [ref=e108]: P5.77
+        - generic [ref=e109] [cursor=pointer]:
+          - generic [ref=e111]: ROE Ruby RB2.6
+          - generic [ref=e112]: P2.6
+        - generic [ref=e113] [cursor=pointer]:
+          - generic [ref=e115]: INFiLED XR3
+          - generic [ref=e116]: P3.91
+        - generic [ref=e117] [cursor=pointer]:
+          - generic [ref=e119]: Absen AT5 Pro
+          - generic [ref=e120]: P5.2
+        - generic [ref=e121] [cursor=pointer]:
+          - generic [ref=e123]: Unilumin UpadIV H6
+          - generic [ref=e124]: P6
+        - generic [ref=e126]: RIGGING
+        - generic [ref=e128]:
+          - generic [ref=e129]: Total weight
+          - generic [ref=e130]: 1152.0 kg
+          - generic [ref=e131]: Per truss point
+          - generic [ref=e132]: 192.0 kg
+          - generic [ref=e133]: Truss SWL
+          - generic [ref=e134]: 600 kg/pt
+          - generic [ref=e135]: Safety margin
+          - generic [ref=e136]: 3.1×
+    - generic [ref=e137]:
+      - generic [ref=e138]:
+        - generic [ref=e139]:
+          - button "SELECT" [ref=e140] [cursor=pointer]
+          - button "DRAW" [ref=e141] [cursor=pointer]
+          - button "ERASE" [ref=e142] [cursor=pointer]
+          - button "MEASURE" [ref=e143] [cursor=pointer]
+        - button "Snap 1px" [ref=e145] [cursor=pointer]:
+          - img [ref=e146]
+          - text: Snap 1px
+        - button "Curve 0°" [ref=e151] [cursor=pointer]:
+          - text: Curve
+          - generic [ref=e152]: 0°
+        - generic [ref=e154] [cursor=pointer]:
+          - generic [ref=e155]: ✓
+          - text: DIMENSIONS
+        - generic [ref=e156] [cursor=pointer]:
+          - generic [ref=e157]: ✓
+          - text: FAULT MAP
+        - generic [ref=e158]: ZOOM
+        - slider [ref=e159]: "100"
+        - generic [ref=e160]: 100%
+      - generic [ref=e161]:
+        - generic:
+          - generic:
+            - generic: WALL
+            - generic: Main Lobby Wall
+          - generic:
+            - generic: PANEL
+            - generic: ROE Ruby RB2.6
+          - generic:
+            - generic: PITCH
+            - generic: 2.6mm
+        - generic:
+          - generic:
+            - generic: REV
+            - generic: "0042"
+          - generic:
+            - generic: SCALE
+            - generic: 1:17.31
+        - generic [ref=e163]:
+          - generic: 9000mm · 29.5ft
+          - generic: 4000mm · 13.1ft
+          - generic [ref=e164]:
+            - generic [ref=e165]: 1,1
+            - generic [ref=e166]: 2,1
+            - generic [ref=e167]: 3,1
+            - generic [ref=e168]: 4,1
+            - generic [ref=e169]: 5,1
+            - generic [ref=e170]: 6,1
+            - generic [ref=e171]: 7,1
+            - generic [ref=e172]: 8,1
+            - generic [ref=e173]: 9,1
+            - generic [ref=e174]: 10,1
+            - generic [ref=e175]: 11,1
+            - generic [ref=e176]: 12,1
+            - generic [ref=e177]: 13,1
+            - generic [ref=e178]: 14,1
+            - generic [ref=e179]: 15,1
+            - generic [ref=e180]: 16,1
+            - generic [ref=e181]: 17,1
+            - generic [ref=e182]: 18,1
+            - generic [ref=e183]: 1,2
+            - generic [ref=e184]: 2,2
+            - generic [ref=e185]: 3,2
+            - generic [ref=e186]: 4,2
+            - generic [ref=e187]: 5,2
+            - generic [ref=e188]: 6,2
+            - generic [ref=e189]: 7,2
+            - generic [ref=e190]: 8,2
+            - generic [ref=e191]: 9,2
+            - generic [ref=e192]: 10,2
+            - generic [ref=e193]: 11,2
+            - generic [ref=e194]: 12,2
+            - generic [ref=e195]: 13,2
+            - generic [ref=e196]: 14,2
+            - generic [ref=e197]: 15,2
+            - generic [ref=e198]: 16,2
+            - generic [ref=e199]: 17,2
+            - generic [ref=e200]: 18,2
+            - generic [ref=e201]: 1,3
+            - generic [ref=e202]: 2,3
+            - generic [ref=e203]: 3,3
+            - generic [ref=e204]: 4,3
+            - generic [ref=e205]: 5,3
+            - generic [ref=e206]: 6,3
+            - generic [ref=e207]: 7,3
+            - generic [ref=e208]: 8,3
+            - generic [ref=e209]: 9,3
+            - generic [ref=e210]: 10,3
+            - generic [ref=e211]: 11,3
+            - generic [ref=e212]: 12,3
+            - generic [ref=e213]: 13,3
+            - generic [ref=e214]: 14,3
+            - generic [ref=e215]: 15,3
+            - generic [ref=e216]: 16,3
+            - generic [ref=e217]: 17,3
+            - generic [ref=e218]: 18,3
+            - generic [ref=e219]: 1,4
+            - generic [ref=e220]: 2,4
+            - generic [ref=e221]: 3,4
+            - generic [ref=e222]: 4,4
+            - generic [ref=e223]: 5,4
+            - generic [ref=e224]: 6,4
+            - generic [ref=e225]: 7,4
+            - generic [ref=e226]: 8,4
+            - generic [ref=e227]: 9,4
+            - generic [ref=e228]: 10,4
+            - generic [ref=e229]: 11,4
+            - generic [ref=e230]: 12,4
+            - generic [ref=e231]: 13,4
+            - generic [ref=e232]: 14,4
+            - generic [ref=e233]: 15,4
+            - generic [ref=e234]: 16,4
+            - generic [ref=e235]: 17,4
+            - generic [ref=e236]: 18,4
+            - generic [ref=e237]: 1,5
+            - generic [ref=e238]: 2,5
+            - generic [ref=e239]: 3,5
+            - generic [ref=e240]: 4,5
+            - generic [ref=e241]: 5,5
+            - generic [ref=e242]: 6,5
+            - generic [ref=e243]: 7,5
+            - generic [ref=e244]: 8,5
+            - generic [ref=e245]: 9,5
+            - generic [ref=e246]: 10,5
+            - generic [ref=e247]: 11,5
+            - generic [ref=e248]: 12,5
+            - generic [ref=e249]: 13,5
+            - generic [ref=e250]: 14,5
+            - generic [ref=e251]: 15,5
+            - generic [ref=e252]: 16,5
+            - generic [ref=e253]: 17,5
+            - generic [ref=e254]: 18,5
+            - generic [ref=e255]: 1,6
+            - generic [ref=e256]: 2,6
+            - generic [ref=e257]: 3,6
+            - generic [ref=e258]: 4,6
+            - generic [ref=e259]: 5,6
+            - generic [ref=e260]: 6,6
+            - generic [ref=e261]: 7,6
+            - generic [ref=e262]: 8,6
+            - generic [ref=e263]: 9,6
+            - generic [ref=e264]: 10,6
+            - generic [ref=e265]: 11,6
+            - generic [ref=e266]: 12,6
+            - generic [ref=e267]: 13,6
+            - generic [ref=e268]: 14,6
+            - generic [ref=e269]: 15,6
+            - generic [ref=e270]: 16,6
+            - generic [ref=e271]: 17,6
+            - generic [ref=e272]: 18,6
+            - generic [ref=e273]: 1,7
+            - generic [ref=e274]: 2,7
+            - generic [ref=e275]: 3,7
+            - generic [ref=e276]: 4,7
+            - generic [ref=e277]: 5,7
+            - generic [ref=e278]: 6,7
+            - generic [ref=e279]: 7,7
+            - generic [ref=e280]: 8,7
+            - generic [ref=e281]: 9,7
+            - generic [ref=e282]: 10,7
+            - generic [ref=e283]: 11,7
+            - generic [ref=e284]: 12,7
+            - generic [ref=e285]: 13,7
+            - generic [ref=e286]: 14,7
+            - generic [ref=e287]: 15,7
+            - generic [ref=e288]: 16,7
+            - generic [ref=e289]: 17,7
+            - generic [ref=e290]: 18,7
+            - generic [ref=e291]: 1,8
+            - generic [ref=e292]: 2,8
+            - generic [ref=e293]: 3,8
+            - generic [ref=e294]: 4,8
+            - generic [ref=e295]: 5,8
+            - generic [ref=e296]: 6,8
+            - generic [ref=e297]: 7,8
+            - generic [ref=e298]: 8,8
+            - generic [ref=e299]: 9,8
+            - generic [ref=e300]: 10,8
+            - generic [ref=e301]: 11,8
+            - generic [ref=e302]: 12,8
+            - generic [ref=e303]: 13,8
+            - generic [ref=e304]: 14,8
+            - generic [ref=e305]: 15,8
+            - generic [ref=e306]: 16,8
+            - generic [ref=e307]: 17,8
+            - generic [ref=e308]: 18,8
+            - generic [ref=e309]: "SX40 #1"
+            - generic [ref=e310]: "SX40 #2"
+        - generic: "X: 0mm · Y: 0mm · GRID 500×500"
+      - generic [ref=e311]:
+        - generic [ref=e312]:
+          - generic [ref=e313]:
+            - text: "PROC #1 · SX40"
+            - generic [ref=e314]: 10GbE A
+          - generic [ref=e315]: 61%
+          - generic [ref=e318]: 5,324,556 px
+        - generic [ref=e319]:
+          - generic [ref=e320]:
+            - text: "PROC #2 · SX40"
+            - generic [ref=e321]: 10GbE B
+          - generic [ref=e322]: 0%
+          - generic [ref=e324]: 0 px
+        - generic [ref=e325]:
+          - generic [ref=e326]: POWER · 200A 3ϕ DISTRO
+          - generic [ref=e327]: 28.8kW
+          - generic [ref=e331]: 12 × 20A circuits · 144kVA cap
+        - generic [ref=e332]:
+          - generic [ref=e333]: DATA RATE · UNCOMP 4:4:4
+          - generic [ref=e334]: 9.6Gbps
+          - generic [ref=e337]: 10GbE × 2 · headroom 38%
+    - generic [ref=e338]:
+      - generic [ref=e339]:
+        - button "Wall" [ref=e340] [cursor=pointer]
+        - button "Panel" [ref=e341] [cursor=pointer]
+        - button "Calc" [ref=e342] [cursor=pointer]
+      - generic [ref=e343]:
+        - generic [ref=e344]:
+          - generic [ref=e345]:
+            - generic [ref=e346]: Resolution
+            - generic [ref=e347]:
+              - text: 3,462
+              - generic [ref=e348]: ×1538
+          - generic [ref=e349]:
+            - generic [ref=e350]: Aspect
+            - generic [ref=e351]: 2.25:1
+        - generic [ref=e353]: GEOMETRY
+        - generic [ref=e355]:
+          - generic [ref=e356]: Columns
+          - spinbutton [ref=e357]: "18"
+        - generic [ref=e358]:
+          - generic [ref=e359]: Rows
+          - spinbutton [ref=e360]: "8"
+        - generic [ref=e361]:
+          - generic [ref=e362]: Curve °
+          - spinbutton [ref=e363]: "0"
+        - generic [ref=e364]:
+          - generic [ref=e365]: Pitch
+          - combobox [ref=e366]:
+            - option "ROE Carbon CB5 (P5.77)"
+            - option "ROE Ruby RB2.6 (P2.6)" [selected]
+            - option "INFiLED XR3 (P3.91)"
+            - option "Absen AT5 Pro (P5.2)"
+            - option "Unilumin UpadIV H6 (P6)"
+        - generic [ref=e367]:
+          - generic [ref=e368]: Dimensions
+          - generic [ref=e369]:
+            - generic [ref=e370]:
+              - textbox [ref=e371]: "9000"
+              - text: mm
+            - generic [ref=e372]:
+              - textbox [ref=e373]: "4000"
+              - text: mm
+        - generic [ref=e375]: PHYSICAL
+        - generic [ref=e377]:
+          - generic [ref=e378]: Panels
+          - generic [ref=e379]: "144"
+          - generic [ref=e380]: Weight
+          - generic [ref=e381]: 1152.0 kg
+          - generic [ref=e382]: Power draw
+          - generic [ref=e383]: 28.80 kW
+          - generic [ref=e384]: Heat output
+          - generic [ref=e385]: 98266 BTU/h
+          - generic [ref=e386]: Circuits
+          - generic [ref=e387]: 12 × 20A
+        - generic [ref=e389]: SIGNAL CHAIN
+        - generic [ref=e391]:
+          - generic [ref=e392]: Processors
+          - generic [ref=e393]: 1 × SX40
+          - generic [ref=e394]: Cabling
+          - generic [ref=e395]: CAT6A · 4 runs
+          - generic [ref=e396]: Refresh
+          - generic [ref=e397]: 3840 Hz
+          - generic [ref=e398]: Bit depth
+          - generic [ref=e399]: 12-bit
+  - contentinfo [ref=e400]:
+    - generic [ref=e401]: READY
+    - generic [ref=e403]: REV 0042
+    - generic [ref=e404]: SYNC ↑ 14:22:08
+    - generic [ref=e405]: 2 WARNINGS
+    - generic [ref=e407]: PRJ-2451
+    - generic [ref=e408]: UTC-05
+    - generic [ref=e409]: 18:32:33

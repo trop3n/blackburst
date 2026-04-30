@@ -4,6 +4,7 @@ import { StatusBar } from "@/components/shell/StatusBar";
 import { Tabs } from "@/components/shell/Tabs";
 import { Topbar } from "@/components/shell/Topbar";
 import { LedWallModule } from "@/modules/led-wall/LedWallModule";
+import { SystemDesignerModule } from "@/modules/system-designer/SystemDesignerModule";
 import { ACCENTS, useApp } from "@/store/useApp";
 
 function ModulePlaceholder({ name }: { name: string }) {
@@ -40,7 +41,7 @@ export default function App() {
       {tweaks.shell === "tabs" && <Tabs />}
       <main className="main">
         {module === "wall" && <LedWallModule />}
-        {module === "system" && <ModulePlaceholder name="System Designer" />}
+        {module === "system" && <SystemDesignerModule />}
         {module === "rack" && <ModulePlaceholder name="Rack Builder" />}
         {module === "inv" && <ModulePlaceholder name="Asset & Inventory" />}
         {module === "docs" && <ModulePlaceholder name="Documentation Hub" />}

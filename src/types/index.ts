@@ -36,3 +36,34 @@ export interface FaultPanel {
   c: number;
   r: number;
 }
+
+export type Lane = "video" | "audio" | "network" | "power";
+export type PatchLane = "video" | "audio" | "net" | "pwr";
+
+export interface SystemNode {
+  id: string;
+  type: string;
+  name: string;
+  x: number;
+  y: number;
+  in?: Lane[];
+  out?: Lane[];
+  details: Record<string, string>;
+}
+
+export interface SystemEdge {
+  from: string;
+  to: string;
+  lane: Lane;
+  label: string;
+}
+
+export interface PatchEntry {
+  id: string;
+  src: string;
+  srcPort: string;
+  dest: string;
+  destPort: string;
+  lane: PatchLane;
+  cable: string;
+}
