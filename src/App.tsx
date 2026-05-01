@@ -4,6 +4,7 @@ import { StatusBar } from "@/components/shell/StatusBar";
 import { Tabs } from "@/components/shell/Tabs";
 import { Topbar } from "@/components/shell/Topbar";
 import { LedWallModule } from "@/modules/led-wall/LedWallModule";
+import { RackBuilderModule } from "@/modules/rack-builder/RackBuilderModule";
 import { SystemDesignerModule } from "@/modules/system-designer/SystemDesignerModule";
 import { ACCENTS, useApp } from "@/store/useApp";
 
@@ -42,7 +43,7 @@ export default function App() {
       <main className="main">
         {module === "wall" && <LedWallModule />}
         {module === "system" && <SystemDesignerModule />}
-        {module === "rack" && <ModulePlaceholder name="Rack Builder" />}
+        {module === "rack" && <RackBuilderModule />}
         {module === "inv" && <ModulePlaceholder name="Asset & Inventory" />}
         {module === "docs" && <ModulePlaceholder name="Documentation Hub" />}
       </main>

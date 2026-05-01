@@ -58,6 +58,26 @@ export interface SystemEdge {
   label: string;
 }
 
+export type RackColor = "accent" | "magenta" | "info" | "warn" | "muted";
+export type RackSize = 24 | 42 | 48;
+
+export interface RackItemDef {
+  id: string;
+  model: string;
+  cat: string;
+  u: number;
+  w: number;
+  watts: number;
+  depth: number;
+  color: RackColor;
+}
+
+export interface RackItem {
+  iid: number;
+  id: string;
+  pos: number;
+}
+
 export interface PatchEntry {
   id: string;
   src: string;
