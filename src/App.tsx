@@ -3,24 +3,12 @@ import { Rail } from "@/components/shell/Rail";
 import { StatusBar } from "@/components/shell/StatusBar";
 import { Tabs } from "@/components/shell/Tabs";
 import { Topbar } from "@/components/shell/Topbar";
+import { DocsModule } from "@/modules/docs/DocsModule";
 import { InventoryModule } from "@/modules/inventory/InventoryModule";
 import { LedWallModule } from "@/modules/led-wall/LedWallModule";
 import { RackBuilderModule } from "@/modules/rack-builder/RackBuilderModule";
 import { SystemDesignerModule } from "@/modules/system-designer/SystemDesignerModule";
 import { ACCENTS, useApp } from "@/store/useApp";
-
-function ModulePlaceholder({ name }: { name: string }) {
-  return (
-    <div className="empty" style={{ gridColumn: "1 / -1" }}>
-      <span className="mono" style={{ fontSize: 14, color: "var(--color-fg-mute)" }}>
-        {name}
-      </span>
-      <span className="mono" style={{ fontSize: 11 }}>
-        Module pending implementation
-      </span>
-    </div>
-  );
-}
 
 export default function App() {
   const module = useApp((s) => s.module);
@@ -46,7 +34,7 @@ export default function App() {
         {module === "system" && <SystemDesignerModule />}
         {module === "rack" && <RackBuilderModule />}
         {module === "inv" && <InventoryModule />}
-        {module === "docs" && <ModulePlaceholder name="Documentation Hub" />}
+        {module === "docs" && <DocsModule />}
       </main>
       <StatusBar />
     </div>

@@ -105,6 +105,22 @@ export interface ShowSchedule {
   kind?: "maint" | "warn";
 }
 
+export type DocKind = "folder" | "doc";
+
+export interface DocNode {
+  id: string;
+  name: string;
+  kind: DocKind;
+  children?: DocNode[];
+}
+
+export interface DocVersion {
+  v: string;
+  who: string;
+  when: string;
+  note: string;
+}
+
 export interface PatchEntry {
   id: string;
   src: string;
