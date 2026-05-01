@@ -950,6 +950,80 @@ button { font-family: inherit; color: inherit; }
 .tbl tbody tr[data-active="1"] { background: var(--accent-faint); }
 .tbl td.muted { color: var(--color-fg-mute); }
 
+/* Status pill (in/out/maintenance) */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.status-pill::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+.status-pill.in::before { background: var(--accent); box-shadow: 0 0 4px var(--accent-dim); }
+.status-pill.out::before { background: var(--color-warn); }
+.status-pill.maint::before { background: var(--color-err); }
+.status-pill.in { color: var(--accent); }
+.status-pill.out { color: var(--color-warn); }
+.status-pill.maint { color: var(--color-err); }
+
+/* Gantt */
+.gantt-label {
+  padding: 6px 10px;
+  font-size: var(--text-sm);
+  border-bottom: 1px solid var(--color-line-faint);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--color-bg-1);
+}
+.gantt-track {
+  position: relative;
+  height: 28px;
+  border-bottom: 1px solid var(--color-line-faint);
+  background: linear-gradient(90deg, var(--color-line-faint) 1px, transparent 1px) 0 0 / calc(100% / 14) 100%;
+}
+.gantt-bar {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  background: var(--accent-dim);
+  border-left: 2px solid var(--accent);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  padding: 0 6px;
+  border-radius: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.gantt-bar.maint { background: oklch(0.68 0.21 25 / 0.18); border-left-color: var(--color-err); color: var(--color-err); }
+.gantt-bar.warn { background: oklch(0.78 0.16 75 / 0.15); border-left-color: var(--color-warn); color: var(--color-warn); }
+.gantt-hdr {
+  display: grid;
+  grid-template-columns: repeat(14, 1fr);
+  border-bottom: 1px solid var(--color-line);
+  background: var(--color-bg-1);
+  position: sticky;
+  top: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-fg-faint);
+}
+.gantt-hdr-cell {
+  padding: 6px 0;
+  text-align: center;
+  border-right: 1px solid var(--color-line-faint);
+}
+
 /* Animated scanline */
 @keyframes scan {
   0% { transform: translateX(-100%); }

@@ -1,0 +1,215 @@
+- generic [ref=e3]:
+  - complementary [ref=e4]:
+    - generic [ref=e5]: BB
+    - generic [ref=e6]:
+      - button "WALL" [ref=e7] [cursor=pointer]:
+        - img [ref=e9]
+        - generic [ref=e11]: WALL
+      - button "SYS" [ref=e12] [cursor=pointer]:
+        - img [ref=e14]
+        - generic [ref=e19]: SYS
+      - button "RACK" [ref=e20] [cursor=pointer]:
+        - img [ref=e22]
+        - generic [ref=e24]: RACK
+      - button "INV" [ref=e25] [cursor=pointer]:
+        - img [ref=e27]
+        - generic [ref=e31]: INV
+      - button "DOCS" [ref=e32] [cursor=pointer]:
+        - img [ref=e34]
+        - generic [ref=e37]: DOCS
+    - button "SET" [ref=e40] [cursor=pointer]:
+      - img [ref=e42]
+      - generic [ref=e45]: SET
+  - banner [ref=e46]:
+    - generic [ref=e47]:
+      - generic [ref=e48]: PRJ-2451
+      - generic [ref=e49]: Atrium Lobby Wall
+      - generic [ref=e50]: Northwind HQ
+    - generic [ref=e51]:
+      - generic [ref=e52]: PROJECTS
+      - generic [ref=e53]: /
+      - generic [ref=e54]: PRJ-2451
+      - generic [ref=e55]: /
+      - generic [ref=e56]: Asset & Inventory
+    - generic [ref=e58]:
+      - generic [ref=e59]:
+        - img [ref=e60]
+        - generic [ref=e63]: Search assets, docs, panels…
+        - generic [ref=e64]: ⌘K
+      - button "Export" [ref=e65] [cursor=pointer]:
+        - img [ref=e66]
+        - text: Export
+      - button "Save Rev" [ref=e68] [cursor=pointer]:
+        - img [ref=e69]
+        - text: Save Rev
+      - generic [ref=e72]: MR
+  - main [ref=e73]:
+    - generic [ref=e74]:
+      - generic [ref=e76]: CATEGORIES
+      - generic [ref=e77]:
+        - generic [ref=e78] [cursor=pointer]:
+          - img [ref=e79]
+          - generic [ref=e81]: All gear
+          - generic [ref=e82]: "348"
+        - generic [ref=e83] [cursor=pointer]:
+          - img [ref=e84]
+          - generic [ref=e86]: LED Panel
+          - generic [ref=e87]: "144"
+        - generic [ref=e88] [cursor=pointer]:
+          - img [ref=e89]
+          - generic [ref=e91]: Processor
+          - generic [ref=e92]: "12"
+        - generic [ref=e93] [cursor=pointer]:
+          - img [ref=e94]
+          - generic [ref=e96]: Switcher
+          - generic [ref=e97]: "8"
+        - generic [ref=e98] [cursor=pointer]:
+          - img [ref=e99]
+          - generic [ref=e101]: Console
+          - generic [ref=e102]: "6"
+        - generic [ref=e103] [cursor=pointer]:
+          - img [ref=e104]
+          - generic [ref=e106]: Camera
+          - generic [ref=e107]: "22"
+        - generic [ref=e108] [cursor=pointer]:
+          - img [ref=e109]
+          - generic [ref=e111]: Amplifier
+          - generic [ref=e112]: "18"
+        - generic [ref=e113] [cursor=pointer]:
+          - img [ref=e114]
+          - generic [ref=e116]: Power
+          - generic [ref=e117]: "26"
+        - generic [ref=e118] [cursor=pointer]:
+          - img [ref=e119]
+          - generic [ref=e121]: Cabling
+          - generic [ref=e122]: "112"
+      - generic [ref=e124]: FLEET STATUS
+      - generic [ref=e125]:
+        - generic [ref=e126]:
+          - generic [ref=e127]:
+            - generic [ref=e128]: Available
+            - generic [ref=e129]: "5"
+          - generic [ref=e130]:
+            - generic [ref=e131]: Deployed
+            - generic [ref=e132]: "6"
+        - generic [ref=e133]:
+          - generic [ref=e134]: In Maintenance
+          - generic [ref=e135]: "2"
+        - generic [ref=e137]: UTILIZATION (30d)
+        - generic [ref=e139]:
+          - img [ref=e140]
+          - generic [ref=e143]:
+            - generic [ref=e144]: 30d AGO
+            - generic [ref=e145]: 67%
+    - generic [ref=e146]:
+      - generic [ref=e147]:
+        - generic [ref=e148]:
+          - button "LIST" [ref=e149] [cursor=pointer]
+          - button "SCHEDULE" [active] [ref=e150] [cursor=pointer]
+        - generic [ref=e152]:
+          - img [ref=e153]
+          - textbox "Filter 13 items in All gear…" [ref=e156]
+        - button "Check In" [ref=e157] [cursor=pointer]:
+          - img [ref=e158]
+          - text: Check In
+        - button "Check Out" [ref=e160] [cursor=pointer]:
+          - img [ref=e161]
+          - text: Check Out
+      - generic [ref=e429]:
+        - generic [ref=e430]: SHOW
+        - generic [ref=e431]:
+          - generic [ref=e432]: 28/04
+          - generic [ref=e433]: 29/04
+          - generic [ref=e434]: 30/04
+          - generic [ref=e435]: 31/04
+          - generic [ref=e436]: 32/04
+          - generic [ref=e437]: 33/04
+          - generic [ref=e438]: 34/04
+          - generic [ref=e439]: 35/04
+          - generic [ref=e440]: 36/04
+          - generic [ref=e441]: 37/04
+          - generic [ref=e442]: 38/04
+          - generic [ref=e443]: 39/04
+          - generic [ref=e444]: 40/04
+          - generic [ref=e445]: 41/04
+        - generic [ref=e446]:
+          - generic [ref=e447]: SH-A
+          - generic [ref=e448]: Helios Auditorium
+        - generic [ref=e450]: Helios Auditorium · 88%
+        - generic [ref=e451]:
+          - generic [ref=e452]: SH-B
+          - generic [ref=e453]: KCR Studio B Refresh
+        - generic [ref=e455]: KCR Studio B Refresh · 64%
+        - generic [ref=e456]:
+          - generic [ref=e457]: SH-C
+          - generic [ref=e458]: Northwind Atrium
+        - generic [ref=e460]: Northwind Atrium · 41%
+        - generic [ref=e461]:
+          - generic [ref=e462]: SH-D
+          - generic [ref=e463]: Maintenance · LA12X
+        - generic [ref=e465]: Maintenance · LA12X · 100%
+        - generic [ref=e466]:
+          - generic [ref=e467]: SH-E
+          - generic [ref=e468]: Calibration · SX40
+        - generic [ref=e470]: Calibration · SX40 · 100%
+    - generic [ref=e358]:
+      - generic [ref=e359]:
+        - generic [ref=e360]: ASSET DETAIL
+        - generic [ref=e361]: BMD-S40-001
+      - generic [ref=e362]:
+        - generic [ref=e363]:
+          - generic [ref=e364]: Processor
+          - generic [ref=e365]: Brompton SX40
+        - generic [ref=e366]:
+          - generic [ref=e367]:
+            - generic [ref=e368]: Status
+            - generic [ref=e370]: OUT
+          - generic [ref=e371]:
+            - generic [ref=e372]: Utilization
+            - generic [ref=e373]: 82%
+        - generic [ref=e375]: ASSIGNMENT
+        - generic [ref=e377]:
+          - generic [ref=e378]: Show
+          - generic [ref=e379]: Helios Auditorium
+          - generic [ref=e380]: Due back
+          - generic [ref=e381]: Apr 28
+          - generic [ref=e382]: Crew
+          - generic [ref=e383]: M. Reyes
+          - generic [ref=e384]: Crate
+          - generic [ref=e385]: CASE-001
+        - generic [ref=e387]: MAINTENANCE
+        - generic [ref=e389]:
+          - generic [ref=e390]: Last svc
+          - generic [ref=e391]: 2026-04-12
+          - generic [ref=e392]: Next due
+          - generic [ref=e393]: 2026-07-15
+          - generic [ref=e394]: Total hrs
+          - generic [ref=e395]: 2,184
+          - generic [ref=e396]: PM cycle
+          - generic [ref=e397]: 90 days
+        - generic [ref=e399]: HISTORY
+        - generic [ref=e401]:
+          - generic [ref=e402]:
+            - generic [ref=e403]: Apr 22
+            - generic [ref=e404]: Returned · QC pass
+            - generic [ref=e405]: S. Larsson
+          - generic [ref=e406]:
+            - generic [ref=e407]: Apr 12
+            - generic [ref=e408]: Deployed → Helios
+            - generic [ref=e409]: M. Reyes
+          - generic [ref=e410]:
+            - generic [ref=e411]: Apr 09
+            - generic [ref=e412]: PM service · firmware 3.4.12
+            - generic [ref=e413]: K. Tanaka
+          - generic [ref=e414]:
+            - generic [ref=e415]: Mar 28
+            - generic [ref=e416]: Returned · ok
+            - generic [ref=e417]: S. Larsson
+  - contentinfo [ref=e418]:
+    - generic [ref=e419]: READY
+    - generic [ref=e421]: REV 0042
+    - generic [ref=e422]: SYNC ↑ 14:22:08
+    - generic [ref=e423]: 2 WARNINGS
+    - generic [ref=e425]: PRJ-2451
+    - generic [ref=e426]: UTC-05
+    - generic [ref=e427]: 19:05:41

@@ -1,0 +1,333 @@
+- generic [ref=e3]:
+  - complementary [ref=e4]:
+    - generic [ref=e5]: BB
+    - generic [ref=e6]:
+      - button "WALL" [ref=e7] [cursor=pointer]:
+        - img [ref=e9]
+        - generic [ref=e11]: WALL
+      - button "SYS" [ref=e12] [cursor=pointer]:
+        - img [ref=e14]
+        - generic [ref=e19]: SYS
+      - button "RACK" [ref=e20] [cursor=pointer]:
+        - img [ref=e22]
+        - generic [ref=e24]: RACK
+      - button "INV" [active] [ref=e25] [cursor=pointer]:
+        - img [ref=e27]
+        - generic [ref=e31]: INV
+      - button "DOCS" [ref=e32] [cursor=pointer]:
+        - img [ref=e34]
+        - generic [ref=e37]: DOCS
+    - button "SET" [ref=e40] [cursor=pointer]:
+      - img [ref=e42]
+      - generic [ref=e45]: SET
+  - banner [ref=e46]:
+    - generic [ref=e47]:
+      - generic [ref=e48]: PRJ-2451
+      - generic [ref=e49]: Atrium Lobby Wall
+      - generic [ref=e50]: Northwind HQ
+    - generic [ref=e51]:
+      - generic [ref=e52]: PROJECTS
+      - generic [ref=e53]: /
+      - generic [ref=e54]: PRJ-2451
+      - generic [ref=e55]: /
+      - generic [ref=e56]: Asset & Inventory
+    - generic [ref=e58]:
+      - generic [ref=e59]:
+        - img [ref=e60]
+        - generic [ref=e63]: Search assets, docs, panels…
+        - generic [ref=e64]: ⌘K
+      - button "Export" [ref=e65] [cursor=pointer]:
+        - img [ref=e66]
+        - text: Export
+      - button "Save Rev" [ref=e68] [cursor=pointer]:
+        - img [ref=e69]
+        - text: Save Rev
+      - generic [ref=e72]: MR
+  - main [ref=e73]:
+    - generic [ref=e74]:
+      - generic [ref=e76]: CATEGORIES
+      - generic [ref=e77]:
+        - generic [ref=e78] [cursor=pointer]:
+          - img [ref=e79]
+          - generic [ref=e81]: All gear
+          - generic [ref=e82]: "348"
+        - generic [ref=e83] [cursor=pointer]:
+          - img [ref=e84]
+          - generic [ref=e86]: LED Panel
+          - generic [ref=e87]: "144"
+        - generic [ref=e88] [cursor=pointer]:
+          - img [ref=e89]
+          - generic [ref=e91]: Processor
+          - generic [ref=e92]: "12"
+        - generic [ref=e93] [cursor=pointer]:
+          - img [ref=e94]
+          - generic [ref=e96]: Switcher
+          - generic [ref=e97]: "8"
+        - generic [ref=e98] [cursor=pointer]:
+          - img [ref=e99]
+          - generic [ref=e101]: Console
+          - generic [ref=e102]: "6"
+        - generic [ref=e103] [cursor=pointer]:
+          - img [ref=e104]
+          - generic [ref=e106]: Camera
+          - generic [ref=e107]: "22"
+        - generic [ref=e108] [cursor=pointer]:
+          - img [ref=e109]
+          - generic [ref=e111]: Amplifier
+          - generic [ref=e112]: "18"
+        - generic [ref=e113] [cursor=pointer]:
+          - img [ref=e114]
+          - generic [ref=e116]: Power
+          - generic [ref=e117]: "26"
+        - generic [ref=e118] [cursor=pointer]:
+          - img [ref=e119]
+          - generic [ref=e121]: Cabling
+          - generic [ref=e122]: "112"
+      - generic [ref=e124]: FLEET STATUS
+      - generic [ref=e125]:
+        - generic [ref=e126]:
+          - generic [ref=e127]:
+            - generic [ref=e128]: Available
+            - generic [ref=e129]: "5"
+          - generic [ref=e130]:
+            - generic [ref=e131]: Deployed
+            - generic [ref=e132]: "6"
+        - generic [ref=e133]:
+          - generic [ref=e134]: In Maintenance
+          - generic [ref=e135]: "2"
+        - generic [ref=e137]: UTILIZATION (30d)
+        - generic [ref=e139]:
+          - img [ref=e140]
+          - generic [ref=e143]:
+            - generic [ref=e144]: 30d AGO
+            - generic [ref=e145]: 67%
+    - generic [ref=e146]:
+      - generic [ref=e147]:
+        - generic [ref=e148]:
+          - button "LIST" [ref=e149] [cursor=pointer]
+          - button "SCHEDULE" [ref=e150] [cursor=pointer]
+        - generic [ref=e152]:
+          - img [ref=e153]
+          - textbox "Filter 13 items in All gear…" [ref=e156]
+        - button "Check In" [ref=e157] [cursor=pointer]:
+          - img [ref=e158]
+          - text: Check In
+        - button "Check Out" [ref=e160] [cursor=pointer]:
+          - img [ref=e161]
+          - text: Check Out
+      - table [ref=e164]:
+        - rowgroup [ref=e165]:
+          - row "ASSET ID MODEL CATEGORY STATUS SHOW / JOB DUE UTIL LAST SVC" [ref=e166]:
+            - columnheader "ASSET ID" [ref=e167]
+            - columnheader "MODEL" [ref=e168]
+            - columnheader "CATEGORY" [ref=e169]
+            - columnheader "STATUS" [ref=e170]
+            - columnheader "SHOW / JOB" [ref=e171]
+            - columnheader "DUE" [ref=e172]
+            - columnheader "UTIL" [ref=e173]
+            - columnheader "LAST SVC" [ref=e174]
+        - rowgroup [ref=e175]:
+          - row "BMD-S40-001 Brompton SX40 Processor OUT Helios Auditorium Apr 28 82% 2026-04-12" [ref=e176] [cursor=pointer]:
+            - cell "BMD-S40-001" [ref=e177]
+            - cell "Brompton SX40" [ref=e178]
+            - cell "Processor" [ref=e179]
+            - cell "OUT" [ref=e180]:
+              - generic [ref=e181]: OUT
+            - cell "Helios Auditorium" [ref=e182]
+            - cell "Apr 28" [ref=e183]
+            - cell "82%" [ref=e184]:
+              - generic [ref=e188]: 82%
+            - cell "2026-04-12" [ref=e189]
+          - row "BMD-S40-002 Brompton SX40 Processor IN — — 64% 2026-04-22" [ref=e190] [cursor=pointer]:
+            - cell "BMD-S40-002" [ref=e191]
+            - cell "Brompton SX40" [ref=e192]
+            - cell "Processor" [ref=e193]
+            - cell "IN" [ref=e194]:
+              - generic [ref=e195]: IN
+            - cell "—" [ref=e196]
+            - cell "—" [ref=e197]
+            - cell "64%" [ref=e198]:
+              - generic [ref=e202]: 64%
+            - cell "2026-04-22" [ref=e203]
+          - row "BMD-S40-003 Brompton SX40 Processor MAINT — Apr 30 71% 2026-04-09" [ref=e204] [cursor=pointer]:
+            - cell "BMD-S40-003" [ref=e205]
+            - cell "Brompton SX40" [ref=e206]
+            - cell "Processor" [ref=e207]
+            - cell "MAINT" [ref=e208]:
+              - generic [ref=e209]: MAINT
+            - cell "—" [ref=e210]
+            - cell "Apr 30" [ref=e211]
+            - cell "71%" [ref=e212]:
+              - generic [ref=e216]: 71%
+            - cell "2026-04-09" [ref=e217]
+          - row "ROE-RB2.6-A1 ROE Ruby RB2.6 (24-pack) LED Panel OUT Helios Auditorium Apr 28 88% 2026-04-12" [ref=e218] [cursor=pointer]:
+            - cell "ROE-RB2.6-A1" [ref=e219]
+            - cell "ROE Ruby RB2.6 (24-pack)" [ref=e220]
+            - cell "LED Panel" [ref=e221]
+            - cell "OUT" [ref=e222]:
+              - generic [ref=e223]: OUT
+            - cell "Helios Auditorium" [ref=e224]
+            - cell "Apr 28" [ref=e225]
+            - cell "88%" [ref=e226]:
+              - generic [ref=e230]: 88%
+            - cell "2026-04-12" [ref=e231]
+          - row "ROE-RB2.6-A2 ROE Ruby RB2.6 (24-pack) LED Panel IN — — 41% 2026-04-19" [ref=e232] [cursor=pointer]:
+            - cell "ROE-RB2.6-A2" [ref=e233]
+            - cell "ROE Ruby RB2.6 (24-pack)" [ref=e234]
+            - cell "LED Panel" [ref=e235]
+            - cell "IN" [ref=e236]:
+              - generic [ref=e237]: IN
+            - cell "—" [ref=e238]
+            - cell "—" [ref=e239]
+            - cell "41%" [ref=e240]:
+              - generic [ref=e244]: 41%
+            - cell "2026-04-19" [ref=e245]
+          - row "ROE-CB5-A1 ROE Carbon CB5 (24-pack) LED Panel IN — — 33% 2026-04-15" [ref=e246] [cursor=pointer]:
+            - cell "ROE-CB5-A1" [ref=e247]
+            - cell "ROE Carbon CB5 (24-pack)" [ref=e248]
+            - cell "LED Panel" [ref=e249]
+            - cell "IN" [ref=e250]:
+              - generic [ref=e251]: IN
+            - cell "—" [ref=e252]
+            - cell "—" [ref=e253]
+            - cell "33%" [ref=e254]:
+              - generic [ref=e258]: 33%
+            - cell "2026-04-15" [ref=e259]
+          - row "VMX-M4-001 vMix M4 Switcher Switcher OUT KCR Studio B May 02 94% 2026-04-20" [ref=e260] [cursor=pointer]:
+            - cell "VMX-M4-001" [ref=e261]
+            - cell "vMix M4 Switcher" [ref=e262]
+            - cell "Switcher" [ref=e263]
+            - cell "OUT" [ref=e264]:
+              - generic [ref=e265]: OUT
+            - cell "KCR Studio B" [ref=e266]
+            - cell "May 02" [ref=e267]
+            - cell "94%" [ref=e268]:
+              - generic [ref=e272]: 94%
+            - cell "2026-04-20" [ref=e273]
+          - row "DGC-SD12-001 DiGiCo SD12 Console IN — — 58% 2026-04-18" [ref=e274] [cursor=pointer]:
+            - cell "DGC-SD12-001" [ref=e275]
+            - cell "DiGiCo SD12" [ref=e276]
+            - cell "Console" [ref=e277]
+            - cell "IN" [ref=e278]:
+              - generic [ref=e279]: IN
+            - cell "—" [ref=e280]
+            - cell "—" [ref=e281]
+            - cell "58%" [ref=e282]:
+              - generic [ref=e286]: 58%
+            - cell "2026-04-18" [ref=e287]
+          - row "LA-12X-001 L-Acoustics LA12X Amplifier OUT Helios Auditorium Apr 28 76% 2026-04-12" [ref=e288] [cursor=pointer]:
+            - cell "LA-12X-001" [ref=e289]
+            - cell "L-Acoustics LA12X" [ref=e290]
+            - cell "Amplifier" [ref=e291]
+            - cell "OUT" [ref=e292]:
+              - generic [ref=e293]: OUT
+            - cell "Helios Auditorium" [ref=e294]
+            - cell "Apr 28" [ref=e295]
+            - cell "76%" [ref=e296]:
+              - generic [ref=e300]: 76%
+            - cell "2026-04-12" [ref=e301]
+          - row "LA-12X-002 L-Acoustics LA12X Amplifier MAINT — May 04 81% 2026-04-08" [ref=e302] [cursor=pointer]:
+            - cell "LA-12X-002" [ref=e303]
+            - cell "L-Acoustics LA12X" [ref=e304]
+            - cell "Amplifier" [ref=e305]
+            - cell "MAINT" [ref=e306]:
+              - generic [ref=e307]: MAINT
+            - cell "—" [ref=e308]
+            - cell "May 04" [ref=e309]
+            - cell "81%" [ref=e310]:
+              - generic [ref=e314]: 81%
+            - cell "2026-04-08" [ref=e315]
+          - row "PTZ-AW-UE150-1 AW-UE150 PTZ Cam Camera IN — — 52% 2026-04-21" [ref=e316] [cursor=pointer]:
+            - cell "PTZ-AW-UE150-1" [ref=e317]
+            - cell "AW-UE150 PTZ Cam" [ref=e318]
+            - cell "Camera" [ref=e319]
+            - cell "IN" [ref=e320]:
+              - generic [ref=e321]: IN
+            - cell "—" [ref=e322]
+            - cell "—" [ref=e323]
+            - cell "52%" [ref=e324]:
+              - generic [ref=e328]: 52%
+            - cell "2026-04-21" [ref=e329]
+          - row "PTZ-AW-UE150-2 AW-UE150 PTZ Cam Camera OUT KCR Studio B May 02 67% 2026-04-20" [ref=e330] [cursor=pointer]:
+            - cell "PTZ-AW-UE150-2" [ref=e331]
+            - cell "AW-UE150 PTZ Cam" [ref=e332]
+            - cell "Camera" [ref=e333]
+            - cell "OUT" [ref=e334]:
+              - generic [ref=e335]: OUT
+            - cell "KCR Studio B" [ref=e336]
+            - cell "May 02" [ref=e337]
+            - cell "67%" [ref=e338]:
+              - generic [ref=e342]: 67%
+            - cell "2026-04-20" [ref=e343]
+          - row "DST-200A-01 Distro 200A 3ϕ Power OUT Helios Auditorium Apr 28 70% 2026-04-12" [ref=e344] [cursor=pointer]:
+            - cell "DST-200A-01" [ref=e345]
+            - cell "Distro 200A 3ϕ" [ref=e346]
+            - cell "Power" [ref=e347]
+            - cell "OUT" [ref=e348]:
+              - generic [ref=e349]: OUT
+            - cell "Helios Auditorium" [ref=e350]
+            - cell "Apr 28" [ref=e351]
+            - cell "70%" [ref=e352]:
+              - generic [ref=e356]: 70%
+            - cell "2026-04-12" [ref=e357]
+    - generic [ref=e358]:
+      - generic [ref=e359]:
+        - generic [ref=e360]: ASSET DETAIL
+        - generic [ref=e361]: BMD-S40-001
+      - generic [ref=e362]:
+        - generic [ref=e363]:
+          - generic [ref=e364]: Processor
+          - generic [ref=e365]: Brompton SX40
+        - generic [ref=e366]:
+          - generic [ref=e367]:
+            - generic [ref=e368]: Status
+            - generic [ref=e370]: OUT
+          - generic [ref=e371]:
+            - generic [ref=e372]: Utilization
+            - generic [ref=e373]: 82%
+        - generic [ref=e375]: ASSIGNMENT
+        - generic [ref=e377]:
+          - generic [ref=e378]: Show
+          - generic [ref=e379]: Helios Auditorium
+          - generic [ref=e380]: Due back
+          - generic [ref=e381]: Apr 28
+          - generic [ref=e382]: Crew
+          - generic [ref=e383]: M. Reyes
+          - generic [ref=e384]: Crate
+          - generic [ref=e385]: CASE-001
+        - generic [ref=e387]: MAINTENANCE
+        - generic [ref=e389]:
+          - generic [ref=e390]: Last svc
+          - generic [ref=e391]: 2026-04-12
+          - generic [ref=e392]: Next due
+          - generic [ref=e393]: 2026-07-15
+          - generic [ref=e394]: Total hrs
+          - generic [ref=e395]: 2,184
+          - generic [ref=e396]: PM cycle
+          - generic [ref=e397]: 90 days
+        - generic [ref=e399]: HISTORY
+        - generic [ref=e401]:
+          - generic [ref=e402]:
+            - generic [ref=e403]: Apr 22
+            - generic [ref=e404]: Returned · QC pass
+            - generic [ref=e405]: S. Larsson
+          - generic [ref=e406]:
+            - generic [ref=e407]: Apr 12
+            - generic [ref=e408]: Deployed → Helios
+            - generic [ref=e409]: M. Reyes
+          - generic [ref=e410]:
+            - generic [ref=e411]: Apr 09
+            - generic [ref=e412]: PM service · firmware 3.4.12
+            - generic [ref=e413]: K. Tanaka
+          - generic [ref=e414]:
+            - generic [ref=e415]: Mar 28
+            - generic [ref=e416]: Returned · ok
+            - generic [ref=e417]: S. Larsson
+  - contentinfo [ref=e418]:
+    - generic [ref=e419]: READY
+    - generic [ref=e421]: REV 0042
+    - generic [ref=e422]: SYNC ↑ 14:22:08
+    - generic [ref=e423]: 2 WARNINGS
+    - generic [ref=e425]: PRJ-2451
+    - generic [ref=e426]: UTC-05
+    - generic [ref=e427]: 19:05:31

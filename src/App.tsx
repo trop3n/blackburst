@@ -3,6 +3,7 @@ import { Rail } from "@/components/shell/Rail";
 import { StatusBar } from "@/components/shell/StatusBar";
 import { Tabs } from "@/components/shell/Tabs";
 import { Topbar } from "@/components/shell/Topbar";
+import { InventoryModule } from "@/modules/inventory/InventoryModule";
 import { LedWallModule } from "@/modules/led-wall/LedWallModule";
 import { RackBuilderModule } from "@/modules/rack-builder/RackBuilderModule";
 import { SystemDesignerModule } from "@/modules/system-designer/SystemDesignerModule";
@@ -44,7 +45,7 @@ export default function App() {
         {module === "wall" && <LedWallModule />}
         {module === "system" && <SystemDesignerModule />}
         {module === "rack" && <RackBuilderModule />}
-        {module === "inv" && <ModulePlaceholder name="Asset & Inventory" />}
+        {module === "inv" && <InventoryModule />}
         {module === "docs" && <ModulePlaceholder name="Documentation Hub" />}
       </main>
       <StatusBar />

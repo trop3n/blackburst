@@ -78,6 +78,33 @@ export interface RackItem {
   pos: number;
 }
 
+export type AssetStatus = "in" | "out" | "maint";
+
+export interface Asset {
+  id: string;
+  model: string;
+  cat: string;
+  status: AssetStatus;
+  show: string;
+  due: string;
+  utilization: number;
+  last: string;
+}
+
+export interface AssetCategory {
+  name: string;
+  count: number;
+}
+
+export interface ShowSchedule {
+  id: string;
+  name: string;
+  start: number;
+  end: number;
+  pct: number;
+  kind?: "maint" | "warn";
+}
+
 export interface PatchEntry {
   id: string;
   src: string;
