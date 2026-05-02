@@ -3,6 +3,7 @@ import { FAULT_PANELS, PANEL_LIBRARY, WALL_LAYOUTS } from "@/lib/data";
 import { useApp } from "@/store/useApp";
 import { computeWallCalc, PROC_PIXEL_CAPACITY } from "./calculations";
 import { useLedWall } from "./store";
+import { validateWall } from "./validation";
 
 const DISTRO_CAPACITY_W = 144_000; // 144kVA distro capacity for the power meter
 
@@ -26,6 +27,7 @@ export function LedWallModule() {
   const layout = WALL_LAYOUTS.find((l) => l.id === layoutId) ?? WALL_LAYOUTS[0];
   const panel = PANEL_LIBRARY.find((p) => p.id === layout.panel) ?? PANEL_LIBRARY[0];
   const calc = computeWallCalc(layout, panel);
+  const issues = validateWall(layout, panel, calc);
 
   // Render scale: fit wall into ~520×320 frame
   const maxFrameW = 520;
@@ -527,6 +529,29 @@ export function LedWallModule() {
 
         {tab === "calc" && (
           <div className="pane-body">
+            <div className="section-h">
+              <span>VALIDATION</span>
+              <span className="line" />
+            </div>
+            {issues.length === 0 ? (
+              <div className="issue-row" data-level="ok">
+                <span className="dot ok" />
+                <div>
+                  <div className="title mono">All checks passing</div>
+                  <div className="detail">No errors or warnings on this wall.</div>
+                </div>
+              </div>
+            ) : (
+              issues.map((iss) => (
+                <div key={iss.id} className="issue-row" data-level={iss.level}>
+                  <span className={`dot ${iss.level}`} />
+                  <div>
+                    <div className="title mono">{iss.title}</div>
+                    <div className="detail">{iss.detail}</div>
+                  </div>
+                </div>
+              ))
+            )}
             <div className="section-h">
               <span>CALCULATIONS</span>
               <span className="line" />
