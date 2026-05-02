@@ -3,6 +3,8 @@ import { useApp } from "@/store/useApp";
 
 export function StatusBar() {
   const project = useApp((s) => s.project);
+  const revisions = useApp((s) => s.revisions);
+  const latest = revisions[0];
   const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
@@ -20,8 +22,8 @@ export function StatusBar() {
       <div className="seg">
         <span className="dot" /> READY
       </div>
-      <div className="seg">REV 0042</div>
-      <div className="seg">SYNC ↑ 14:22:08</div>
+      <div className="seg">REV {String(latest?.n ?? 0).padStart(4, "0")}</div>
+      <div className="seg">SAVED {latest ? new Date(latest.at).toTimeString().slice(0, 8) : "—"}</div>
       <div className="seg">
         <span className="dot warn" /> 2 WARNINGS
       </div>

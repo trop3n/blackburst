@@ -1,4 +1,6 @@
+import { useRef } from "react";
 import { I } from "@/components/Icon";
+import { exportProject, importProject } from "@/lib/project-io";
 import { useApp } from "@/store/useApp";
 import type { ModuleId } from "@/types";
 
@@ -13,6 +15,25 @@ const MODULE_LABELS: Record<ModuleId, string> = {
 export function Topbar() {
   const module = useApp((s) => s.module);
   const project = useApp((s) => s.project);
+  const saveRev = useApp((s) => s.saveRev);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleSaveRev = () => {
+    const note = window.prompt("Revision note", "");
+    if (note === null) return;
+    saveRev(note);
+  };
+
+  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      await importProject(file);
+    } catch (err) {
+      window.alert(`Import failed: ${err instanceof Error ? err.message : String(err)}`);
+    }
+    e.target.value = "";
+  };
 
   return (
     <header className="topbar">
@@ -35,10 +56,20 @@ export function Topbar() {
           <span>Search assets, docs, panels…</span>
           <kbd>⌘K</kbd>
         </div>
-        <button className="tb-btn">
+        <button className="tb-btn" onClick={() => fileInputRef.current?.click()}>
+          <I.Folder size={13} /> Import
+        </button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="application/json,.json"
+          onChange={handleImport}
+          style={{ display: "none" }}
+        />
+        <button className="tb-btn" onClick={exportProject}>
           <I.Export size={13} /> Export
         </button>
-        <button className="tb-btn primary">
+        <button className="tb-btn primary" onClick={handleSaveRev}>
           <I.Plus size={13} /> Save Rev
         </button>
         <div className="user-chip">
