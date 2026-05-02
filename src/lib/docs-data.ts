@@ -48,13 +48,13 @@ export const RECENT_DOCS: { id: string; n: string; w: string; t: string }[] = [
   { id: "r3", n: "Load-In Procedure", w: "S. Larsson", t: "3h" },
 ];
 
-export const LINKED_REFS: { k: string; n: string }[] = [
-  { k: "ASSET", n: "BMD-S40-001 · Brompton SX40" },
-  { k: "ASSET", n: "ROE-RB2.6-A1 · 24-pack" },
-  { k: "WALL", n: "W1 · Main Lobby Wall" },
-  { k: "NODE", n: "n4 · SX40 Processor #1" },
-  { k: "DOC", n: "SOP · Wall Calibration" },
-  { k: "DOC", n: "Patch List · Day 1" },
+export const LINKED_REFS: { k: "ASSET" | "WALL" | "NODE" | "DOC"; n: string; id: string }[] = [
+  { k: "ASSET", n: "BMD-S40-001 · Brompton SX40", id: "BMD-S40-001" },
+  { k: "ASSET", n: "ROE-RB2.6-A1 · 24-pack", id: "ROE-RB2.6-A1" },
+  { k: "WALL", n: "W1 · Main Lobby Wall", id: "W1" },
+  { k: "NODE", n: "n4 · SX40 Processor #1", id: "n4" },
+  { k: "DOC", n: "SOP · Wall Calibration", id: "d-sop-cal" },
+  { k: "DOC", n: "Patch List · Day 1", id: "d-prj-pat" },
 ];
 
 export const DOC_COMMENTS: { who: string; t: string; c: string }[] = [

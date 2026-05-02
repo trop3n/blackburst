@@ -1094,6 +1094,7 @@ button { font-family: inherit; color: inherit; }
   cursor: pointer;
 }
 .docs-page .ref::before { content: "↗"; opacity: 0.6; }
+.docs-page .ref:hover { background: var(--accent-faint); border-color: var(--accent-dim); }
 .docs-page .callout {
   border-left: 2px solid var(--accent);
   background: var(--accent-faint);

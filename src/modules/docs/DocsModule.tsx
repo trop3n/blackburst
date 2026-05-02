@@ -1,5 +1,8 @@
 import { useMemo } from "react";
 import { I } from "@/components/Icon";
+import { RefChip } from "@/components/RefChip";
+import { goto } from "@/lib/nav";
+import { useApp } from "@/store/useApp";
 import {
   DOC_COMMENTS,
   DOC_TREE,
@@ -133,9 +136,11 @@ export function DocsModule() {
           <h2>01 · System Overview</h2>
           <p>
             The room is driven by a redundant Brompton SX40 pair (
-            <a className="ref">BMD-S40-001</a> / <a className="ref">BMD-S40-002</a>) feeding the{" "}
-            <a className="ref">W1 · Main Lobby Wall</a> (P2.6, 18×8 cabinets, 9000×2080 native). Audio
-            reinforcement is via <a className="ref">DGC-SD12-001</a> through <a className="ref">LA-12X-001</a>.
+            <RefChip kind="asset" id="BMD-S40-001" /> /{" "}
+            <RefChip kind="asset" id="BMD-S40-002" />) feeding the{" "}
+            <RefChip kind="wall" id="W1">W1 · Main Lobby Wall</RefChip> (P2.6, 18×8 cabinets, 9000×2080
+            native). Audio reinforcement is via <RefChip kind="asset" id="DGC-SD12-001" /> through{" "}
+            <RefChip kind="asset" id="LA-12X-001" />.
           </p>
 
           <div className="callout">
@@ -151,7 +156,7 @@ export function DocsModule() {
             </strong>
             <div style={{ marginTop: 4 }}>
               SX40 #1 carries the left half of the wall, SX40 #2 the right. Failover is manual — see{" "}
-              <a className="ref">SOP · Wall Calibration §4</a>.
+              <RefChip kind="doc" id="d-sop-cal">SOP · Wall Calibration §4</RefChip>.
             </div>
           </div>
 
@@ -161,13 +166,15 @@ export function DocsModule() {
             <li><code>08:00</code> — Truss to height; pickup points marked at 6 hangs · 84 kg/pt</li>
             <li>
               <code>10:30</code> — Panel hang begins (left half first); ref{" "}
-              <a className="ref">SOP · Load-In §2.4</a>
+              <RefChip kind="doc" id="d-sop-load">SOP · Load-In §2.4</RefChip>
             </li>
             <li>
-              <code>13:00</code> — Processor power-up; data sync via <a className="ref">10GbE A/B</a>
+              <code>13:00</code> — Processor power-up; data sync via{" "}
+              <RefChip kind="node" id="n4">10GbE A/B</RefChip>
             </li>
             <li>
-              <code>14:30</code> — Calibration sweep — see <a className="ref">SOP · Wall Calibration</a>
+              <code>14:30</code> — Calibration sweep — see{" "}
+              <RefChip kind="doc" id="d-sop-cal">SOP · Wall Calibration</RefChip>
             </li>
             <li><code>15:30</code> — Audio system checks; FOH walk</li>
             <li><code>16:00</code> — End of Day 1; system held overnight in standby</li>
@@ -177,20 +184,37 @@ export function DocsModule() {
           <p>
             Director cues delivered over <code>Stage Manager → Cue 1</code>. Standby pages issued 5 min before
             each major change. Two warnings flagged on the system:{" "}
-            <a className="ref" style={{ color: "var(--color-warn)", borderColor: "var(--color-warn)" }}>
+            <RefChip
+              kind="wall"
+              id="W1"
+              style={{ color: "var(--color-warn)", borderColor: "var(--color-warn)" }}
+            >
               Panel C7,R3 fault
-            </a>{" "}
+            </RefChip>{" "}
             and{" "}
-            <a className="ref" style={{ color: "var(--color-warn)", borderColor: "var(--color-warn)" }}>
+            <RefChip
+              kind="asset"
+              id="BMD-S40-001"
+              style={{ color: "var(--color-warn)", borderColor: "var(--color-warn)" }}
+            >
               SX40 #1 thermal
-            </a>{" "}
+            </RefChip>{" "}
             — both have hot-swap spares staged stage-left.
           </p>
 
           <h2>04 · Strike · Day 3 (06:00 – 11:00)</h2>
           <p>
             Reverse load-in order. Power down via SOP. All assets returned to crates and checked back into{" "}
-            <a className="ref">Inventory</a> with QC pass.
+            <a
+              className="ref"
+              onClick={(e) => {
+                e.preventDefault();
+                useApp.getState().setModule("inv");
+              }}
+            >
+              Inventory
+            </a>{" "}
+            with QC pass.
           </p>
         </div>
       </div>
@@ -210,12 +234,20 @@ export function DocsModule() {
         </div>
         <div className="pane-hd"><span>LINKED REFERENCES</span></div>
         <div style={{ padding: "0 0 12px" }}>
-          {LINKED_REFS.map((r, i) => (
-            <div key={i} className="list-row">
-              <span className="chip accent" style={{ minWidth: 44, justifyContent: "center" }}>{r.k}</span>
-              <span className="lbl">{r.n}</span>
-            </div>
-          ))}
+          {LINKED_REFS.map((r, i) => {
+            const kindMap = { ASSET: "asset", WALL: "wall", NODE: "node", DOC: "doc" } as const;
+            return (
+              <div
+                key={i}
+                className="list-row"
+                onClick={() => goto({ kind: kindMap[r.k], id: r.id })}
+                style={{ cursor: "pointer" }}
+              >
+                <span className="chip accent" style={{ minWidth: 44, justifyContent: "center" }}>{r.k}</span>
+                <span className="lbl">{r.n}</span>
+              </div>
+            );
+          })}
         </div>
         <div className="pane-hd">
           <span>COMMENTS</span>
