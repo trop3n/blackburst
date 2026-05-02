@@ -15,6 +15,9 @@ const MODULE_LABELS: Record<ModuleId, string> = {
 export function Topbar() {
   const module = useApp((s) => s.module);
   const project = useApp((s) => s.project);
+  const projects = useApp((s) => s.projects);
+  const currentProjectId = useApp((s) => s.currentProjectId);
+  const setCurrentProjectId = useApp((s) => s.setCurrentProjectId);
   const saveRev = useApp((s) => s.saveRev);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -38,7 +41,20 @@ export function Topbar() {
   return (
     <header className="topbar">
       <div className="topbar-section">
-        <span className="proj-pill mono">{project.id}</span>
+        <label className="proj-pill mono proj-select">
+          <select
+            value={currentProjectId}
+            onChange={(e) => setCurrentProjectId(e.target.value)}
+          >
+            {projects.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.id} — {p.name}
+              </option>
+            ))}
+          </select>
+          <span>{project.id}</span>
+          <I.Chev size={10} dir="down" />
+        </label>
         <span style={{ color: "var(--color-fg)" }}>{project.name}</span>
         <span className="chip">{project.client}</span>
       </div>

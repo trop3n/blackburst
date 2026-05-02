@@ -1,50 +1,19 @@
-import { useDocs } from "@/modules/docs/store";
-import { useInventory } from "@/modules/inventory/store";
-import { useLedWall } from "@/modules/led-wall/store";
-import { useRack } from "@/modules/rack-builder/store";
-import { useSystem } from "@/modules/system-designer/store";
-import { useApp } from "@/store/useApp";
-
-const STORE_KEYS = [
-  "blackburst:app:v1",
-  "blackburst:led-wall:v1",
-  "blackburst:system:v1",
-  "blackburst:rack:v1",
-  "blackburst:inventory:v1",
-  "blackburst:docs:v1",
-] as const;
-
-type StoreKey = typeof STORE_KEYS[number];
-
-const STORES: Record<StoreKey, { getState: () => unknown }> = {
-  "blackburst:app:v1": useApp,
-  "blackburst:led-wall:v1": useLedWall,
-  "blackburst:system:v1": useSystem,
-  "blackburst:rack:v1": useRack,
-  "blackburst:inventory:v1": useInventory,
-  "blackburst:docs:v1": useDocs,
-};
+import {
+  applyState,
+  snapshotCurrent,
+  writeBucket,
+  type ProjectStateBuckets,
+} from "@/lib/project-storage";
+import { useApp, type Revision } from "@/store/useApp";
+import type { Project } from "@/types";
 
 export interface ProjectSnapshot {
   format: "blackburst-project";
-  version: 1;
+  version: 2;
   exportedAt: string;
-  project: { id: string; name: string; client: string; status: string };
-  stores: Record<string, { state: unknown; version: number }>;
-}
-
-function snapshot(): ProjectSnapshot {
-  const stores: ProjectSnapshot["stores"] = {};
-  for (const key of STORE_KEYS) {
-    stores[key] = { state: STORES[key].getState(), version: 0 };
-  }
-  return {
-    format: "blackburst-project",
-    version: 1,
-    exportedAt: new Date().toISOString(),
-    project: useApp.getState().project,
-    stores,
-  };
+  project: Project;
+  revisions: Revision[];
+  state: ProjectStateBuckets;
 }
 
 function todayStamp(): string {
@@ -52,8 +21,20 @@ function todayStamp(): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
+function buildSnapshot(): ProjectSnapshot {
+  const app = useApp.getState();
+  return {
+    format: "blackburst-project",
+    version: 2,
+    exportedAt: new Date().toISOString(),
+    project: app.project,
+    revisions: app.revisions,
+    state: snapshotCurrent(),
+  };
+}
+
 export function exportProject() {
-  const snap = snapshot();
+  const snap = buildSnapshot();
   const blob = new Blob([JSON.stringify(snap, null, 2)], { type: "application/json" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
@@ -67,16 +48,26 @@ export function exportProject() {
 
 export async function importProject(file: File): Promise<void> {
   const text = await file.text();
-  const data = JSON.parse(text) as ProjectSnapshot;
+  const data = JSON.parse(text) as Partial<ProjectSnapshot>;
   if (data.format !== "blackburst-project") {
     throw new Error("Not a Blackburst project file");
   }
-  for (const [key, value] of Object.entries(data.stores)) {
-    if (STORE_KEYS.includes(key as typeof STORE_KEYS[number])) {
-      localStorage.setItem(key, JSON.stringify(value));
-    }
+  if (!data.state || typeof data.state !== "object") {
+    throw new Error("Project file is missing state");
   }
-  // Reload so persist middleware re-hydrates from the new localStorage values.
-  window.location.reload();
+  const app = useApp.getState();
+  const currentId = app.currentProjectId;
+  applyState(data.state);
+  writeBucket(currentId, data.state);
+  const importedProject = data.project;
+  if (importedProject) {
+    app.updateCurrentProject({
+      name: importedProject.name,
+      client: importedProject.client,
+      status: importedProject.status,
+    });
+  }
+  if (Array.isArray(data.revisions)) {
+    app.setRevisionsForCurrent(data.revisions);
+  }
 }
-

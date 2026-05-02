@@ -220,6 +220,18 @@ button { font-family: inherit; color: inherit; }
   width: 6px; height: 6px; border-radius: 50%;
   background: var(--accent);
 }
+.proj-select { position: relative; cursor: pointer; padding-right: 6px; }
+.proj-select:hover { color: var(--color-fg); border-color: var(--accent); }
+.proj-select select {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  appearance: none;
+  border: 0;
+  font: inherit;
+}
+.proj-select > svg { color: var(--color-fg-faint); }
 .topbar .spacer { flex: 1; }
 .cmdk {
   display: flex; align-items: center; gap: 6px;
