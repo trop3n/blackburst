@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { I } from "@/components/Icon";
 import { ASSETS, ASSET_CATEGORIES, ASSET_HISTORY, SHOWS } from "@/lib/inventory-data";
 import { useInventory } from "./store";
+import { issuesByAsset, summarizeAssetIssues, validateAssets } from "./validation";
 
 export function InventoryModule() {
   const cat = useInventory((s) => s.cat);
@@ -28,6 +29,10 @@ export function InventoryModule() {
   const totalIn = ASSETS.filter((a) => a.status === "in").length;
   const totalOut = ASSETS.filter((a) => a.status === "out").length;
   const totalMaint = ASSETS.filter((a) => a.status === "maint").length;
+  const allIssues = useMemo(() => validateAssets(ASSETS, SHOWS), []);
+  const issuesIndex = useMemo(() => issuesByAsset(allIssues), [allIssues]);
+  const issuesSummary = summarizeAssetIssues(allIssues);
+  const selectedIssues = asset ? issuesIndex.get(asset.id) ?? [] : [];
 
   return (
     <>
@@ -62,6 +67,37 @@ export function InventoryModule() {
           <div className="readout">
             <div className="lbl">In Maintenance</div>
             <div className="val" style={{ color: "var(--color-err)" }}>{totalMaint}</div>
+          </div>
+          <div className="section-h">
+            <span>CONSISTENCY</span>
+            <span className="line" />
+          </div>
+          <div style={{ padding: "0 12px 8px" }}>
+            {issuesSummary.level === "ok" ? (
+              <div className="issue-row" data-level="ok">
+                <span className="dot ok" />
+                <div>
+                  <div className="title mono">All assignments consistent</div>
+                  <div className="detail">No conflicts between assets and the show schedule.</div>
+                </div>
+              </div>
+            ) : (
+              allIssues.map((iss) => (
+                <div
+                  key={iss.id}
+                  className="issue-row"
+                  data-level={iss.level}
+                  onClick={() => setSelected(iss.assetId)}
+                  style={{ cursor: "pointer" }}
+                >
+                  <span className={`dot ${iss.level}`} />
+                  <div>
+                    <div className="title mono">{iss.title}</div>
+                    <div className="detail">{iss.detail}</div>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
           <div className="section-h"><span>UTILIZATION (30d)</span><span className="line" /></div>
           <div style={{ padding: "0 12px 12px" }}>
@@ -129,14 +165,39 @@ export function InventoryModule() {
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((a) => (
+                {filtered.map((a) => {
+                  const rowIssues = issuesIndex.get(a.id);
+                  const rowLevel = rowIssues?.some((i) => i.level === "error")
+                    ? "error"
+                    : rowIssues?.length
+                      ? "warn"
+                      : null;
+                  return (
                   <tr
                     key={a.id}
                     data-active={selected === a.id ? "1" : "0"}
                     onClick={() => setSelected(a.id)}
                     style={{ cursor: "pointer" }}
                   >
-                    <td>{a.id}</td>
+                    <td>
+                      {rowLevel && (
+                        <span
+                          className={`dot ${rowLevel}`}
+                          title={rowIssues?.map((i) => i.title).join(" · ")}
+                          style={{
+                            display: "inline-block",
+                            width: 6,
+                            height: 6,
+                            borderRadius: "50%",
+                            marginRight: 6,
+                            verticalAlign: "middle",
+                            background:
+                              rowLevel === "error" ? "var(--color-err)" : "var(--color-warn)",
+                          }}
+                        />
+                      )}
+                      {a.id}
+                    </td>
                     <td style={{ fontFamily: "var(--font-sans)" }}>{a.model}</td>
                     <td className="muted">{a.cat}</td>
                     <td>
@@ -162,7 +223,8 @@ export function InventoryModule() {
                     </td>
                     <td className="muted">{a.last}</td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -221,6 +283,25 @@ export function InventoryModule() {
                 </div>
               </div>
             </div>
+            {selectedIssues.length > 0 && (
+              <>
+                <div className="section-h">
+                  <span>ISSUES</span>
+                  <span className="line" />
+                </div>
+                <div style={{ padding: "0 12px" }}>
+                  {selectedIssues.map((iss) => (
+                    <div key={iss.id} className="issue-row" data-level={iss.level}>
+                      <span className={`dot ${iss.level}`} />
+                      <div>
+                        <div className="title mono">{iss.title}</div>
+                        <div className="detail">{iss.detail}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
             <div className="section-h"><span>ASSIGNMENT</span><span className="line" /></div>
             <div className="kv">
               <span className="k">Show</span><span className="v">{asset.show}</span>
