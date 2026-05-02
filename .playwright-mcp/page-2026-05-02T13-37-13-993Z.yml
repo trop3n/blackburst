@@ -1,0 +1,555 @@
+- generic [ref=e3]:
+  - complementary [ref=e4]:
+    - generic [ref=e5]: BB
+    - generic [ref=e6]:
+      - button "WALL" [ref=e7] [cursor=pointer]:
+        - img [ref=e9]
+        - generic [ref=e11]: WALL
+      - button "SYS" [ref=e12] [cursor=pointer]:
+        - img [ref=e14]
+        - generic [ref=e19]: SYS
+      - button "RACK" [ref=e20] [cursor=pointer]:
+        - img [ref=e22]
+        - generic [ref=e24]: RACK
+      - button "INV" [ref=e25] [cursor=pointer]:
+        - img [ref=e27]
+        - generic [ref=e31]: INV
+      - button "DOCS" [ref=e32] [cursor=pointer]:
+        - img [ref=e34]
+        - generic [ref=e37]: DOCS
+    - button "SET" [ref=e40] [cursor=pointer]:
+      - img [ref=e42]
+      - generic [ref=e45]: SET
+  - banner [ref=e46]:
+    - generic [ref=e47]:
+      - generic [ref=e48]: PRJ-2451
+      - generic [ref=e49]: Atrium Lobby Wall
+      - generic [ref=e50]: Northwind HQ
+    - generic [ref=e51]:
+      - generic [ref=e52]: PROJECTS
+      - generic [ref=e53]: /
+      - generic [ref=e54]: PRJ-2451
+      - generic [ref=e55]: /
+      - generic [ref=e56]: Rack Builder
+    - generic [ref=e58]:
+      - generic [ref=e59]:
+        - img [ref=e60]
+        - generic [ref=e63]: Search assets, docs, panels…
+        - generic [ref=e64]: ⌘K
+      - button "Export" [ref=e65] [cursor=pointer]:
+        - img [ref=e66]
+        - text: Export
+      - button "Save Rev" [ref=e68] [cursor=pointer]:
+        - img [ref=e69]
+        - text: Save Rev
+      - generic [ref=e72]: MR
+  - main [ref=e73]:
+    - generic [ref=e410]:
+      - generic [ref=e411]:
+        - generic [ref=e412]: EQUIPMENT CATALOG
+        - generic [ref=e413]: "22"
+      - generic [ref=e414]:
+        - img [ref=e415]
+        - textbox "Filter equipment…" [ref=e418]
+      - generic [ref=e419]:
+        - button "ALL" [ref=e420] [cursor=pointer]
+        - button "PROCESSOR" [ref=e421] [cursor=pointer]
+        - button "SWITCHER" [ref=e422] [cursor=pointer]
+        - button "NETWORK" [ref=e423] [cursor=pointer]
+        - button "COMPUTE" [ref=e424] [cursor=pointer]
+        - button "AUDIO" [ref=e425] [cursor=pointer]
+        - button "POWER" [ref=e426] [cursor=pointer]
+        - button "MISC" [ref=e427] [cursor=pointer]
+      - generic [ref=e428]:
+        - generic [ref=e429] [cursor=pointer]:
+          - generic [ref=e430]:
+            - generic [ref=e431]: 1U
+            - generic [ref=e432]: Brompton SX40
+            - button [ref=e433]:
+              - img [ref=e434]
+          - generic [ref=e436]:
+            - generic [ref=e437]: PROCESSOR
+            - generic [ref=e438]: 8.6kg
+            - generic [ref=e439]: 350W
+            - generic [ref=e440]: 432mm
+        - generic [ref=e441] [cursor=pointer]:
+          - generic [ref=e442]:
+            - generic [ref=e443]: 1U
+            - generic [ref=e444]: Brompton Tessera S8
+            - button [ref=e445]:
+              - img [ref=e446]
+          - generic [ref=e448]:
+            - generic [ref=e449]: PROCESSOR
+            - generic [ref=e450]: 7.2kg
+            - generic [ref=e451]: 280W
+            - generic [ref=e452]: 432mm
+        - generic [ref=e453] [cursor=pointer]:
+          - generic [ref=e454]:
+            - generic [ref=e455]: 2U
+            - generic [ref=e456]: Novastar MX40 Pro
+            - button [ref=e457]:
+              - img [ref=e458]
+          - generic [ref=e460]:
+            - generic [ref=e461]: PROCESSOR
+            - generic [ref=e462]: 12.4kg
+            - generic [ref=e463]: 420W
+            - generic [ref=e464]: 480mm
+        - generic [ref=e465] [cursor=pointer]:
+          - generic [ref=e466]:
+            - generic [ref=e467]: 2U
+            - generic [ref=e468]: Megapixel Helios
+            - button [ref=e469]:
+              - img [ref=e470]
+          - generic [ref=e472]:
+            - generic [ref=e473]: PROCESSOR
+            - generic [ref=e474]: 14kg
+            - generic [ref=e475]: 480W
+            - generic [ref=e476]: 530mm
+        - generic [ref=e477] [cursor=pointer]:
+          - generic [ref=e478]:
+            - generic [ref=e479]: 1U
+            - generic [ref=e480]: vMix M4 Switcher
+            - button [ref=e481]:
+              - img [ref=e482]
+          - generic [ref=e484]:
+            - generic [ref=e485]: SWITCHER
+            - generic [ref=e486]: 6.4kg
+            - generic [ref=e487]: 220W
+            - generic [ref=e488]: 380mm
+        - generic [ref=e489] [cursor=pointer]:
+          - generic [ref=e490]:
+            - generic [ref=e491]: 4U
+            - generic [ref=e492]: BMD ATEM 4 M/E
+            - button [ref=e493]:
+              - img [ref=e494]
+          - generic [ref=e496]:
+            - generic [ref=e497]: SWITCHER
+            - generic [ref=e498]: 14kg
+            - generic [ref=e499]: 250W
+            - generic [ref=e500]: 410mm
+        - generic [ref=e501] [cursor=pointer]:
+          - generic [ref=e502]:
+            - generic [ref=e503]: 2U
+            - generic [ref=e504]: AJA Kumo 3232 SDI Router
+            - button [ref=e505]:
+              - img [ref=e506]
+          - generic [ref=e508]:
+            - generic [ref=e509]: SWITCHER
+            - generic [ref=e510]: 8.5kg
+            - generic [ref=e511]: 180W
+            - generic [ref=e512]: 410mm
+        - generic [ref=e513] [cursor=pointer]:
+          - generic [ref=e514]:
+            - generic [ref=e515]: 1U
+            - generic [ref=e516]: Cisco Cat 9300 · 48-port
+            - button [ref=e517]:
+              - img [ref=e518]
+          - generic [ref=e520]:
+            - generic [ref=e521]: NETWORK
+            - generic [ref=e522]: 6.8kg
+            - generic [ref=e523]: 160W
+            - generic [ref=e524]: 460mm
+        - generic [ref=e525] [cursor=pointer]:
+          - generic [ref=e526]:
+            - generic [ref=e527]: 1U
+            - generic [ref=e528]: Arista 7050X · 32×100GbE
+            - button [ref=e529]:
+              - img [ref=e530]
+          - generic [ref=e532]:
+            - generic [ref=e533]: NETWORK
+            - generic [ref=e534]: 9.4kg
+            - generic [ref=e535]: 240W
+            - generic [ref=e536]: 510mm
+        - generic [ref=e537] [cursor=pointer]:
+          - generic [ref=e538]:
+            - generic [ref=e539]: 1U
+            - generic [ref=e540]: Palo Alto PA-440
+            - button [ref=e541]:
+              - img [ref=e542]
+          - generic [ref=e544]:
+            - generic [ref=e545]: NETWORK
+            - generic [ref=e546]: 4.5kg
+            - generic [ref=e547]: 80W
+            - generic [ref=e548]: 360mm
+        - generic [ref=e549] [cursor=pointer]:
+          - generic [ref=e550]:
+            - generic [ref=e551]: 1U
+            - generic [ref=e552]: Dell R660 1U Server
+            - button [ref=e553]:
+              - img [ref=e554]
+          - generic [ref=e556]:
+            - generic [ref=e557]: COMPUTE
+            - generic [ref=e558]: 16.5kg
+            - generic [ref=e559]: 600W
+            - generic [ref=e560]: 720mm
+        - generic [ref=e561] [cursor=pointer]:
+          - generic [ref=e562]:
+            - generic [ref=e563]: 2U
+            - generic [ref=e564]: HPE DL380 Gen11 2U
+            - button [ref=e565]:
+              - img [ref=e566]
+          - generic [ref=e568]:
+            - generic [ref=e569]: COMPUTE
+            - generic [ref=e570]: 24kg
+            - generic [ref=e571]: 800W
+            - generic [ref=e572]: 750mm
+        - generic [ref=e573] [cursor=pointer]:
+          - generic [ref=e574]:
+            - generic [ref=e575]: 4U
+            - generic [ref=e576]: Disguise gx 2c · 4U
+            - button [ref=e577]:
+              - img [ref=e578]
+          - generic [ref=e580]:
+            - generic [ref=e581]: COMPUTE
+            - generic [ref=e582]: 36kg
+            - generic [ref=e583]: 1200W
+            - generic [ref=e584]: 720mm
+        - generic [ref=e585] [cursor=pointer]:
+          - generic [ref=e586]:
+            - generic [ref=e587]: 6U
+            - generic [ref=e588]: DiGiCo SD-Rack
+            - button [ref=e589]:
+              - img [ref=e590]
+          - generic [ref=e592]:
+            - generic [ref=e593]: AUDIO
+            - generic [ref=e594]: 22kg
+            - generic [ref=e595]: 240W
+            - generic [ref=e596]: 440mm
+        - generic [ref=e597] [cursor=pointer]:
+          - generic [ref=e598]:
+            - generic [ref=e599]: 2U
+            - generic [ref=e600]: L-Acoustics LA12X
+            - button [ref=e601]:
+              - img [ref=e602]
+          - generic [ref=e604]:
+            - generic [ref=e605]: AUDIO
+            - generic [ref=e606]: 14.5kg
+            - generic [ref=e607]: 1500W
+            - generic [ref=e608]: 480mm
+        - generic [ref=e609] [cursor=pointer]:
+          - generic [ref=e610]:
+            - generic [ref=e611]: 1U
+            - generic [ref=e612]: Shure ULXD4Q · 4ch
+            - button [ref=e613]:
+              - img [ref=e614]
+          - generic [ref=e616]:
+            - generic [ref=e617]: AUDIO
+            - generic [ref=e618]: 4.2kg
+            - generic [ref=e619]: 60W
+            - generic [ref=e620]: 360mm
+        - generic [ref=e621] [cursor=pointer]:
+          - generic [ref=e622]:
+            - generic [ref=e623]: 1U
+            - generic [ref=e624]: APC AP8865 PDU · 30A
+            - button [ref=e625]:
+              - img [ref=e626]
+          - generic [ref=e628]:
+            - generic [ref=e629]: POWER
+            - generic [ref=e630]: 5kg
+            - generic [ref=e631]: 0W
+            - generic [ref=e632]: 110mm
+        - generic [ref=e633] [cursor=pointer]:
+          - generic [ref=e634]:
+            - generic [ref=e635]: 2U
+            - generic [ref=e636]: Eaton 9PX 3000VA
+            - button [ref=e637]:
+              - img [ref=e638]
+          - generic [ref=e640]:
+            - generic [ref=e641]: POWER
+            - generic [ref=e642]: 24kg
+            - generic [ref=e643]: 60W
+            - generic [ref=e644]: 540mm
+        - generic [ref=e645] [cursor=pointer]:
+          - generic [ref=e646]:
+            - generic [ref=e647]: 2U
+            - generic [ref=e648]: Furman P-2400 IT Iso
+            - button [ref=e649]:
+              - img [ref=e650]
+          - generic [ref=e652]:
+            - generic [ref=e653]: POWER
+            - generic [ref=e654]: 18kg
+            - generic [ref=e655]: 30W
+            - generic [ref=e656]: 280mm
+        - generic [ref=e657] [cursor=pointer]:
+          - generic [ref=e658]:
+            - generic [ref=e659]: 1U
+            - generic [ref=e660]: 1U KVM Drawer · 17in
+            - button [ref=e661]:
+              - img [ref=e662]
+          - generic [ref=e664]:
+            - generic [ref=e665]: MISC
+            - generic [ref=e666]: 11kg
+            - generic [ref=e667]: 40W
+            - generic [ref=e668]: 590mm
+        - generic [ref=e669] [cursor=pointer]:
+          - generic [ref=e670]:
+            - generic [ref=e671]: 1U
+            - generic [ref=e672]: Blank Panel · 1U
+            - button [ref=e673]:
+              - img [ref=e674]
+          - generic [ref=e676]:
+            - generic [ref=e677]: MISC
+            - generic [ref=e678]: 0.5kg
+            - generic [ref=e679]: 0W
+            - generic [ref=e680]: 0mm
+        - generic [ref=e681] [cursor=pointer]:
+          - generic [ref=e682]:
+            - generic [ref=e683]: 2U
+            - generic [ref=e684]: Vented Panel · 2U
+            - button [ref=e685]:
+              - img [ref=e686]
+          - generic [ref=e688]:
+            - generic [ref=e689]: MISC
+            - generic [ref=e690]: 0.6kg
+            - generic [ref=e691]: 0W
+            - generic [ref=e692]: 0mm
+    - generic [ref=e693]:
+      - generic [ref=e694]:
+        - generic [ref=e695]:
+          - button "24U" [active] [ref=e696] [cursor=pointer]
+          - button "42U" [ref=e697] [cursor=pointer]
+          - button "48U" [ref=e698] [cursor=pointer]
+        - generic [ref=e700]: RACK · R-001
+        - generic [ref=e701]: "SHOW: HELIOS"
+        - generic [ref=e702]: DRAG FROM CATALOG · ↕ TO REORDER
+        - button "Spec PDF" [ref=e704] [cursor=pointer]:
+          - img [ref=e705]
+          - text: Spec PDF
+        - button "Add Rack" [ref=e707] [cursor=pointer]:
+          - img [ref=e708]
+          - text: Add Rack
+      - generic [ref=e710]:
+        - generic:
+          - generic:
+            - generic: RACK
+            - generic: R-001 · Stage Left
+          - generic:
+            - generic: SIZE
+            - generic: 24U · 600×1070mm
+          - generic:
+            - generic: SWL
+            - generic: 800 kg static
+        - generic:
+          - generic:
+            - generic: USED
+            - generic: 125%
+          - generic:
+            - generic: FREE
+            - generic: "-6U"
+        - generic [ref=e712]:
+          - generic [ref=e713]:
+            - generic [ref=e714]: FRONT VIEW
+            - generic [ref=e717]:
+              - generic [ref=e718]:
+                - generic [ref=e737]: "24"
+                - generic [ref=e738]: "23"
+                - generic [ref=e739]: "22"
+                - generic [ref=e740]: "21"
+                - generic [ref=e741]: "20"
+                - generic [ref=e742]: "19"
+                - generic [ref=e743]: "18"
+                - generic [ref=e744]: "17"
+                - generic [ref=e745]: "16"
+                - generic [ref=e746]: "15"
+                - generic [ref=e747]: "14"
+                - generic [ref=e748]: "13"
+                - generic [ref=e749]: "12"
+                - generic [ref=e750]: "11"
+                - generic [ref=e751]: "10"
+                - generic [ref=e752]: "9"
+                - generic [ref=e753]: "8"
+                - generic [ref=e754]: "7"
+                - generic [ref=e755]: "6"
+                - generic [ref=e756]: "5"
+                - generic [ref=e757]: "4"
+                - generic [ref=e758]: "3"
+                - generic [ref=e759]: "2"
+                - generic [ref=e760]: "1"
+              - generic [ref=e761]:
+                - generic [ref=e848] [cursor=pointer]:
+                  - generic [ref=e850]: Blank Panel · 1U
+                  - generic [ref=e851]: 1U
+                - generic [ref=e852] [cursor=pointer]:
+                  - generic [ref=e854]: 1U KVM Drawer · 17in
+                  - generic [ref=e855]: 1U
+                - generic [ref=e856] [cursor=pointer]:
+                  - generic [ref=e858]: vMix M4 Switcher
+                  - generic [ref=e859]: 1U
+                - generic [ref=e860] [cursor=pointer]:
+                  - generic [ref=e862]: BMD ATEM 4 M/E
+                  - generic [ref=e863]: 250W
+                  - generic [ref=e864]: ·
+                  - generic [ref=e865]: 4U
+                - generic [ref=e866] [cursor=pointer]:
+                  - generic [ref=e868]: Brompton SX40
+                  - generic [ref=e869]: 1U
+                - generic [ref=e870] [cursor=pointer]:
+                  - generic [ref=e872]: Brompton SX40
+                  - generic [ref=e873]: 1U
+                - generic [ref=e874] [cursor=pointer]:
+                  - generic [ref=e876]: Brompton Tessera S8
+                  - generic [ref=e877]: 1U
+                - generic [ref=e878] [cursor=pointer]:
+                  - generic [ref=e880]: AJA Kumo 3232 SDI Router
+                  - generic [ref=e881]: 180W
+                  - generic [ref=e882]: ·
+                  - generic [ref=e883]: 2U
+                - generic [ref=e884] [cursor=pointer]:
+                  - generic [ref=e886]: Arista 7050X · 32×100GbE
+                  - generic [ref=e887]: 1U
+                - generic [ref=e888] [cursor=pointer]:
+                  - generic [ref=e890]: Cisco Cat 9300 · 48-port
+                  - generic [ref=e891]: 1U
+                - generic [ref=e892] [cursor=pointer]:
+                  - generic [ref=e894]: Palo Alto PA-440
+                  - generic [ref=e895]: 1U
+                - generic [ref=e896] [cursor=pointer]:
+                  - generic [ref=e898]: HPE DL380 Gen11 2U
+                  - generic [ref=e899]: 800W
+                  - generic [ref=e900]: ·
+                  - generic [ref=e901]: 2U
+                - generic [ref=e902] [cursor=pointer]:
+                  - generic [ref=e904]: Disguise gx 2c · 4U
+                  - generic [ref=e905]: 1200W
+                  - generic [ref=e906]: ·
+                  - generic [ref=e907]: 4U
+                - generic [ref=e908] [cursor=pointer]:
+                  - generic [ref=e910]: DiGiCo SD-Rack
+                  - generic [ref=e911]: 240W
+                  - generic [ref=e912]: ·
+                  - generic [ref=e913]: 6U
+                - generic [ref=e914] [cursor=pointer]:
+                  - generic [ref=e916]: Eaton 9PX 3000VA
+                  - generic [ref=e917]: 60W
+                  - generic [ref=e918]: ·
+                  - generic [ref=e919]: 2U
+                - generic [ref=e920] [cursor=pointer]:
+                  - generic [ref=e922]: APC AP8865 PDU · 30A
+                  - generic [ref=e923]: 1U
+              - generic [ref=e924]:
+                - generic [ref=e943]: "24"
+                - generic [ref=e944]: "23"
+                - generic [ref=e945]: "22"
+                - generic [ref=e946]: "21"
+                - generic [ref=e947]: "20"
+                - generic [ref=e948]: "19"
+                - generic [ref=e949]: "18"
+                - generic [ref=e950]: "17"
+                - generic [ref=e951]: "16"
+                - generic [ref=e952]: "15"
+                - generic [ref=e953]: "14"
+                - generic [ref=e954]: "13"
+                - generic [ref=e955]: "12"
+                - generic [ref=e956]: "11"
+                - generic [ref=e957]: "10"
+                - generic [ref=e958]: "9"
+                - generic [ref=e959]: "8"
+                - generic [ref=e960]: "7"
+                - generic [ref=e961]: "6"
+                - generic [ref=e962]: "5"
+                - generic [ref=e963]: "4"
+                - generic [ref=e964]: "3"
+                - generic [ref=e965]: "2"
+                - generic [ref=e966]: "1"
+          - generic [ref=e968]:
+            - generic [ref=e969]: SIDE PROFILE
+            - generic [ref=e991]: 1070mm
+        - generic: EIA-310 · 19in · 24U · DEEP 750mm
+      - generic [ref=e992]:
+        - generic [ref=e993]:
+          - generic [ref=e994]: RACK USAGE
+          - generic [ref=e995]:
+            - text: "30"
+            - generic [ref=e996]: / 24U
+          - generic [ref=e999]: "-6U free · 16 devices"
+        - generic [ref=e1000]:
+          - generic [ref=e1001]: WEIGHT
+          - generic [ref=e1002]: 196.5kg
+          - generic [ref=e1005]: SWL 250kg · 79% loaded
+        - generic [ref=e1006]:
+          - generic [ref=e1007]: POWER DRAW
+          - generic [ref=e1008]: 4.45kW
+          - generic [ref=e1012]: 3 × 15A · 21.4A @ 208V
+        - generic [ref=e1013]:
+          - generic [ref=e1014]: THERMAL · BTU/h
+          - generic [ref=e1015]: 15,183BTU/h
+          - generic [ref=e1018]: ≈ 1.27 ton AC · airflow F→B
+    - generic [ref=e1019]:
+      - generic [ref=e1020]:
+        - generic [ref=e1021]: RACK INSPECTOR
+        - generic [ref=e1022]: R-001
+      - generic [ref=e1023]:
+        - generic [ref=e1024]:
+          - generic [ref=e1025]: SELECTED · U13–16
+          - generic [ref=e1026]: Disguise gx 2c · 4U
+        - generic [ref=e1027]:
+          - generic [ref=e1028]:
+            - generic [ref=e1029]: Size
+            - generic [ref=e1030]: 4U
+          - generic [ref=e1031]:
+            - generic [ref=e1032]: Depth
+            - generic [ref=e1033]: 720mm
+        - generic [ref=e1035]: SPECIFICATION
+        - generic [ref=e1037]:
+          - generic [ref=e1038]: Category
+          - generic [ref=e1039]: Compute
+          - generic [ref=e1040]: Weight
+          - generic [ref=e1041]: 36 kg
+          - generic [ref=e1042]: Power
+          - generic [ref=e1043]: 1200 W
+          - generic [ref=e1044]: Mount
+          - generic [ref=e1045]: EIA-310 · 4-post
+          - generic [ref=e1046]: Cable mgmt
+          - generic [ref=e1047]: Rear · L-bar
+          - generic [ref=e1048]: Asset ref
+          - generic [ref=e1049]: BMD-013
+        - generic [ref=e1051]: POSITION
+        - generic [ref=e1053]:
+          - generic [ref=e1054]: U slot
+          - spinbutton [ref=e1055]: "13"
+          - button "↑" [ref=e1056] [cursor=pointer]
+          - button "↓" [ref=e1057] [cursor=pointer]
+        - generic [ref=e1058]:
+          - button "Remove" [ref=e1059] [cursor=pointer]:
+            - img [ref=e1060]
+            - text: Remove
+          - button "Edit Spec" [ref=e1062] [cursor=pointer]
+      - generic [ref=e1064]: POWER BUDGET
+      - generic [ref=e1065]:
+        - generic [ref=e1066]:
+          - generic [ref=e1067]: Misc
+          - generic [ref=e1070]: 40W
+        - generic [ref=e1071]:
+          - generic [ref=e1072]: Switcher
+          - generic [ref=e1075]: 650W
+        - generic [ref=e1076]:
+          - generic [ref=e1077]: Processor
+          - generic [ref=e1080]: 980W
+        - generic [ref=e1081]:
+          - generic [ref=e1082]: Network
+          - generic [ref=e1085]: 480W
+        - generic [ref=e1086]:
+          - generic [ref=e1087]: Compute
+          - generic [ref=e1090]: 2000W
+        - generic [ref=e1091]:
+          - generic [ref=e1092]: Audio
+          - generic [ref=e1095]: 240W
+        - generic [ref=e1096]:
+          - generic [ref=e1097]: Power
+          - generic [ref=e1100]: 60W
+        - generic [ref=e1102]: CIRCUIT MAP
+        - generic [ref=e1104]:
+          - generic [ref=e1105]: "L6-30 #1"
+          - generic [ref=e1106]: 2400W / 2400W
+          - generic [ref=e1107]: "L6-30 #2"
+          - generic [ref=e1108]: 2050W / 2400W
+          - generic [ref=e1109]: UPS runtime
+          - generic [ref=e1110]: 40 min @ load
+  - contentinfo [ref=e400]:
+    - generic [ref=e401]: READY
+    - generic [ref=e403]: REV 0042
+    - generic [ref=e404]: SYNC ↑ 14:22:08
+    - generic [ref=e405]: 2 WARNINGS
+    - generic [ref=e407]: PRJ-2451
+    - generic [ref=e408]: UTC-05
+    - generic [ref=e409]: 08:37:13

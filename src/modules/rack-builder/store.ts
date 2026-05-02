@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 import { DEFAULT_RACK, RACK_CATALOG } from "@/lib/rack-data";
 import type { RackItem, RackSize } from "@/types";
 
@@ -61,64 +62,76 @@ function nextIid(items: RackItem[]): number {
   return items.reduce((m, i) => Math.max(m, i.iid), 0) + 1;
 }
 
-export const useRack = create<RackState>((set, get) => ({
-  items: DEFAULT_RACK,
-  selectedIid: 13,
-  rackSize: 42,
-  filter: "All",
-  search: "",
-  hoverPos: null,
-  draggingId: null,
+export const useRack = create<RackState>()(
+  persist(
+    (set, get) => ({
+      items: DEFAULT_RACK,
+      selectedIid: 13,
+      rackSize: 42,
+      filter: "All",
+      search: "",
+      hoverPos: null,
+      draggingId: null,
 
-  setItems: (items) => set({ items }),
-  setSelectedIid: (selectedIid) => set({ selectedIid }),
-  setRackSize: (rackSize) => set({ rackSize }),
-  setFilter: (filter) => set({ filter }),
-  setSearch: (search) => set({ search }),
-  setHoverPos: (hoverPos) => set({ hoverPos }),
-  setDraggingId: (draggingId) => set({ draggingId }),
+      setItems: (items) => set({ items }),
+      setSelectedIid: (selectedIid) => set({ selectedIid }),
+      setRackSize: (rackSize) => set({ rackSize }),
+      setFilter: (filter) => set({ filter }),
+      setSearch: (search) => set({ search }),
+      setHoverPos: (hoverPos) => set({ hoverPos }),
+      setDraggingId: (draggingId) => set({ draggingId }),
 
-  addItem: (id) => {
-    const { items, rackSize } = get();
-    const def = RACK_CATALOG.find((d) => d.id === id);
-    if (!def) return;
-    const pos = findSlotFor(items, rackSize, def.u);
-    if (pos == null) return;
-    const iid = nextIid(items);
-    set({ items: [...items, { iid, id, pos }], selectedIid: iid });
-  },
+      addItem: (id) => {
+        const { items, rackSize } = get();
+        const def = RACK_CATALOG.find((d) => d.id === id);
+        if (!def) return;
+        const pos = findSlotFor(items, rackSize, def.u);
+        if (pos == null) return;
+        const iid = nextIid(items);
+        set({ items: [...items, { iid, id, pos }], selectedIid: iid });
+      },
 
-  placeItem: (id, pos) => {
-    const { items, rackSize } = get();
-    const def = RACK_CATALOG.find((d) => d.id === id);
-    if (!def) return false;
-    if (!fits(items, rackSize, def, pos)) return false;
-    const iid = nextIid(items);
-    set({ items: [...items, { iid, id, pos }], selectedIid: iid });
-    return true;
-  },
+      placeItem: (id, pos) => {
+        const { items, rackSize } = get();
+        const def = RACK_CATALOG.find((d) => d.id === id);
+        if (!def) return false;
+        if (!fits(items, rackSize, def, pos)) return false;
+        const iid = nextIid(items);
+        set({ items: [...items, { iid, id, pos }], selectedIid: iid });
+        return true;
+      },
 
-  removeItem: (iid) => {
-    const { items, selectedIid } = get();
-    set({
-      items: items.filter((i) => i.iid !== iid),
-      selectedIid: selectedIid === iid ? null : selectedIid,
-    });
-  },
+      removeItem: (iid) => {
+        const { items, selectedIid } = get();
+        set({
+          items: items.filter((i) => i.iid !== iid),
+          selectedIid: selectedIid === iid ? null : selectedIid,
+        });
+      },
 
-  movePos: (iid, pos) => {
-    const { items, rackSize } = get();
-    const item = items.find((i) => i.iid === iid);
-    if (!item) return;
-    const def = RACK_CATALOG.find((d) => d.id === item.id);
-    if (!def) return;
-    const np = Math.max(1, Math.min(rackSize - def.u + 1, pos));
-    // ensure it doesn't collide with others
-    const others = items.filter((i) => i.iid !== iid);
-    const used = buildUsedSlots(others);
-    for (let k = np; k < np + def.u; k++) if (used.has(k)) return;
-    set({ items: items.map((i) => (i.iid === iid ? { ...i, pos: np } : i)) });
-  },
-}));
+      movePos: (iid, pos) => {
+        const { items, rackSize } = get();
+        const item = items.find((i) => i.iid === iid);
+        if (!item) return;
+        const def = RACK_CATALOG.find((d) => d.id === item.id);
+        if (!def) return;
+        const np = Math.max(1, Math.min(rackSize - def.u + 1, pos));
+        const others = items.filter((i) => i.iid !== iid);
+        const used = buildUsedSlots(others);
+        for (let k = np; k < np + def.u; k++) if (used.has(k)) return;
+        set({ items: items.map((i) => (i.iid === iid ? { ...i, pos: np } : i)) });
+      },
+    }),
+    {
+      name: "blackburst:rack:v1",
+      partialize: (s) => ({
+        items: s.items,
+        selectedIid: s.selectedIid,
+        rackSize: s.rackSize,
+        filter: s.filter,
+      }),
+    },
+  ),
+);
 
 export { buildUsedSlots, fits };

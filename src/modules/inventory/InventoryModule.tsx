@@ -1,13 +1,15 @@
 import { useMemo, useState } from "react";
 import { I } from "@/components/Icon";
 import { ASSETS, ASSET_CATEGORIES, ASSET_HISTORY, SHOWS } from "@/lib/inventory-data";
-
-type View = "list" | "schedule";
+import { useInventory } from "./store";
 
 export function InventoryModule() {
-  const [cat, setCat] = useState("All gear");
-  const [selected, setSelected] = useState("BMD-S40-001");
-  const [view, setView] = useState<View>("list");
+  const cat = useInventory((s) => s.cat);
+  const setCat = useInventory((s) => s.setCat);
+  const selected = useInventory((s) => s.selected);
+  const setSelected = useInventory((s) => s.setSelected);
+  const view = useInventory((s) => s.view);
+  const setView = useInventory((s) => s.setView);
   const [filter, setFilter] = useState("");
 
   const filtered = useMemo(() => {

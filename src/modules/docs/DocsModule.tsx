@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo } from "react";
 import { I } from "@/components/Icon";
 import {
   DOC_COMMENTS,
@@ -8,6 +8,7 @@ import {
   RECENT_DOCS,
 } from "@/lib/docs-data";
 import type { DocNode } from "@/types";
+import { useDocs } from "./store";
 
 interface TreeNodeProps {
   node: DocNode;
@@ -61,15 +62,11 @@ function DocTreeNode({ node, depth, activeId, setActive, expanded, toggle }: Tre
 }
 
 export function DocsModule() {
-  const [activeId, setActive] = useState("d-prj-ros");
-  const [expanded, setExpanded] = useState<Set<string>>(new Set(["d-prj", "d-spec", "d-sop"]));
-  const toggle = (id: string) =>
-    setExpanded((s) => {
-      const n = new Set(s);
-      if (n.has(id)) n.delete(id);
-      else n.add(id);
-      return n;
-    });
+  const activeId = useDocs((s) => s.activeId);
+  const setActive = useDocs((s) => s.setActive);
+  const expandedArr = useDocs((s) => s.expanded);
+  const toggle = useDocs((s) => s.toggle);
+  const expanded = useMemo(() => new Set(expandedArr), [expandedArr]);
 
   return (
     <>

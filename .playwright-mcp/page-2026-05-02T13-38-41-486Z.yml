@@ -1,0 +1,212 @@
+- generic [ref=e3]:
+  - complementary [ref=e4]:
+    - generic [ref=e5]: BB
+    - generic [ref=e6]:
+      - button "WALL" [ref=e7] [cursor=pointer]:
+        - img [ref=e9]
+        - generic [ref=e11]: WALL
+      - button "SYS" [ref=e12] [cursor=pointer]:
+        - img [ref=e14]
+        - generic [ref=e19]: SYS
+      - button "RACK" [ref=e20] [cursor=pointer]:
+        - img [ref=e22]
+        - generic [ref=e24]: RACK
+      - button "INV" [ref=e25] [cursor=pointer]:
+        - img [ref=e27]
+        - generic [ref=e31]: INV
+      - button "DOCS" [ref=e32] [cursor=pointer]:
+        - img [ref=e34]
+        - generic [ref=e37]: DOCS
+    - button "SET" [ref=e40] [cursor=pointer]:
+      - img [ref=e42]
+      - generic [ref=e45]: SET
+  - banner [ref=e46]:
+    - generic [ref=e47]:
+      - generic [ref=e48]: PRJ-2451
+      - generic [ref=e49]: Atrium Lobby Wall
+      - generic [ref=e50]: Northwind HQ
+    - generic [ref=e51]:
+      - generic [ref=e52]: PROJECTS
+      - generic [ref=e53]: /
+      - generic [ref=e54]: PRJ-2451
+      - generic [ref=e55]: /
+      - generic [ref=e56]: Asset & Inventory
+    - generic [ref=e58]:
+      - generic [ref=e59]:
+        - img [ref=e60]
+        - generic [ref=e63]: Search assets, docs, panels…
+        - generic [ref=e64]: ⌘K
+      - button "Export" [ref=e65] [cursor=pointer]:
+        - img [ref=e66]
+        - text: Export
+      - button "Save Rev" [ref=e68] [cursor=pointer]:
+        - img [ref=e69]
+        - text: Save Rev
+      - generic [ref=e72]: MR
+  - main [ref=e73]:
+    - generic [ref=e74]:
+      - generic [ref=e76]: CATEGORIES
+      - generic [ref=e77]:
+        - generic [ref=e78] [cursor=pointer]:
+          - img [ref=e79]
+          - generic [ref=e81]: All gear
+          - generic [ref=e82]: "348"
+        - generic [ref=e83] [cursor=pointer]:
+          - img [ref=e84]
+          - generic [ref=e86]: LED Panel
+          - generic [ref=e87]: "144"
+        - generic [ref=e88] [cursor=pointer]:
+          - img [ref=e89]
+          - generic [ref=e91]: Processor
+          - generic [ref=e92]: "12"
+        - generic [ref=e93] [cursor=pointer]:
+          - img [ref=e94]
+          - generic [ref=e96]: Switcher
+          - generic [ref=e97]: "8"
+        - generic [ref=e98] [cursor=pointer]:
+          - img [ref=e99]
+          - generic [ref=e101]: Console
+          - generic [ref=e102]: "6"
+        - generic [ref=e103] [cursor=pointer]:
+          - img [ref=e104]
+          - generic [ref=e106]: Camera
+          - generic [ref=e107]: "22"
+        - generic [ref=e108] [cursor=pointer]:
+          - img [ref=e109]
+          - generic [ref=e111]: Amplifier
+          - generic [ref=e112]: "18"
+        - generic [ref=e113] [cursor=pointer]:
+          - img [ref=e114]
+          - generic [ref=e116]: Power
+          - generic [ref=e117]: "26"
+        - generic [ref=e118] [cursor=pointer]:
+          - img [ref=e119]
+          - generic [ref=e121]: Cabling
+          - generic [ref=e122]: "112"
+      - generic [ref=e124]: FLEET STATUS
+      - generic [ref=e125]:
+        - generic [ref=e126]:
+          - generic [ref=e127]:
+            - generic [ref=e128]: Available
+            - generic [ref=e129]: "5"
+          - generic [ref=e130]:
+            - generic [ref=e131]: Deployed
+            - generic [ref=e132]: "6"
+        - generic [ref=e133]:
+          - generic [ref=e134]: In Maintenance
+          - generic [ref=e135]: "2"
+        - generic [ref=e137]: UTILIZATION (30d)
+        - generic [ref=e139]:
+          - img [ref=e140]
+          - generic [ref=e143]:
+            - generic [ref=e144]: 30d AGO
+            - generic [ref=e145]: 67%
+    - generic [ref=e146]:
+      - generic [ref=e147]:
+        - generic [ref=e148]:
+          - button "LIST" [ref=e149] [cursor=pointer]
+          - button "SCHEDULE" [ref=e150] [cursor=pointer]
+        - generic [ref=e152]:
+          - img [ref=e153]
+          - textbox "Filter 2 items in Camera…" [ref=e156]
+        - button "Check In" [ref=e157] [cursor=pointer]:
+          - img [ref=e158]
+          - text: Check In
+        - button "Check Out" [ref=e160] [cursor=pointer]:
+          - img [ref=e161]
+          - text: Check Out
+      - table [ref=e164]:
+        - rowgroup [ref=e165]:
+          - row "ASSET ID MODEL CATEGORY STATUS SHOW / JOB DUE UTIL LAST SVC" [ref=e166]:
+            - columnheader "ASSET ID" [ref=e167]
+            - columnheader "MODEL" [ref=e168]
+            - columnheader "CATEGORY" [ref=e169]
+            - columnheader "STATUS" [ref=e170]
+            - columnheader "SHOW / JOB" [ref=e171]
+            - columnheader "DUE" [ref=e172]
+            - columnheader "UTIL" [ref=e173]
+            - columnheader "LAST SVC" [ref=e174]
+        - rowgroup [ref=e175]:
+          - row "PTZ-AW-UE150-1 AW-UE150 PTZ Cam Camera IN — — 52% 2026-04-21" [ref=e176] [cursor=pointer]:
+            - cell "PTZ-AW-UE150-1" [ref=e177]
+            - cell "AW-UE150 PTZ Cam" [ref=e178]
+            - cell "Camera" [ref=e179]
+            - cell "IN" [ref=e180]:
+              - generic [ref=e181]: IN
+            - cell "—" [ref=e182]
+            - cell "—" [ref=e183]
+            - cell "52%" [ref=e184]:
+              - generic [ref=e188]: 52%
+            - cell "2026-04-21" [ref=e189]
+          - row "PTZ-AW-UE150-2 AW-UE150 PTZ Cam Camera OUT KCR Studio B May 02 67% 2026-04-20" [ref=e190] [cursor=pointer]:
+            - cell "PTZ-AW-UE150-2" [ref=e191]
+            - cell "AW-UE150 PTZ Cam" [ref=e192]
+            - cell "Camera" [ref=e193]
+            - cell "OUT" [ref=e194]:
+              - generic [ref=e195]: OUT
+            - cell "KCR Studio B" [ref=e196]
+            - cell "May 02" [ref=e197]
+            - cell "67%" [ref=e198]:
+              - generic [ref=e202]: 67%
+            - cell "2026-04-20" [ref=e203]
+    - generic [ref=e204]:
+      - generic [ref=e205]:
+        - generic [ref=e206]: ASSET DETAIL
+        - generic [ref=e207]: BMD-S40-001
+      - generic [ref=e208]:
+        - generic [ref=e209]:
+          - generic [ref=e210]: Processor
+          - generic [ref=e211]: Brompton SX40
+        - generic [ref=e212]:
+          - generic [ref=e213]:
+            - generic [ref=e214]: Status
+            - generic [ref=e216]: OUT
+          - generic [ref=e217]:
+            - generic [ref=e218]: Utilization
+            - generic [ref=e219]: 82%
+        - generic [ref=e221]: ASSIGNMENT
+        - generic [ref=e223]:
+          - generic [ref=e224]: Show
+          - generic [ref=e225]: Helios Auditorium
+          - generic [ref=e226]: Due back
+          - generic [ref=e227]: Apr 28
+          - generic [ref=e228]: Crew
+          - generic [ref=e229]: M. Reyes
+          - generic [ref=e230]: Crate
+          - generic [ref=e231]: CASE-001
+        - generic [ref=e233]: MAINTENANCE
+        - generic [ref=e235]:
+          - generic [ref=e236]: Last svc
+          - generic [ref=e237]: 2026-04-12
+          - generic [ref=e238]: Next due
+          - generic [ref=e239]: 2026-07-15
+          - generic [ref=e240]: Total hrs
+          - generic [ref=e241]: 2,184
+          - generic [ref=e242]: PM cycle
+          - generic [ref=e243]: 90 days
+        - generic [ref=e245]: HISTORY
+        - generic [ref=e247]:
+          - generic [ref=e248]:
+            - generic [ref=e249]: Apr 22
+            - generic [ref=e250]: Returned · QC pass
+            - generic [ref=e251]: S. Larsson
+          - generic [ref=e252]:
+            - generic [ref=e253]: Apr 12
+            - generic [ref=e254]: Deployed → Helios
+            - generic [ref=e255]: M. Reyes
+          - generic [ref=e256]:
+            - generic [ref=e257]: Apr 09
+            - generic [ref=e258]: PM service · firmware 3.4.12
+            - generic [ref=e259]: K. Tanaka
+          - generic [ref=e260]:
+            - generic [ref=e261]: Mar 28
+            - generic [ref=e262]: Returned · ok
+            - generic [ref=e263]: S. Larsson
+  - contentinfo [ref=e264]:
+    - generic [ref=e265]: READY
+    - generic [ref=e267]: REV 0042
+    - generic [ref=e268]: SYNC ↑ 14:22:08
+    - generic [ref=e269]: 2 WARNINGS
+    - generic [ref=e271]: PRJ-2451
+    - generic [ref=e272]: UTC-05
+    - generic [ref=e273]: 08:38:41

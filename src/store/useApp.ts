@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 import type { AccentName, CanvasStyle, Density, ModuleId, Project, Shell } from "@/types";
 
 export interface Tweaks {
@@ -44,16 +45,21 @@ interface AppState {
   project: Project;
 }
 
-export const useApp = create<AppState>((set) => ({
-  module: "wall",
-  setModule: (module) => set({ module }),
-  tweaks: {
-    density: "normal",
-    accent: "acid-green",
-    shell: "rail",
-    canvasStyle: "grid",
-  },
-  setTweak: (key, value) =>
-    set((s) => ({ tweaks: { ...s.tweaks, [key]: value } })),
-  project: { id: "PRJ-2451", name: "Atrium Lobby Wall", client: "Northwind HQ", status: "in-design" },
-}));
+export const useApp = create<AppState>()(
+  persist(
+    (set) => ({
+      module: "wall",
+      setModule: (module) => set({ module }),
+      tweaks: {
+        density: "normal",
+        accent: "acid-green",
+        shell: "rail",
+        canvasStyle: "grid",
+      },
+      setTweak: (key, value) =>
+        set((s) => ({ tweaks: { ...s.tweaks, [key]: value } })),
+      project: { id: "PRJ-2451", name: "Atrium Lobby Wall", client: "Northwind HQ", status: "in-design" },
+    }),
+    { name: "blackburst:app:v1" },
+  ),
+);
