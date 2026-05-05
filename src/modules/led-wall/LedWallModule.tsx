@@ -25,6 +25,8 @@ export function LedWallModule() {
   const setShowFaults = useLedWall((s) => s.setShowFaults);
   const setTab = useLedWall((s) => s.setTab);
   const updateWall = useLedWall((s) => s.updateWall);
+  const addWall = useLedWall((s) => s.addWall);
+  const removeWall = useLedWall((s) => s.removeWall);
 
   const layout = walls.find((l) => l.id === layoutId) ?? walls[0];
   const panel = PANEL_LIBRARY.find((p) => p.id === layout.panel) ?? PANEL_LIBRARY[0];
@@ -50,7 +52,11 @@ export function LedWallModule() {
         <div className="pane-hd">
           <span>WALLS</span>
           <span className="spacer" />
-          <button className="icon-btn" aria-label="New wall">
+          <button
+            className="icon-btn"
+            aria-label="New wall"
+            onClick={() => addWall()}
+          >
             <I.Plus size={12} />
           </button>
         </div>
@@ -67,6 +73,19 @@ export function LedWallModule() {
               <span className="meta">
                 {l.cols}×{l.rows}
               </span>
+              {walls.length > 1 && (
+                <button
+                  className="icon-btn"
+                  aria-label={`Delete ${l.name}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (confirm(`Delete wall "${l.name}"?`)) removeWall(l.id);
+                  }}
+                  style={{ marginLeft: 4 }}
+                >
+                  <I.Cross size={11} />
+                </button>
+              )}
             </div>
           ))}
         </div>
@@ -88,6 +107,7 @@ export function LedWallModule() {
               key={p.id}
               className="list-row"
               data-active={panel.id === p.id ? "1" : "0"}
+              onClick={() => updateWall(layout.id, { panel: p.id })}
             >
               <span
                 style={{
