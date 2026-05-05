@@ -1,5 +1,5 @@
 import { I } from "@/components/Icon";
-import { FAULT_PANELS, PANEL_LIBRARY, WALL_LAYOUTS } from "@/lib/data";
+import { FAULT_PANELS, PANEL_LIBRARY } from "@/lib/data";
 import { useApp } from "@/store/useApp";
 import { computeWallCalc, PROC_PIXEL_CAPACITY } from "./calculations";
 import { useLedWall } from "./store";
@@ -9,6 +9,7 @@ const DISTRO_CAPACITY_W = 144_000; // 144kVA distro capacity for the power meter
 
 export function LedWallModule() {
   const canvasStyle = useApp((s) => s.tweaks.canvasStyle);
+  const walls = useLedWall((s) => s.walls);
   const layoutId = useLedWall((s) => s.layoutId);
   const selected = useLedWall((s) => s.selected);
   const tool = useLedWall((s) => s.tool);
@@ -23,8 +24,9 @@ export function LedWallModule() {
   const setShowDims = useLedWall((s) => s.setShowDims);
   const setShowFaults = useLedWall((s) => s.setShowFaults);
   const setTab = useLedWall((s) => s.setTab);
+  const updateWall = useLedWall((s) => s.updateWall);
 
-  const layout = WALL_LAYOUTS.find((l) => l.id === layoutId) ?? WALL_LAYOUTS[0];
+  const layout = walls.find((l) => l.id === layoutId) ?? walls[0];
   const panel = PANEL_LIBRARY.find((p) => p.id === layout.panel) ?? PANEL_LIBRARY[0];
   const calc = computeWallCalc(layout, panel);
   const issues = validateWall(layout, panel, calc);
@@ -53,7 +55,7 @@ export function LedWallModule() {
           </button>
         </div>
         <div style={{ flex: "0 0 auto" }}>
-          {WALL_LAYOUTS.map((l) => (
+          {walls.map((l) => (
             <div
               key={l.id}
               className="list-row"
@@ -416,19 +418,47 @@ export function LedWallModule() {
             </div>
             <div className="fld">
               <span className="k">Columns</span>
-              <input defaultValue={layout.cols} type="number" />
+              <input
+                value={layout.cols}
+                type="number"
+                min={1}
+                onChange={(e) => {
+                  const n = Math.max(1, Math.floor(Number(e.target.value) || 1));
+                  updateWall(layout.id, { cols: n });
+                }}
+              />
             </div>
             <div className="fld">
               <span className="k">Rows</span>
-              <input defaultValue={layout.rows} type="number" />
+              <input
+                value={layout.rows}
+                type="number"
+                min={1}
+                onChange={(e) => {
+                  const n = Math.max(1, Math.floor(Number(e.target.value) || 1));
+                  updateWall(layout.id, { rows: n });
+                }}
+              />
             </div>
             <div className="fld">
               <span className="k">Curve °</span>
-              <input defaultValue={layout.curve} type="number" />
+              <input
+                value={layout.curve}
+                type="number"
+                min={-30}
+                max={30}
+                onChange={(e) => {
+                  const n = Math.max(-30, Math.min(30, Number(e.target.value) || 0));
+                  updateWall(layout.id, { curve: n });
+                }}
+              />
             </div>
             <div className="fld">
               <span className="k">Pitch</span>
-              <select defaultValue={panel.id}>
+              <select
+                value={panel.id}
+                onChange={(e) => updateWall(layout.id, { panel: e.target.value })}
+              >
                 {PANEL_LIBRARY.map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.model} (P{p.pitch})

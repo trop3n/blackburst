@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { PANEL_LIBRARY, WALL_LAYOUTS } from "@/lib/data";
+import { PANEL_LIBRARY } from "@/lib/data";
 import { ASSETS, SHOWS } from "@/lib/inventory-data";
 import { computeWallCalc } from "@/modules/led-wall/calculations";
 import { useLedWall } from "@/modules/led-wall/store";
@@ -10,6 +10,7 @@ import { useApp } from "@/store/useApp";
 export function StatusBar() {
   const project = useApp((s) => s.project);
   const revisions = useApp((s) => s.revisions);
+  const walls = useLedWall((s) => s.walls);
   const layoutId = useLedWall((s) => s.layoutId);
   const latest = revisions[0];
   const [now, setNow] = useState(() => new Date());
@@ -24,7 +25,7 @@ export function StatusBar() {
   const sign = offsetHours >= 0 ? "+" : "-";
   const tz = `UTC${sign}${String(Math.abs(offsetHours)).padStart(2, "0")}`;
 
-  const layout = WALL_LAYOUTS.find((l) => l.id === layoutId) ?? WALL_LAYOUTS[0];
+  const layout = walls.find((l) => l.id === layoutId) ?? walls[0];
   const panel = PANEL_LIBRARY.find((p) => p.id === layout.panel) ?? PANEL_LIBRARY[0];
   const calc = computeWallCalc(layout, panel);
   const wall = summarize(validateWall(layout, panel, calc));

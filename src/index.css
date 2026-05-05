@@ -728,30 +728,39 @@ button { font-family: inherit; color: inherit; }
   pointer-events: none;
   white-space: nowrap;
 }
-.dim-arrow.h { top: -22px; left: 0; right: 0; text-align: center; }
+.dim-arrow.h {
+  top: -22px;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
 .dim-arrow.h::before, .dim-arrow.h::after {
   content: "";
-  position: absolute;
-  top: 50%;
+  flex: 1;
   height: 1px;
   background: var(--accent);
 }
-.dim-arrow.h::before { left: 0; right: 50%; margin-right: 24px; }
-.dim-arrow.h::after { left: 50%; right: 0; margin-left: 24px; }
 .dim-arrow.v {
-  left: -42px; top: 0; bottom: 0;
-  display: flex; align-items: center;
-  writing-mode: vertical-rl; transform: rotate(180deg);
+  left: -42px;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
 }
 .dim-arrow.v::before, .dim-arrow.v::after {
   content: "";
-  position: absolute;
-  left: 50%;
+  flex: 1;
   width: 1px;
   background: var(--accent);
 }
-.dim-arrow.v::before { top: 0; bottom: 50%; margin-bottom: 14px; }
-.dim-arrow.v::after { top: 50%; bottom: 0; margin-top: 14px; }
 
 .canvas-overlay {
   position: absolute;

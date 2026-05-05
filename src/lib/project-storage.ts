@@ -3,6 +3,7 @@ import { useInventory } from "@/modules/inventory/store";
 import { useLedWall } from "@/modules/led-wall/store";
 import { useRack } from "@/modules/rack-builder/store";
 import { useSystem } from "@/modules/system-designer/store";
+import { WALL_LAYOUTS } from "@/lib/data";
 import { DEFAULT_RACK } from "@/lib/rack-data";
 
 export const BUCKETS_KEY = "blackburst:projects:v1";
@@ -18,8 +19,9 @@ interface StoreSpec {
 
 const SPECS = {
   "led-wall": {
-    fields: ["layoutId", "selected", "tool", "zoom", "showDims", "showFaults", "tab"],
+    fields: ["walls", "layoutId", "selected", "tool", "zoom", "showDims", "showFaults", "tab"],
     defaults: {
+      walls: WALL_LAYOUTS,
       layoutId: "W1",
       selected: null,
       tool: "select",
