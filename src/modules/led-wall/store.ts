@@ -22,6 +22,7 @@ interface LedWallState {
   tab: LedTab;
   measureFrom: CellRef | null;
   measureTo: CellRef | null;
+  panelSearch: string;
   setLayoutId: (id: string) => void;
   setSelected: (sel: CellRef | null) => void;
   setTool: (t: LedTool) => void;
@@ -29,6 +30,7 @@ interface LedWallState {
   setShowDims: (v: boolean) => void;
   setShowFaults: (v: boolean) => void;
   setTab: (t: LedTab) => void;
+  setPanelSearch: (q: string) => void;
   updateWall: (id: string, patch: Partial<WallLayout>) => void;
   addWall: () => void;
   removeWall: (id: string) => void;
@@ -59,10 +61,12 @@ export const useLedWall = create<LedWallState>()(
       tab: "wall",
       measureFrom: null,
       measureTo: null,
+      panelSearch: "",
       setLayoutId: (layoutId) =>
         set({ layoutId, selected: null, measureFrom: null, measureTo: null }),
       setSelected: (selected) => set({ selected }),
       setTool: (tool) => set({ tool, measureFrom: null, measureTo: null }),
+      setPanelSearch: (panelSearch) => set({ panelSearch }),
       setZoom: (zoom) => set({ zoom }),
       setShowDims: (showDims) => set({ showDims }),
       setShowFaults: (showFaults) => set({ showFaults }),

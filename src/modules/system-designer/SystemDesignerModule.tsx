@@ -1,7 +1,7 @@
 import { Fragment } from "react";
 import { I } from "@/components/Icon";
-import { PATCH_SHEET, SYSTEM_EDGES, SYSTEM_NODES } from "@/lib/data";
-import type { Lane, PatchLane, SystemEdge } from "@/types";
+import { PATCH_SHEET } from "@/lib/data";
+import type { Lane, PatchLane, SystemEdge, SystemNode } from "@/types";
 import { useSystem } from "./store";
 
 const LANE_COLOR: Record<Lane, string> = {
@@ -32,9 +32,10 @@ const PALETTE_GROUPS: { cat: string; items: string[] }[] = [
 const LANES: Lane[] = ["video", "audio", "network", "power"];
 const PATCH_LANES: PatchLane[] = ["video", "audio", "net", "pwr"];
 
-function pathFor(e: SystemEdge): string {
-  const a = SYSTEM_NODES.find((n) => n.id === e.from)!;
-  const b = SYSTEM_NODES.find((n) => n.id === e.to)!;
+function pathFor(e: SystemEdge, nodes: SystemNode[]): string {
+  const a = nodes.find((n) => n.id === e.from);
+  const b = nodes.find((n) => n.id === e.to);
+  if (!a || !b) return "";
   const x1 = a.x + NODE_W;
   const y1 = a.y + NODE_H_BASE / 2;
   const x2 = b.x;
@@ -44,6 +45,8 @@ function pathFor(e: SystemEdge): string {
 }
 
 export function SystemDesignerModule() {
+  const nodes = useSystem((s) => s.nodes);
+  const edges = useSystem((s) => s.edges);
   const lanes = useSystem((s) => s.lanes);
   const toggleLane = useSystem((s) => s.toggleLane);
   const selectedId = useSystem((s) => s.selectedNodeId);
@@ -51,8 +54,8 @@ export function SystemDesignerModule() {
   const view = useSystem((s) => s.view);
   const setView = useSystem((s) => s.setView);
 
-  const node = SYSTEM_NODES.find((n) => n.id === selectedId);
-  const visibleEdges = SYSTEM_EDGES.filter((e) => lanes[e.lane]);
+  const node = nodes.find((n) => n.id === selectedId);
+  const visibleEdges = edges.filter((e) => lanes[e.lane]);
 
   return (
     <>
@@ -133,10 +136,10 @@ export function SystemDesignerModule() {
               </div>
               <div className="row">
                 <span className="k">NODES</span>
-                <span className="v">{SYSTEM_NODES.length}</span>
+                <span className="v">{nodes.length}</span>
                 <span className="k">EDGES</span>
                 <span className="v">
-                  {visibleEdges.length}/{SYSTEM_EDGES.length}
+                  {visibleEdges.length}/{edges.length}
                 </span>
               </div>
             </div>
@@ -165,7 +168,7 @@ export function SystemDesignerModule() {
               {visibleEdges.map((e, i) => (
                 <g key={`p${i}`} style={{ color: LANE_COLOR[e.lane] }}>
                   <path
-                    d={pathFor(e)}
+                    d={pathFor(e, nodes)}
                     fill="none"
                     stroke="currentColor"
                     strokeWidth="1.2"
@@ -175,8 +178,9 @@ export function SystemDesignerModule() {
                 </g>
               ))}
               {visibleEdges.map((e, i) => {
-                const a = SYSTEM_NODES.find((n) => n.id === e.from)!;
-                const b = SYSTEM_NODES.find((n) => n.id === e.to)!;
+                const a = nodes.find((n) => n.id === e.from);
+                const b = nodes.find((n) => n.id === e.to);
+                if (!a || !b) return null;
                 const mx = (a.x + NODE_W + b.x) / 2;
                 const my = (a.y + b.y) / 2 + NODE_H_BASE / 2;
                 return (
@@ -207,7 +211,7 @@ export function SystemDesignerModule() {
               })}
             </svg>
 
-            {SYSTEM_NODES.map((n) => (
+            {nodes.map((n) => (
               <div
                 key={n.id}
                 className="node"
@@ -342,19 +346,22 @@ export function SystemDesignerModule() {
               <span>CONNECTIONS</span>
               <span className="line" />
             </div>
-            {SYSTEM_EDGES.filter((e) => e.from === node.id || e.to === node.id).map((e, i) => {
-              const isOut = e.from === node.id;
-              const peer = SYSTEM_NODES.find((n) => n.id === (isOut ? e.to : e.from))!;
-              return (
-                <div key={`c${i}`} className="list-row">
-                  <span className="chip" style={{ color: LANE_COLOR[e.lane] }}>
-                    {isOut ? "→" : "←"}
-                  </span>
-                  <span className="lbl">{peer.name}</span>
-                  <span className="meta">{e.label}</span>
-                </div>
-              );
-            })}
+            {edges
+              .filter((e) => e.from === node.id || e.to === node.id)
+              .map((e, i) => {
+                const isOut = e.from === node.id;
+                const peer = nodes.find((n) => n.id === (isOut ? e.to : e.from));
+                if (!peer) return null;
+                return (
+                  <div key={`c${i}`} className="list-row">
+                    <span className="chip" style={{ color: LANE_COLOR[e.lane] }}>
+                      {isOut ? "→" : "←"}
+                    </span>
+                    <span className="lbl">{peer.name}</span>
+                    <span className="meta">{e.label}</span>
+                  </div>
+                );
+              })}
             <div className="section-h">
               <span>HEALTH</span>
               <span className="line" />

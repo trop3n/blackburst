@@ -3,7 +3,7 @@ import { useInventory } from "@/modules/inventory/store";
 import { useLedWall } from "@/modules/led-wall/store";
 import { useRack } from "@/modules/rack-builder/store";
 import { useSystem } from "@/modules/system-designer/store";
-import { WALL_LAYOUTS } from "@/lib/data";
+import { SYSTEM_EDGES, SYSTEM_NODES, WALL_LAYOUTS } from "@/lib/data";
 import { DEFAULT_RACK } from "@/lib/rack-data";
 
 export const BUCKETS_KEY = "blackburst:projects:v1";
@@ -33,8 +33,10 @@ const SPECS = {
     store: useLedWall as unknown as StoreSpec["store"],
   },
   system: {
-    fields: ["lanes", "selectedNodeId", "view"],
+    fields: ["nodes", "edges", "lanes", "selectedNodeId", "view"],
     defaults: {
+      nodes: SYSTEM_NODES,
+      edges: SYSTEM_EDGES,
       lanes: { video: true, audio: true, network: true, power: true },
       selectedNodeId: "n4",
       view: "graph",

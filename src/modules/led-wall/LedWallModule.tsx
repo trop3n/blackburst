@@ -33,9 +33,20 @@ export function LedWallModule() {
   const clearMeasure = useLedWall((s) => s.clearMeasure);
   const addCol = useLedWall((s) => s.addCol);
   const addRow = useLedWall((s) => s.addRow);
+  const panelSearch = useLedWall((s) => s.panelSearch);
+  const setPanelSearch = useLedWall((s) => s.setPanelSearch);
 
   const layout = walls.find((l) => l.id === layoutId) ?? walls[0];
   const panel = PANEL_LIBRARY.find((p) => p.id === layout.panel) ?? PANEL_LIBRARY[0];
+  const panelSearchLc = panelSearch.trim().toLowerCase();
+  const filteredPanels = panelSearchLc
+    ? PANEL_LIBRARY.filter(
+        (p) =>
+          p.model.toLowerCase().includes(panelSearchLc) ||
+          String(p.pitch).includes(panelSearchLc) ||
+          p.id.toLowerCase().includes(panelSearchLc),
+      )
+    : PANEL_LIBRARY;
   const calc = computeWallCalc(layout, panel);
   const issues = validateWall(layout, panel, calc);
 
@@ -124,15 +135,19 @@ export function LedWallModule() {
           <span>PANEL LIBRARY</span>
           <span className="spacer" />
           <span className="mono" style={{ fontSize: 10, color: "var(--color-fg-faint)" }}>
-            {PANEL_LIBRARY.length}
+            {filteredPanels.length}/{PANEL_LIBRARY.length}
           </span>
         </div>
         <div className="search">
           <I.Search size={12} />
-          <input placeholder="Filter by pitch, model…" />
+          <input
+            placeholder="Filter by pitch, model…"
+            value={panelSearch}
+            onChange={(e) => setPanelSearch(e.target.value)}
+          />
         </div>
         <div className="pane-body">
-          {PANEL_LIBRARY.map((p) => (
+          {filteredPanels.map((p) => (
             <div
               key={p.id}
               className="list-row"
@@ -550,6 +565,19 @@ export function LedWallModule() {
                   <span className="unit">:1</span>
                 </div>
               </div>
+            </div>
+            <div className="section-h">
+              <span>IDENTITY</span>
+              <span className="line" />
+            </div>
+            <div className="fld">
+              <span className="k">Name</span>
+              <input
+                value={layout.name}
+                onChange={(e) =>
+                  updateWall(layout.id, { name: e.target.value })
+                }
+              />
             </div>
             <div className="section-h">
               <span>GEOMETRY</span>
