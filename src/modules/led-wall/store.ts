@@ -6,17 +6,24 @@ import type { WallLayout } from "@/types";
 export type LedTool = "select" | "draw" | "erase" | "measure";
 export type LedTab = "wall" | "panel" | "calc";
 
+export interface CellRef {
+  c: number;
+  r: number;
+}
+
 interface LedWallState {
   walls: WallLayout[];
   layoutId: string;
-  selected: { c: number; r: number } | null;
+  selected: CellRef | null;
   tool: LedTool;
   zoom: number;
   showDims: boolean;
   showFaults: boolean;
   tab: LedTab;
+  measureFrom: CellRef | null;
+  measureTo: CellRef | null;
   setLayoutId: (id: string) => void;
-  setSelected: (sel: { c: number; r: number } | null) => void;
+  setSelected: (sel: CellRef | null) => void;
   setTool: (t: LedTool) => void;
   setZoom: (z: number) => void;
   setShowDims: (v: boolean) => void;
@@ -25,7 +32,11 @@ interface LedWallState {
   updateWall: (id: string, patch: Partial<WallLayout>) => void;
   addWall: () => void;
   removeWall: (id: string) => void;
+  handleCellClick: (cell: CellRef) => void;
+  clearMeasure: () => void;
 }
+
+const MAX_COLS = 50;
 
 function nextWallId(existing: WallLayout[]): string {
   let n = existing.length + 1;
@@ -44,9 +55,12 @@ export const useLedWall = create<LedWallState>()(
       showDims: true,
       showFaults: true,
       tab: "wall",
-      setLayoutId: (layoutId) => set({ layoutId, selected: null }),
+      measureFrom: null,
+      measureTo: null,
+      setLayoutId: (layoutId) =>
+        set({ layoutId, selected: null, measureFrom: null, measureTo: null }),
       setSelected: (selected) => set({ selected }),
-      setTool: (tool) => set({ tool }),
+      setTool: (tool) => set({ tool, measureFrom: null, measureTo: null }),
       setZoom: (zoom) => set({ zoom }),
       setShowDims: (showDims) => set({ showDims }),
       setShowFaults: (showFaults) => set({ showFaults }),
@@ -89,6 +103,47 @@ export const useLedWall = create<LedWallState>()(
           const selected = s.layoutId === id ? null : s.selected;
           return { walls, layoutId, selected };
         }),
+      handleCellClick: (cell) =>
+        set((s) => {
+          const layout = s.walls.find((w) => w.id === s.layoutId);
+          if (!layout) return s;
+          if (s.tool === "select") {
+            return { selected: cell, tab: "panel" };
+          }
+          if (s.tool === "draw") {
+            if (layout.cols >= MAX_COLS) return s;
+            const walls = s.walls.map((w) =>
+              w.id === layout.id ? { ...w, cols: w.cols + 1 } : w,
+            );
+            return { walls };
+          }
+          if (s.tool === "erase") {
+            const isLastCol = cell.c === layout.cols - 1 && layout.cols > 1;
+            const isLastRow = cell.r === layout.rows - 1 && layout.rows > 1;
+            if (!isLastCol && !isLastRow) return s;
+            const patch = isLastCol
+              ? { cols: layout.cols - 1 }
+              : { rows: layout.rows - 1 };
+            const walls = s.walls.map((w) =>
+              w.id === layout.id ? { ...w, ...patch } : w,
+            );
+            const sel = s.selected;
+            const selected =
+              sel &&
+              ((isLastCol && sel.c >= layout.cols - 1) ||
+                (isLastRow && sel.r >= layout.rows - 1))
+                ? null
+                : sel;
+            return { walls, selected };
+          }
+          if (s.tool === "measure") {
+            if (!s.measureFrom) return { measureFrom: cell, measureTo: null };
+            if (!s.measureTo) return { measureTo: cell };
+            return { measureFrom: cell, measureTo: null };
+          }
+          return s;
+        }),
+      clearMeasure: () => set({ measureFrom: null, measureTo: null }),
     }),
     { name: "blackburst:led-wall:v2" },
   ),

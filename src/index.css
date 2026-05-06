@@ -718,6 +718,17 @@ button { font-family: inherit; color: inherit; }
   border-color: var(--accent);
   border-width: 1px;
 }
+.led-panel[data-measure="from"],
+.led-panel[data-measure="to"] {
+  background: oklch(0.82 0.13 220 / 0.35);
+  border-color: var(--color-info);
+  border-width: 1px;
+  color: var(--color-info);
+}
+.led-panel[data-erase-target="1"] {
+  background: oklch(0.68 0.21 25 / 0.18);
+  border-color: oklch(0.68 0.21 25 / 0.7);
+}
 
 .dim-arrow {
   position: absolute;

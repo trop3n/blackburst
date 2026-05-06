@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { I } from "@/components/Icon";
 import { FAULT_PANELS, PANEL_LIBRARY } from "@/lib/data";
 import { useApp } from "@/store/useApp";
@@ -18,7 +19,6 @@ export function LedWallModule() {
   const showFaults = useLedWall((s) => s.showFaults);
   const tab = useLedWall((s) => s.tab);
   const setLayoutId = useLedWall((s) => s.setLayoutId);
-  const setSelected = useLedWall((s) => s.setSelected);
   const setTool = useLedWall((s) => s.setTool);
   const setZoom = useLedWall((s) => s.setZoom);
   const setShowDims = useLedWall((s) => s.setShowDims);
@@ -27,6 +27,10 @@ export function LedWallModule() {
   const updateWall = useLedWall((s) => s.updateWall);
   const addWall = useLedWall((s) => s.addWall);
   const removeWall = useLedWall((s) => s.removeWall);
+  const measureFrom = useLedWall((s) => s.measureFrom);
+  const measureTo = useLedWall((s) => s.measureTo);
+  const handleCellClick = useLedWall((s) => s.handleCellClick);
+  const clearMeasure = useLedWall((s) => s.clearMeasure);
 
   const layout = walls.find((l) => l.id === layoutId) ?? walls[0];
   const panel = PANEL_LIBRARY.find((p) => p.id === layout.panel) ?? PANEL_LIBRARY[0];
@@ -44,6 +48,29 @@ export function LedWallModule() {
   const panelPxH = panel.h * scale;
 
   const dataRateGbps = (calc.resW * calc.resH * 60 * 30) / 1e9;
+
+  useEffect(() => {
+    if (tool !== "measure") return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") clearMeasure();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [tool, clearMeasure]);
+
+  const measureDistMm =
+    measureFrom && measureTo
+      ? Math.hypot(
+          (measureTo.c - measureFrom.c) * panel.w,
+          (measureTo.r - measureFrom.r) * panel.h,
+        )
+      : null;
+  const cursorByTool: Record<typeof tool, string> = {
+    select: "default",
+    draw: "copy",
+    erase: "not-allowed",
+    measure: "crosshair",
+  };
 
   return (
     <>
@@ -249,28 +276,41 @@ export function LedWallModule() {
                   </div>
                 </>
               )}
-              <div className="led-wall-frame" style={{ width: frameW, height: frameH }}>
+              <div
+                className="led-wall-frame"
+                style={{ width: frameW, height: frameH, cursor: cursorByTool[tool] }}
+              >
                 {Array.from({ length: layout.rows }).map((_, r) =>
                   Array.from({ length: layout.cols }).map((_, c) => {
                     const fault =
                       showFaults && FAULT_PANELS.some((f) => f.c === c && f.r === r);
                     const sel = selected && selected.c === c && selected.r === r;
+                    const isMeasureFrom =
+                      measureFrom && measureFrom.c === c && measureFrom.r === r;
+                    const isMeasureTo =
+                      measureTo && measureTo.c === c && measureTo.r === r;
+                    const eraseTarget =
+                      tool === "erase" &&
+                      ((c === layout.cols - 1 && layout.cols > 1) ||
+                        (r === layout.rows - 1 && layout.rows > 1));
+                    let cellCursor: string | undefined;
+                    if (tool === "erase") cellCursor = eraseTarget ? "pointer" : "not-allowed";
                     return (
                       <div
                         key={`${c}-${r}`}
                         className="led-panel"
                         data-fault={fault ? "1" : "0"}
                         data-selected={sel ? "1" : "0"}
+                        data-measure={isMeasureFrom ? "from" : isMeasureTo ? "to" : undefined}
+                        data-erase-target={tool === "erase" && eraseTarget ? "1" : undefined}
                         style={{
                           left: c * panelPxW,
                           top: r * panelPxH,
                           width: panelPxW,
                           height: panelPxH,
+                          cursor: cellCursor,
                         }}
-                        onClick={() => {
-                          setSelected({ c, r });
-                          setTab("panel");
-                        }}
+                        onClick={() => handleCellClick({ c, r })}
                       >
                         {panelPxW > 28 && `${c + 1},${r + 1}`}
                       </div>
@@ -319,8 +359,30 @@ export function LedWallModule() {
           </div>
 
           <div className="crosshair-readout">
-            X: {selected ? selected.c * panel.w : 0}mm · Y: {selected ? selected.r * panel.h : 0}mm
-            · GRID {panel.w}×{panel.h}
+            {tool === "measure" ? (
+              measureDistMm != null && measureFrom && measureTo ? (
+                <>
+                  MEASURE · ({measureFrom.c + 1},{measureFrom.r + 1}) → ({measureTo.c + 1},
+                  {measureTo.r + 1}) · {measureDistMm.toFixed(0)}mm ·{" "}
+                  {(measureDistMm / 304.8).toFixed(2)}ft · ESC to clear
+                </>
+              ) : measureFrom ? (
+                <>
+                  MEASURE · from ({measureFrom.c + 1},{measureFrom.r + 1}) — click second panel
+                </>
+              ) : (
+                <>MEASURE · click first panel</>
+              )
+            ) : tool === "draw" ? (
+              <>DRAW · click any panel to add a column (max {50})</>
+            ) : tool === "erase" ? (
+              <>ERASE · click last column or last row to remove</>
+            ) : (
+              <>
+                X: {selected ? selected.c * panel.w : 0}mm · Y:{" "}
+                {selected ? selected.r * panel.h : 0}mm · GRID {panel.w}×{panel.h}
+              </>
+            )}
           </div>
         </div>
 
