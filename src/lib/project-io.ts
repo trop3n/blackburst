@@ -7,9 +7,12 @@ import {
 import { useApp, type Revision } from "@/store/useApp";
 import type { Project } from "@/types";
 
+export const SUPPORTED_SNAPSHOT_VERSIONS = [2, 3] as const;
+export type SnapshotVersion = (typeof SUPPORTED_SNAPSHOT_VERSIONS)[number];
+
 export interface ProjectSnapshot {
   format: "blackburst-project";
-  version: 2;
+  version: SnapshotVersion;
   exportedAt: string;
   project: Project;
   revisions: Revision[];
@@ -25,7 +28,7 @@ function buildSnapshot(): ProjectSnapshot {
   const app = useApp.getState();
   return {
     format: "blackburst-project",
-    version: 2,
+    version: 3,
     exportedAt: new Date().toISOString(),
     project: app.project,
     revisions: app.revisions,
@@ -51,6 +54,14 @@ export async function importProject(file: File): Promise<void> {
   const data = JSON.parse(text) as Partial<ProjectSnapshot>;
   if (data.format !== "blackburst-project") {
     throw new Error("Not a Blackburst project file");
+  }
+  if (
+    typeof data.version !== "number" ||
+    !SUPPORTED_SNAPSHOT_VERSIONS.includes(data.version as SnapshotVersion)
+  ) {
+    throw new Error(
+      `Unsupported project file version: ${String(data.version)}. Expected one of ${SUPPORTED_SNAPSHOT_VERSIONS.join(", ")}.`,
+    );
   }
   if (!data.state || typeof data.state !== "object") {
     throw new Error("Project file is missing state");

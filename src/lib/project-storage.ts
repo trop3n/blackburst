@@ -107,7 +107,7 @@ function defaultBucket(): ProjectStateBuckets {
 
 export function applyState(buckets: ProjectStateBuckets) {
   for (const [key, spec] of Object.entries(SPECS)) {
-    const slice = buckets[key] ?? spec.defaults;
+    const slice = { ...spec.defaults, ...(buckets[key] ?? {}) };
     spec.store.setState(slice);
   }
 }
