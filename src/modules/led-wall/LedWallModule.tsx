@@ -31,6 +31,8 @@ export function LedWallModule() {
   const measureTo = useLedWall((s) => s.measureTo);
   const handleCellClick = useLedWall((s) => s.handleCellClick);
   const clearMeasure = useLedWall((s) => s.clearMeasure);
+  const addCol = useLedWall((s) => s.addCol);
+  const addRow = useLedWall((s) => s.addRow);
 
   const layout = walls.find((l) => l.id === layoutId) ?? walls[0];
   const panel = PANEL_LIBRARY.find((p) => p.id === layout.panel) ?? PANEL_LIBRARY[0];
@@ -67,10 +69,11 @@ export function LedWallModule() {
       : null;
   const cursorByTool: Record<typeof tool, string> = {
     select: "default",
-    draw: "copy",
+    draw: "default",
     erase: "not-allowed",
     measure: "crosshair",
   };
+  const drawZoneSize = Math.max(22, Math.min(panelPxW, panelPxH));
 
   return (
     <>
@@ -317,6 +320,60 @@ export function LedWallModule() {
                     );
                   })
                 )}
+                {/* Draw mode: clickable grow zones outside the wall */}
+                {tool === "draw" && (
+                  <>
+                    <div
+                      className="draw-zone right"
+                      style={{
+                        left: frameW + 4,
+                        top: 0,
+                        width: drawZoneSize,
+                        height: frameH,
+                      }}
+                      onClick={() => addCol()}
+                      title="Add column"
+                    >
+                      <span>+ COL</span>
+                    </div>
+                    <div
+                      className="draw-zone bottom"
+                      style={{
+                        left: 0,
+                        top: frameH + 4,
+                        width: frameW,
+                        height: drawZoneSize,
+                      }}
+                      onClick={() => addRow()}
+                      title="Add row"
+                    >
+                      <span>+ ROW</span>
+                    </div>
+                  </>
+                )}
+                {/* Measure connecting line */}
+                {measureFrom && measureTo && (
+                  <svg
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      width: "100%",
+                      height: "100%",
+                      pointerEvents: "none",
+                      overflow: "visible",
+                    }}
+                  >
+                    <line
+                      x1={(measureFrom.c + 0.5) * panelPxW}
+                      y1={(measureFrom.r + 0.5) * panelPxH}
+                      x2={(measureTo.c + 0.5) * panelPxW}
+                      y2={(measureTo.r + 0.5) * panelPxH}
+                      stroke="var(--color-info)"
+                      strokeWidth={1.5}
+                      strokeDasharray="4 3"
+                    />
+                  </svg>
+                )}
                 {/* Processor split overlay */}
                 <div
                   style={{
@@ -374,7 +431,7 @@ export function LedWallModule() {
                 <>MEASURE · click first panel</>
               )
             ) : tool === "draw" ? (
-              <>DRAW · click any panel to add a column (max {50})</>
+              <>DRAW · click + COL or + ROW to grow the wall</>
             ) : tool === "erase" ? (
               <>ERASE · click last column or last row to remove</>
             ) : (

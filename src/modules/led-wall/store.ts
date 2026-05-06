@@ -33,6 +33,8 @@ interface LedWallState {
   addWall: () => void;
   removeWall: (id: string) => void;
   handleCellClick: (cell: CellRef) => void;
+  addCol: () => void;
+  addRow: () => void;
   clearMeasure: () => void;
 }
 
@@ -110,13 +112,6 @@ export const useLedWall = create<LedWallState>()(
           if (s.tool === "select") {
             return { selected: cell, tab: "panel" };
           }
-          if (s.tool === "draw") {
-            if (layout.cols >= MAX_COLS) return s;
-            const walls = s.walls.map((w) =>
-              w.id === layout.id ? { ...w, cols: w.cols + 1 } : w,
-            );
-            return { walls };
-          }
           if (s.tool === "erase") {
             const isLastCol = cell.c === layout.cols - 1 && layout.cols > 1;
             const isLastRow = cell.r === layout.rows - 1 && layout.rows > 1;
@@ -138,10 +133,29 @@ export const useLedWall = create<LedWallState>()(
           }
           if (s.tool === "measure") {
             if (!s.measureFrom) return { measureFrom: cell, measureTo: null };
-            if (!s.measureTo) return { measureTo: cell };
-            return { measureFrom: cell, measureTo: null };
+            return { measureTo: cell };
           }
           return s;
+        }),
+      addCol: () =>
+        set((s) => {
+          const layout = s.walls.find((w) => w.id === s.layoutId);
+          if (!layout || layout.cols >= MAX_COLS) return s;
+          return {
+            walls: s.walls.map((w) =>
+              w.id === layout.id ? { ...w, cols: w.cols + 1 } : w,
+            ),
+          };
+        }),
+      addRow: () =>
+        set((s) => {
+          const layout = s.walls.find((w) => w.id === s.layoutId);
+          if (!layout || layout.rows >= 30) return s;
+          return {
+            walls: s.walls.map((w) =>
+              w.id === layout.id ? { ...w, rows: w.rows + 1 } : w,
+            ),
+          };
         }),
       clearMeasure: () => set({ measureFrom: null, measureTo: null }),
     }),

@@ -730,6 +730,25 @@ button { font-family: inherit; color: inherit; }
   border-color: oklch(0.68 0.21 25 / 0.7);
 }
 
+.draw-zone {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  background: var(--accent-faint);
+  border: 1px dashed var(--accent);
+  border-radius: 2px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 80ms;
+}
+.draw-zone:hover { background: var(--accent-dim); }
+.draw-zone.right > span { writing-mode: vertical-rl; transform: rotate(180deg); }
+
 .dim-arrow {
   position: absolute;
   font-family: var(--font-mono);
