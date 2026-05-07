@@ -1,8 +1,10 @@
-import { Fragment } from "react";
+import { Fragment, useRef, useState } from "react";
 import { I } from "@/components/Icon";
 import { PATCH_SHEET } from "@/lib/data";
 import type { Lane, PatchLane, SystemEdge, SystemNode } from "@/types";
 import { useSystem } from "./store";
+
+const DRAG_THRESHOLD_PX = 3;
 
 const LANE_COLOR: Record<Lane, string> = {
   video: "var(--color-magenta)",
@@ -21,13 +23,57 @@ const PATCH_LANE_TO_LANE: Record<PatchLane, Lane> = {
 const NODE_W = 150;
 const NODE_H_BASE = 56;
 
-const PALETTE_GROUPS: { cat: string; items: string[] }[] = [
-  { cat: "VIDEO SOURCES", items: ["Resolume Mac", "Disguise gx 2c", "BMD HyperDeck", "PTZ Camera"] },
-  { cat: "PROCESSORS", items: ["Brompton SX40", "Brompton Tessera S8", "Novastar MX40", "Megapixel Helios"] },
-  { cat: "MIXERS", items: ["vMix M4", "Blackmagic ATEM", "Roland V-160HD"] },
-  { cat: "AUDIO", items: ["DiGiCo SD12", "Yamaha CL5", "Shure ULXD4Q"] },
-  { cat: "POWER", items: ["Distro 200A 3ϕ", "Lex SQ-12IL"] },
+interface PaletteGroup {
+  cat: string;
+  type: string;
+  in?: Lane[];
+  out?: Lane[];
+  details: Record<string, string>;
+  items: string[];
+}
+
+const PALETTE_GROUPS: PaletteGroup[] = [
+  {
+    cat: "VIDEO SOURCES",
+    type: "SOURCE",
+    out: ["video", "network"],
+    details: { res: "1920×1080", fps: "60p" },
+    items: ["Resolume Mac", "Disguise gx 2c", "BMD HyperDeck", "PTZ Camera"],
+  },
+  {
+    cat: "PROCESSORS",
+    type: "PROC",
+    in: ["video"],
+    out: ["network"],
+    details: { ports: "4×10GbE", load: "0%" },
+    items: ["Brompton SX40", "Brompton Tessera S8", "Novastar MX40", "Megapixel Helios"],
+  },
+  {
+    cat: "MIXERS",
+    type: "MIXER",
+    in: ["video", "video"],
+    out: ["video"],
+    details: { inputs: "4×SDI", outputs: "2×SDI" },
+    items: ["vMix M4", "Blackmagic ATEM", "Roland V-160HD"],
+  },
+  {
+    cat: "AUDIO",
+    type: "AUDIO",
+    in: ["audio"],
+    out: ["audio"],
+    details: { channels: "32", aux: "8" },
+    items: ["DiGiCo SD12", "Yamaha CL5", "Shure ULXD4Q"],
+  },
+  {
+    cat: "POWER",
+    type: "POWER",
+    out: ["power"],
+    details: { capacity: "—", load: "—" },
+    items: ["Distro 200A 3ϕ", "Lex SQ-12IL"],
+  },
 ];
+
+const PALETTE_MIME = "application/x-blackburst-palette";
 
 const LANES: Lane[] = ["video", "audio", "network", "power"];
 const PATCH_LANES: PatchLane[] = ["video", "audio", "net", "pwr"];
@@ -53,9 +99,92 @@ export function SystemDesignerModule() {
   const setSelected = useSystem((s) => s.setSelectedNodeId);
   const view = useSystem((s) => s.view);
   const setView = useSystem((s) => s.setView);
+  const updateNode = useSystem((s) => s.updateNode);
+  const addNode = useSystem((s) => s.addNode);
 
   const node = nodes.find((n) => n.id === selectedId);
   const visibleEdges = edges.filter((e) => lanes[e.lane]);
+
+  const dragRef = useRef<{
+    id: string;
+    startCx: number;
+    startCy: number;
+    nodeX: number;
+    nodeY: number;
+    moved: boolean;
+  } | null>(null);
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+
+  const onNodeMouseDown = (e: React.MouseEvent, n: SystemNode) => {
+    if (e.button !== 0) return;
+    e.stopPropagation();
+    e.preventDefault();
+    dragRef.current = {
+      id: n.id,
+      startCx: e.clientX,
+      startCy: e.clientY,
+      nodeX: n.x,
+      nodeY: n.y,
+      moved: false,
+    };
+    setDraggingId(n.id);
+
+    const onMove = (ev: MouseEvent) => {
+      const d = dragRef.current;
+      if (!d) return;
+      const dx = ev.clientX - d.startCx;
+      const dy = ev.clientY - d.startCy;
+      if (!d.moved && Math.hypot(dx, dy) > DRAG_THRESHOLD_PX) d.moved = true;
+      if (d.moved) {
+        updateNode(d.id, {
+          x: Math.max(0, Math.round(d.nodeX + dx)),
+          y: Math.max(0, Math.round(d.nodeY + dy)),
+        });
+      }
+    };
+
+    const onUp = () => {
+      const d = dragRef.current;
+      if (d && !d.moved) setSelected(d.id);
+      dragRef.current = null;
+      setDraggingId(null);
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    };
+
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+  };
+
+  const onCanvasDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    if (!e.dataTransfer.types.includes(PALETTE_MIME)) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "copy";
+  };
+
+  const onCanvasDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    const raw = e.dataTransfer.getData(PALETTE_MIME);
+    if (!raw) return;
+    e.preventDefault();
+    const [giStr, iiStr] = raw.split(":");
+    const gi = Number(giStr);
+    const ii = Number(iiStr);
+    const group = PALETTE_GROUPS[gi];
+    const name = group?.items[ii];
+    if (!group || !name) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = Math.max(0, Math.round(e.clientX - rect.left - NODE_W / 2));
+    const y = Math.max(0, Math.round(e.clientY - rect.top - NODE_H_BASE / 2));
+    addNode({
+      type: group.type,
+      name,
+      x,
+      y,
+      in: group.in,
+      out: group.out,
+      details: { ...group.details },
+    });
+  };
 
   return (
     <>
@@ -69,14 +198,23 @@ export function SystemDesignerModule() {
           <input placeholder="Drag to canvas…" />
         </div>
         <div className="pane-body">
-          {PALETTE_GROUPS.map((g) => (
+          {PALETTE_GROUPS.map((g, gi) => (
             <Fragment key={g.cat}>
               <div className="section-h">
                 <span>{g.cat}</span>
                 <span className="line" />
               </div>
-              {g.items.map((it) => (
-                <div key={it} className="list-row" style={{ cursor: "grab" }}>
+              {g.items.map((it, ii) => (
+                <div
+                  key={it}
+                  className="list-row"
+                  style={{ cursor: "grab" }}
+                  draggable
+                  onDragStart={(e) => {
+                    e.dataTransfer.setData(PALETTE_MIME, `${gi}:${ii}`);
+                    e.dataTransfer.effectAllowed = "copy";
+                  }}
+                >
                   <I.Move size={12} />
                   <span className="lbl">{it}</span>
                 </div>
@@ -128,6 +266,8 @@ export function SystemDesignerModule() {
             className="led-canvas"
             data-canvas-style="schematic"
             style={{ cursor: "default" }}
+            onDragOver={onCanvasDragOver}
+            onDrop={onCanvasDrop}
           >
             <div className="canvas-overlay tl">
               <div className="row">
@@ -216,8 +356,9 @@ export function SystemDesignerModule() {
                 key={n.id}
                 className="node"
                 data-selected={selectedId === n.id ? "1" : "0"}
+                data-dragging={draggingId === n.id ? "1" : "0"}
                 style={{ left: n.x, top: n.y, width: NODE_W }}
-                onClick={() => setSelected(n.id)}
+                onMouseDown={(e) => onNodeMouseDown(e, n)}
               >
                 <div className="node-hd">
                   <span style={{ color: "var(--accent)" }}>●</span>
