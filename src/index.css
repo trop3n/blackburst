@@ -270,6 +270,15 @@ button { font-family: inherit; color: inherit; }
   border-color: var(--accent-dim);
 }
 .tb-btn.primary:hover { background: var(--accent); color: var(--color-bg-0); }
+.tb-btn.danger {
+  color: var(--color-warn);
+  border-color: var(--color-line-strong);
+}
+.tb-btn.danger:hover {
+  background: var(--color-warn);
+  color: var(--color-bg-0);
+  border-color: var(--color-warn);
+}
 
 .user-chip {
   display: flex; align-items: center; gap: 6px;

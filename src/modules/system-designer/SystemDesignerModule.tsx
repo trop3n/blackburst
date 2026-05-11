@@ -101,6 +101,7 @@ export function SystemDesignerModule() {
   const setView = useSystem((s) => s.setView);
   const updateNode = useSystem((s) => s.updateNode);
   const addNode = useSystem((s) => s.addNode);
+  const removeNode = useSystem((s) => s.removeNode);
 
   const node = nodes.find((n) => n.id === selectedId);
   const visibleEdges = edges.filter((e) => lanes[e.lane]);
@@ -519,6 +520,21 @@ export function SystemDesignerModule() {
               <span className="k">Errors (24h)</span>
               <span className="v">0</span>
             </div>
+            <div className="section-h">
+              <span>ACTIONS</span>
+              <span className="line" />
+            </div>
+            <button
+              className="tb-btn danger"
+              onClick={() => {
+                if (confirm(`Remove node "${node.name}"? Connected edges will also be deleted.`)) {
+                  removeNode(node.id);
+                }
+              }}
+              style={{ width: "100%", justifyContent: "center" }}
+            >
+              <I.Cross size={12} /> Remove node
+            </button>
           </div>
         )}
 
