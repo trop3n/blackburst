@@ -1,8 +1,8 @@
-import { Fragment } from "react";
+import { Fragment, useEffect } from "react";
 import { I } from "@/components/Icon";
 import { RACK_CATALOG, RACK_COLOR_MAP } from "@/lib/rack-data";
 import type { RackSize } from "@/types";
-import { buildUsedSlots, fits, useRack } from "./store";
+import { fits, useRack } from "./store";
 
 const U_HEIGHT = 14;
 const RACK_W = 360;
@@ -16,16 +16,48 @@ export function RackBuilderModule() {
   const search = useRack((s) => s.search);
   const hoverPos = useRack((s) => s.hoverPos);
   const draggingId = useRack((s) => s.draggingId);
+  const draggingIid = useRack((s) => s.draggingIid);
   const setSelectedIid = useRack((s) => s.setSelectedIid);
   const setRackSize = useRack((s) => s.setRackSize);
   const setFilter = useRack((s) => s.setFilter);
   const setSearch = useRack((s) => s.setSearch);
   const setHoverPos = useRack((s) => s.setHoverPos);
   const setDraggingId = useRack((s) => s.setDraggingId);
+  const setDraggingIid = useRack((s) => s.setDraggingIid);
   const addItem = useRack((s) => s.addItem);
   const placeItem = useRack((s) => s.placeItem);
   const removeItem = useRack((s) => s.removeItem);
   const movePos = useRack((s) => s.movePos);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const tgt = e.target as HTMLElement | null;
+      if (
+        tgt &&
+        (tgt.tagName === "INPUT" ||
+          tgt.tagName === "TEXTAREA" ||
+          tgt.tagName === "SELECT" ||
+          tgt.isContentEditable)
+      ) return;
+      const state = useRack.getState();
+      const iid = state.selectedIid;
+      if (iid == null) return;
+      const item = state.items.find((i) => i.iid === iid);
+      if (!item) return;
+      if (e.key === "Delete" || e.key === "Backspace") {
+        e.preventDefault();
+        state.removeItem(iid);
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        state.movePos(iid, item.pos + 1);
+      } else if (e.key === "ArrowDown") {
+        e.preventDefault();
+        state.movePos(iid, item.pos - 1);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   const cats = ["All", ...Array.from(new Set(RACK_CATALOG.map((c) => c.cat)))];
   const visibleCatalog = RACK_CATALOG.filter((c) => {
@@ -33,8 +65,6 @@ export function RackBuilderModule() {
     if (search && !c.model.toLowerCase().includes(search.toLowerCase())) return false;
     return true;
   });
-
-  const usedSlots = buildUsedSlots(items);
 
   const totalU = items.reduce((s, i) => {
     const d = RACK_CATALOG.find((x) => x.id === i.id);
@@ -60,9 +90,22 @@ export function RackBuilderModule() {
   const selected = items.find((i) => i.iid === selectedIid) ?? null;
   const selectedDef = selected ? RACK_CATALOG.find((d) => d.id === selected.id) : null;
 
-  const hoverDef = draggingId ? RACK_CATALOG.find((d) => d.id === draggingId) : null;
+  const movingItem = draggingIid != null ? items.find((i) => i.iid === draggingIid) : null;
+  const movingDef = movingItem ? RACK_CATALOG.find((d) => d.id === movingItem.id) : null;
+  const hoverDef = draggingId
+    ? RACK_CATALOG.find((d) => d.id === draggingId) ?? null
+    : movingDef;
   const hoverValid =
-    hoverDef && hoverPos != null ? fits(items, rackSize, hoverDef, hoverPos) : false;
+    hoverDef && hoverPos != null
+      ? draggingIid != null
+        ? fits(
+            items.filter((i) => i.iid !== draggingIid),
+            rackSize,
+            hoverDef,
+            hoverPos,
+          )
+        : fits(items, rackSize, hoverDef, hoverPos)
+      : false;
 
   const byCat: Record<string, number> = {};
   for (const it of items) {
@@ -224,11 +267,8 @@ export function RackBuilderModule() {
             DRAG FROM CATALOG · ↕ TO REORDER
           </span>
           <div className="divider-v" />
-          <button className="tb-btn">
+          <button className="tb-btn" onClick={() => window.print()}>
             <I.Export size={13} /> Spec PDF
-          </button>
-          <button className="tb-btn primary">
-            <I.Plus size={13} /> Add Rack
           </button>
         </div>
 
@@ -342,10 +382,13 @@ export function RackBuilderModule() {
                       onDragLeave={() => setHoverPos(null)}
                       onDrop={(e) => {
                         e.preventDefault();
-                        if (draggingId && hoverPos != null) {
+                        if (draggingIid != null && hoverPos != null) {
+                          movePos(draggingIid, hoverPos);
+                        } else if (draggingId && hoverPos != null) {
                           placeItem(draggingId, hoverPos);
                         }
                         setDraggingId(null);
+                        setDraggingIid(null);
                         setHoverPos(null);
                       }}
                       style={{
@@ -416,8 +459,19 @@ export function RackBuilderModule() {
                         return (
                           <div
                             key={it.iid}
+                            draggable
                             onClick={() => setSelectedIid(it.iid)}
-                            onDoubleClick={() => removeItem(it.iid)}
+                            onDragStart={(e) => {
+                              e.stopPropagation();
+                              setSelectedIid(it.iid);
+                              setDraggingIid(it.iid);
+                              e.dataTransfer.effectAllowed = "move";
+                              e.dataTransfer.setData("text/plain", `iid:${it.iid}`);
+                            }}
+                            onDragEnd={() => {
+                              setDraggingIid(null);
+                              setHoverPos(null);
+                            }}
                             style={{
                               position: "absolute",
                               left: 8,
@@ -434,7 +488,8 @@ export function RackBuilderModule() {
                               fontFamily: "var(--font-mono)",
                               fontSize: 9.5,
                               color: col.fg,
-                              cursor: "pointer",
+                              cursor: draggingIid === it.iid ? "grabbing" : "grab",
+                              opacity: draggingIid === it.iid ? 0.4 : 1,
                               overflow: "hidden",
                             }}
                           >
@@ -502,12 +557,12 @@ export function RackBuilderModule() {
                           }}
                         >
                           {hoverValid
-                            ? `+ ${hoverDef.model} @ U${hoverPos}`
+                            ? draggingIid != null
+                              ? `→ ${hoverDef.model} @ U${hoverPos}`
+                              : `+ ${hoverDef.model} @ U${hoverPos}`
                             : "× SLOT OCCUPIED"}
                         </div>
                       )}
-                      {/* Suppress unused warning */}
-                      {usedSlots.size > 0 ? null : null}
                     </div>
                     {/* Right U-numbers */}
                     <div
@@ -834,15 +889,23 @@ export function RackBuilderModule() {
 
             <div style={{ padding: "8px 12px", display: "flex", gap: 6 }}>
               <button
-                className="tb-btn"
-                style={{ flex: 1 }}
+                className="tb-btn danger"
+                style={{ flex: 1, justifyContent: "center" }}
                 onClick={() => removeItem(selected.iid)}
               >
                 <I.Cross size={12} /> Remove
               </button>
-              <button className="tb-btn primary" style={{ flex: 1 }}>
-                Edit Spec
-              </button>
+            </div>
+            <div
+              className="mono"
+              style={{
+                padding: "0 12px 8px",
+                fontSize: 10,
+                color: "var(--color-fg-faint)",
+                textAlign: "center",
+              }}
+            >
+              ↑ / ↓ nudge · DEL removes · drag to reslot
             </div>
           </div>
         ) : (
@@ -862,7 +925,7 @@ export function RackBuilderModule() {
                   lineHeight: 1.4,
                 }}
               >
-                Click a slot, drag from the catalog, or double-click to auto-place.
+                Drag from the catalog or double-click a row to auto-place. Click a placed device to inspect.
               </span>
             </div>
           </div>

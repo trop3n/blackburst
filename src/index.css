@@ -368,7 +368,7 @@ button { font-family: inherit; color: inherit; }
   flex-shrink: 0;
 }
 .pane-hd .spacer { flex: 1; }
-.pane-hd .icon-btn {
+.icon-btn {
   width: 20px; height: 20px;
   background: transparent;
   border: 0;
@@ -379,7 +379,7 @@ button { font-family: inherit; color: inherit; }
   align-items: center;
   justify-content: center;
 }
-.pane-hd .icon-btn:hover { background: var(--color-bg-3); color: var(--color-fg); }
+.icon-btn:hover { background: var(--color-bg-3); color: var(--color-fg); }
 .pane-body { flex: 1; overflow: auto; min-height: 0; }
 
 /* Status bar */
@@ -991,7 +991,16 @@ button { font-family: inherit; color: inherit; }
   top: 50%; transform: translateY(-50%);
 }
 .node-port.in { left: -5px; }
-.node-port.out { right: -5px; }
+.node-port.out { right: -5px; cursor: crosshair; }
+.led-canvas[data-edge-draft] .node-port.in { opacity: 0.25; transition: opacity 80ms, transform 80ms; }
+.led-canvas[data-edge-draft="video"] .node-port.in[data-lane="video"],
+.led-canvas[data-edge-draft="audio"] .node-port.in[data-lane="audio"],
+.led-canvas[data-edge-draft="network"] .node-port.in[data-lane="network"],
+.led-canvas[data-edge-draft="power"] .node-port.in[data-lane="power"] {
+  opacity: 1;
+  transform: translateY(-50%) scale(1.6);
+  cursor: crosshair;
+}
 .node-port.video { border-color: var(--color-magenta); }
 .node-port.audio { border-color: var(--color-info); }
 .node-port.network { border-color: var(--accent); }

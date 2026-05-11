@@ -11,6 +11,7 @@ interface RackState {
   search: string;
   hoverPos: number | null;
   draggingId: string | null;
+  draggingIid: number | null;
 
   setItems: (items: RackItem[]) => void;
   setSelectedIid: (iid: number | null) => void;
@@ -19,6 +20,7 @@ interface RackState {
   setSearch: (s: string) => void;
   setHoverPos: (p: number | null) => void;
   setDraggingId: (id: string | null) => void;
+  setDraggingIid: (iid: number | null) => void;
 
   addItem: (id: string) => void;
   placeItem: (id: string, pos: number) => boolean;
@@ -72,6 +74,7 @@ export const useRack = create<RackState>()(
       search: "",
       hoverPos: null,
       draggingId: null,
+      draggingIid: null,
 
       setItems: (items) => set({ items }),
       setSelectedIid: (selectedIid) => set({ selectedIid }),
@@ -80,6 +83,7 @@ export const useRack = create<RackState>()(
       setSearch: (search) => set({ search }),
       setHoverPos: (hoverPos) => set({ hoverPos }),
       setDraggingId: (draggingId) => set({ draggingId }),
+      setDraggingIid: (draggingIid) => set({ draggingIid }),
 
       addItem: (id) => {
         const { items, rackSize } = get();

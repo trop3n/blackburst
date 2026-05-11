@@ -102,6 +102,8 @@ export function SystemDesignerModule() {
   const updateNode = useSystem((s) => s.updateNode);
   const addNode = useSystem((s) => s.addNode);
   const removeNode = useSystem((s) => s.removeNode);
+  const addEdge = useSystem((s) => s.addEdge);
+  const removeEdge = useSystem((s) => s.removeEdge);
 
   const node = nodes.find((n) => n.id === selectedId);
   const visibleEdges = edges.filter((e) => lanes[e.lane]);
@@ -115,6 +117,67 @@ export function SystemDesignerModule() {
     moved: boolean;
   } | null>(null);
   const [draggingId, setDraggingId] = useState<string | null>(null);
+  const canvasRef = useRef<HTMLDivElement | null>(null);
+  const [edgeDraft, setEdgeDraft] = useState<{
+    fromId: string;
+    lane: Lane;
+    startX: number;
+    startY: number;
+    cursorX: number;
+    cursorY: number;
+  } | null>(null);
+
+  const onPortMouseDown = (e: React.MouseEvent, fromNode: SystemNode, lane: Lane) => {
+    if (e.button !== 0) return;
+    e.stopPropagation();
+    e.preventDefault();
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const startX = fromNode.x + NODE_W;
+    const startY = fromNode.y + NODE_H_BASE / 2;
+    setEdgeDraft({
+      fromId: fromNode.id,
+      lane,
+      startX,
+      startY,
+      cursorX: e.clientX - rect.left,
+      cursorY: e.clientY - rect.top,
+    });
+
+    const onMove = (ev: MouseEvent) => {
+      setEdgeDraft((d) =>
+        d ? { ...d, cursorX: ev.clientX - rect.left, cursorY: ev.clientY - rect.top } : null,
+      );
+    };
+    const cleanup = () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+      window.removeEventListener("keydown", onKey);
+    };
+    const onUp = (ev: MouseEvent) => {
+      cleanup();
+      setEdgeDraft(null);
+      const el = ev.target as HTMLElement | null;
+      if (!el) return;
+      const dir = el.dataset?.portDir;
+      const targetId = el.dataset?.nodeId;
+      const targetLane = el.dataset?.lane as Lane | undefined;
+      if (dir !== "in" || !targetId || !targetLane) return;
+      if (targetLane !== lane) return;
+      if (targetId === fromNode.id) return;
+      addEdge({ from: fromNode.id, to: targetId, lane, label: lane.toUpperCase() });
+    };
+    const onKey = (ev: KeyboardEvent) => {
+      if (ev.key === "Escape") {
+        cleanup();
+        setEdgeDraft(null);
+      }
+    };
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+    window.addEventListener("keydown", onKey);
+  };
 
   const onNodeMouseDown = (e: React.MouseEvent, n: SystemNode) => {
     if (e.button !== 0) return;
@@ -264,9 +327,11 @@ export function SystemDesignerModule() {
 
         {view === "graph" && (
           <div
+            ref={canvasRef}
             className="led-canvas"
             data-canvas-style="schematic"
-            style={{ cursor: "default" }}
+            data-edge-draft={edgeDraft?.lane ?? undefined}
+            style={{ cursor: edgeDraft ? "crosshair" : "default" }}
             onDragOver={onCanvasDragOver}
             onDrop={onCanvasDrop}
           >
@@ -350,6 +415,18 @@ export function SystemDesignerModule() {
                   </g>
                 );
               })}
+              {edgeDraft && (
+                <line
+                  x1={edgeDraft.startX}
+                  y1={edgeDraft.startY}
+                  x2={edgeDraft.cursorX}
+                  y2={edgeDraft.cursorY}
+                  stroke={LANE_COLOR[edgeDraft.lane]}
+                  strokeWidth="1.5"
+                  strokeDasharray="4 4"
+                  strokeOpacity="0.85"
+                />
+              )}
             </svg>
 
             {nodes.map((n) => (
@@ -391,6 +468,9 @@ export function SystemDesignerModule() {
                     key={`in${i}`}
                     className={`node-port in ${lane}`}
                     style={{ top: 28 + i * 14 }}
+                    data-node-id={n.id}
+                    data-port-dir="in"
+                    data-lane={lane}
                   />
                 ))}
                 {n.out?.map((lane, i) => (
@@ -398,6 +478,10 @@ export function SystemDesignerModule() {
                     key={`out${i}`}
                     className={`node-port out ${lane}`}
                     style={{ top: 28 + i * 14 }}
+                    data-node-id={n.id}
+                    data-port-dir="out"
+                    data-lane={lane}
+                    onMouseDown={(e) => onPortMouseDown(e, n, lane)}
                   />
                 ))}
               </div>
@@ -501,6 +585,14 @@ export function SystemDesignerModule() {
                     </span>
                     <span className="lbl">{peer.name}</span>
                     <span className="meta">{e.label}</span>
+                    <button
+                      className="icon-btn"
+                      aria-label={`Remove edge to ${peer.name}`}
+                      onClick={() => removeEdge(e.from, e.to)}
+                      style={{ marginLeft: 4 }}
+                    >
+                      <I.Cross size={11} />
+                    </button>
                   </div>
                 );
               })}
