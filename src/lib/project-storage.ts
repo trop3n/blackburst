@@ -4,6 +4,7 @@ import { useLedWall } from "@/modules/led-wall/store";
 import { useRack } from "@/modules/rack-builder/store";
 import { useSystem } from "@/modules/system-designer/store";
 import { SYSTEM_EDGES, SYSTEM_NODES, WALL_LAYOUTS } from "@/lib/data";
+import { ASSETS } from "@/lib/inventory-data";
 import { DEFAULT_RACK } from "@/lib/rack-data";
 
 export const BUCKETS_KEY = "blackburst:projects:v1";
@@ -54,8 +55,9 @@ const SPECS = {
     store: useRack as unknown as StoreSpec["store"],
   },
   inv: {
-    fields: ["cat", "selected", "view"],
+    fields: ["assets", "cat", "selected", "view"],
     defaults: {
+      assets: ASSETS,
       cat: "All gear",
       selected: "BMD-S40-001",
       view: "list",

@@ -1,20 +1,23 @@
 import { useMemo, useState } from "react";
 import { I } from "@/components/Icon";
-import { ASSETS, ASSET_CATEGORIES, ASSET_HISTORY, SHOWS } from "@/lib/inventory-data";
+import { ASSET_CATEGORIES, ASSET_HISTORY, SHOWS } from "@/lib/inventory-data";
 import { useInventory } from "./store";
 import { issuesByAsset, summarizeAssetIssues, validateAssets } from "./validation";
 
 export function InventoryModule() {
+  const assets = useInventory((s) => s.assets);
   const cat = useInventory((s) => s.cat);
   const setCat = useInventory((s) => s.setCat);
   const selected = useInventory((s) => s.selected);
   const setSelected = useInventory((s) => s.setSelected);
   const view = useInventory((s) => s.view);
   const setView = useInventory((s) => s.setView);
+  const checkIn = useInventory((s) => s.checkIn);
+  const checkOut = useInventory((s) => s.checkOut);
   const [filter, setFilter] = useState("");
 
   const filtered = useMemo(() => {
-    const base = cat === "All gear" ? ASSETS : ASSETS.filter((a) => a.cat === cat);
+    const base = cat === "All gear" ? assets : assets.filter((a) => a.cat === cat);
     if (!filter.trim()) return base;
     const q = filter.trim().toLowerCase();
     return base.filter(
@@ -23,34 +26,57 @@ export function InventoryModule() {
         a.model.toLowerCase().includes(q) ||
         a.show.toLowerCase().includes(q),
     );
-  }, [cat, filter]);
+  }, [assets, cat, filter]);
 
-  const asset = ASSETS.find((a) => a.id === selected);
-  const totalIn = ASSETS.filter((a) => a.status === "in").length;
-  const totalOut = ASSETS.filter((a) => a.status === "out").length;
-  const totalMaint = ASSETS.filter((a) => a.status === "maint").length;
-  const allIssues = useMemo(() => validateAssets(ASSETS, SHOWS), []);
+  const asset = assets.find((a) => a.id === selected);
+  const totalIn = assets.filter((a) => a.status === "in").length;
+  const totalOut = assets.filter((a) => a.status === "out").length;
+  const totalMaint = assets.filter((a) => a.status === "maint").length;
+  const countByCat = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const a of assets) m.set(a.cat, (m.get(a.cat) ?? 0) + 1);
+    return m;
+  }, [assets]);
+  const allIssues = useMemo(() => validateAssets(assets, SHOWS), [assets]);
   const issuesIndex = useMemo(() => issuesByAsset(allIssues), [allIssues]);
   const issuesSummary = summarizeAssetIssues(allIssues);
   const selectedIssues = asset ? issuesIndex.get(asset.id) ?? [] : [];
+
+  const handleCheckIn = () => {
+    if (!asset) return;
+    if (asset.status === "in") return;
+    checkIn(asset.id);
+  };
+  const handleCheckOut = () => {
+    if (!asset) return;
+    if (asset.status === "out") return;
+    const show = prompt(`Check out ${asset.id} — show / job name?`, asset.show !== "—" ? asset.show : "")?.trim();
+    if (!show) return;
+    const due = prompt(`Due back date (e.g. "Apr 28")?`, asset.due !== "—" ? asset.due : "")?.trim();
+    if (!due) return;
+    checkOut(asset.id, show, due);
+  };
 
   return (
     <>
       <div className="left-pane">
         <div className="pane-hd"><span>CATEGORIES</span></div>
         <div style={{ flex: "0 0 auto" }}>
-          {ASSET_CATEGORIES.map((c) => (
-            <div
-              key={c.name}
-              className="list-row"
-              data-active={cat === c.name ? "1" : "0"}
-              onClick={() => setCat(c.name)}
-            >
-              <I.Folder size={12} />
-              <span className="lbl">{c.name}</span>
-              <span className="meta">{c.count}</span>
-            </div>
-          ))}
+          {ASSET_CATEGORIES.map((c) => {
+            const live = c.name === "All gear" ? assets.length : countByCat.get(c.name) ?? 0;
+            return (
+              <div
+                key={c.name}
+                className="list-row"
+                data-active={cat === c.name ? "1" : "0"}
+                onClick={() => setCat(c.name)}
+              >
+                <I.Folder size={12} />
+                <span className="lbl">{c.name}</span>
+                <span className="meta">{live}</span>
+              </div>
+            );
+          })}
         </div>
         <div className="pane-hd"><span>FLEET STATUS</span></div>
         <div className="pane-body">
@@ -145,8 +171,22 @@ export function InventoryModule() {
               onChange={(e) => setFilter(e.target.value)}
             />
           </div>
-          <button className="tb-btn"><I.Plus size={13} /> Check In</button>
-          <button className="tb-btn primary"><I.Export size={13} /> Check Out</button>
+          <button
+            className="tb-btn"
+            onClick={handleCheckIn}
+            disabled={!asset || asset.status === "in"}
+            title={asset ? `Check in ${asset.id}` : "Select an asset first"}
+          >
+            <I.Plus size={13} /> Check In
+          </button>
+          <button
+            className="tb-btn primary"
+            onClick={handleCheckOut}
+            disabled={!asset || asset.status === "out"}
+            title={asset ? `Check out ${asset.id}` : "Select an asset first"}
+          >
+            <I.Export size={13} /> Check Out
+          </button>
         </div>
 
         {view === "list" && (
@@ -258,8 +298,30 @@ export function InventoryModule() {
         <div className="pane-hd">
           <span>ASSET DETAIL</span>
           <span className="spacer" />
-          <span className="chip accent">{asset?.id}</span>
+          <span className="chip accent">{asset?.id ?? "—"}</span>
         </div>
+        {!asset && (
+          <div className="pane-body">
+            <div className="empty" style={{ padding: 30 }}>
+              <I.Inventory size={28} />
+              <span className="mono" style={{ fontSize: 11, color: "var(--color-fg-faint)" }}>
+                NO ASSET SELECTED
+              </span>
+              <span
+                className="mono"
+                style={{
+                  fontSize: 10,
+                  color: "var(--color-fg-faint)",
+                  textAlign: "center",
+                  maxWidth: 200,
+                  lineHeight: 1.4,
+                }}
+              >
+                Click a row in the list, or pick an issue on the left, to inspect.
+              </span>
+            </div>
+          </div>
+        )}
         {asset && (
           <div className="pane-body">
             <div className="readout">
