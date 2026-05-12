@@ -17,6 +17,8 @@ interface InventoryState {
   setAssetStatus: (id: string, status: AssetStatus, opts?: { show?: string; due?: string }) => void;
   checkIn: (id: string) => void;
   checkOut: (id: string, show: string, due: string) => void;
+  addAsset: (asset: Asset) => void;
+  removeAsset: (id: string) => void;
 }
 
 export const useInventory = create<InventoryState>()(
@@ -57,6 +59,16 @@ export const useInventory = create<InventoryState>()(
           assets: s.assets.map((a) =>
             a.id === id ? { ...a, status: "out", show, due } : a,
           ),
+        })),
+      addAsset: (asset) =>
+        set((s) =>
+          s.assets.some((a) => a.id === asset.id)
+            ? s
+            : { assets: [...s.assets, asset] },
+        ),
+      removeAsset: (id) =>
+        set((s) => ({
+          assets: s.assets.filter((a) => a.id !== id),
         })),
     }),
     { name: "blackburst:inventory:v2" },

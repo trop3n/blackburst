@@ -1,8 +1,16 @@
 import { useMemo, useState } from "react";
 import { I } from "@/components/Icon";
-import { ASSET_CATEGORIES, ASSET_HISTORY, SHOWS } from "@/lib/inventory-data";
+import { ASSET_CATEGORIES, SHOWS } from "@/lib/inventory-data";
+import type { AssetStatus } from "@/types";
 import { useInventory } from "./store";
 import { issuesByAsset, summarizeAssetIssues, validateAssets } from "./validation";
+
+const CAT_OPTIONS = ASSET_CATEGORIES.filter((c) => c.name !== "All gear").map((c) => c.name);
+const STATUS_OPTIONS: { value: AssetStatus; label: string }[] = [
+  { value: "in", label: "IN" },
+  { value: "out", label: "OUT" },
+  { value: "maint", label: "MAINT" },
+];
 
 export function InventoryModule() {
   const assets = useInventory((s) => s.assets);
@@ -14,6 +22,9 @@ export function InventoryModule() {
   const setView = useInventory((s) => s.setView);
   const checkIn = useInventory((s) => s.checkIn);
   const checkOut = useInventory((s) => s.checkOut);
+  const updateAsset = useInventory((s) => s.updateAsset);
+  const addAsset = useInventory((s) => s.addAsset);
+  const removeAsset = useInventory((s) => s.removeAsset);
   const [filter, setFilter] = useState("");
 
   const filtered = useMemo(() => {
@@ -56,6 +67,43 @@ export function InventoryModule() {
     if (!due) return;
     checkOut(asset.id, show, due);
   };
+  const handleNewAsset = () => {
+    const id = prompt("Asset ID (e.g. BMD-S40-004)?")?.trim();
+    if (!id) return;
+    if (assets.some((a) => a.id === id)) {
+      alert(`Asset ID "${id}" already exists.`);
+      return;
+    }
+    const model = prompt("Model name?")?.trim();
+    if (!model) return;
+    const catName = prompt("Category?", CAT_OPTIONS[0])?.trim();
+    if (!catName) return;
+    const today = new Date().toISOString().slice(0, 10);
+    addAsset({
+      id,
+      model,
+      cat: catName,
+      status: "in",
+      show: "—",
+      due: "—",
+      utilization: 0,
+      last: today,
+    });
+    setSelected(id);
+  };
+  const handleDecommission = () => {
+    if (!asset) return;
+    if (!confirm(`Decommission ${asset.id} (${asset.model})? This removes it from the fleet.`)) return;
+    const idx = filtered.findIndex((a) => a.id === asset.id);
+    const fallback = filtered[idx + 1]?.id ?? filtered[idx - 1]?.id ?? assets.find((a) => a.id !== asset.id)?.id ?? "";
+    removeAsset(asset.id);
+    setSelected(fallback);
+  };
+
+  const avgUtilization =
+    assets.length > 0
+      ? Math.round(assets.reduce((s, a) => s + a.utilization, 0) / assets.length)
+      : 0;
 
   return (
     <>
@@ -125,32 +173,46 @@ export function InventoryModule() {
               ))
             )}
           </div>
-          <div className="section-h"><span>UTILIZATION (30d)</span><span className="line" /></div>
+          <div className="section-h"><span>FLEET UTILIZATION</span><span className="line" /></div>
           <div style={{ padding: "0 12px 12px" }}>
-            <svg width="100%" height="60" viewBox="0 0 200 60" preserveAspectRatio="none">
-              <polyline
-                points="0,40 20,38 40,32 60,28 80,30 100,22 120,18 140,22 160,16 180,20 200,14"
-                fill="none"
-                stroke="var(--accent)"
-                strokeWidth="1.2"
+            <div
+              className="mono"
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                fontSize: 11,
+                color: "var(--color-fg-faint)",
+                marginBottom: 4,
+              }}
+            >
+              <span>AVG</span>
+              <span
+                style={{
+                  color: avgUtilization > 85 ? "var(--color-warn)" : "var(--accent)",
+                }}
+              >
+                {avgUtilization}%
+              </span>
+            </div>
+            <div className="bar">
+              <div
+                className="bar-fill"
+                style={{
+                  width: `${avgUtilization}%`,
+                  background: avgUtilization > 85 ? "var(--color-warn)" : "var(--accent)",
+                }}
               />
-              <polygon
-                points="0,40 20,38 40,32 60,28 80,30 100,22 120,18 140,22 160,16 180,20 200,14 200,60 0,60"
-                fill="var(--accent-faint)"
-                stroke="none"
-              />
-            </svg>
+            </div>
             <div
               className="mono"
               style={{
                 fontSize: 10,
-                display: "flex",
-                justifyContent: "space-between",
                 color: "var(--color-fg-faint)",
+                marginTop: 4,
+                textAlign: "right",
               }}
             >
-              <span>30d AGO</span>
-              <span style={{ color: "var(--accent)" }}>67%</span>
+              {assets.length} asset{assets.length === 1 ? "" : "s"} tracked
             </div>
           </div>
         </div>
@@ -171,6 +233,9 @@ export function InventoryModule() {
               onChange={(e) => setFilter(e.target.value)}
             />
           </div>
+          <button className="tb-btn" onClick={handleNewAsset} title="Add a new asset to the fleet">
+            <I.Plus size={13} /> New
+          </button>
           <button
             className="tb-btn"
             onClick={handleCheckIn}
@@ -328,23 +393,6 @@ export function InventoryModule() {
               <div className="lbl">{asset.cat}</div>
               <div className="val" style={{ fontSize: 14 }}>{asset.model}</div>
             </div>
-            <div className="readout-grid">
-              <div className="readout">
-                <div className="lbl">Status</div>
-                <div className="val" style={{ fontSize: 13 }}>
-                  <span className={`status-pill ${asset.status}`}>{asset.status.toUpperCase()}</span>
-                </div>
-              </div>
-              <div className="readout">
-                <div className="lbl">Utilization</div>
-                <div
-                  className="val"
-                  style={{ color: asset.utilization > 85 ? "var(--color-warn)" : "var(--accent)" }}
-                >
-                  {asset.utilization}<span className="unit">%</span>
-                </div>
-              </div>
-            </div>
             {selectedIssues.length > 0 && (
               <>
                 <div className="section-h">
@@ -364,39 +412,102 @@ export function InventoryModule() {
                 </div>
               </>
             )}
+            <div className="section-h"><span>IDENTITY</span><span className="line" /></div>
+            <div style={{ padding: "0 12px" }}>
+              <div className="fld">
+                <span className="k">Model</span>
+                <input
+                  value={asset.model}
+                  onChange={(e) => updateAsset(asset.id, { model: e.target.value })}
+                />
+              </div>
+              <div className="fld">
+                <span className="k">Category</span>
+                <select
+                  value={asset.cat}
+                  onChange={(e) => updateAsset(asset.id, { cat: e.target.value })}
+                >
+                  {CAT_OPTIONS.map((c) => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="fld">
+                <span className="k">Status</span>
+                <select
+                  value={asset.status}
+                  onChange={(e) => updateAsset(asset.id, { status: e.target.value as AssetStatus })}
+                >
+                  {STATUS_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="fld">
+                <span className="k">Utilization</span>
+                <div className="unit-input" data-unit="%">
+                  <input
+                    type="number"
+                    min={0}
+                    max={100}
+                    value={asset.utilization}
+                    onChange={(e) =>
+                      updateAsset(asset.id, {
+                        utilization: Math.max(0, Math.min(100, Number(e.target.value) || 0)),
+                      })
+                    }
+                  />
+                </div>
+              </div>
+            </div>
             <div className="section-h"><span>ASSIGNMENT</span><span className="line" /></div>
-            <div className="kv">
-              <span className="k">Show</span><span className="v">{asset.show}</span>
-              <span className="k">Due back</span><span className="v">{asset.due}</span>
-              <span className="k">Crew</span><span className="v">M. Reyes</span>
-              <span className="k">Crate</span><span className="v">CASE-{asset.id.slice(-3)}</span>
+            <div style={{ padding: "0 12px" }}>
+              <div className="fld">
+                <span className="k">Show</span>
+                <input
+                  value={asset.show}
+                  onChange={(e) => updateAsset(asset.id, { show: e.target.value })}
+                />
+              </div>
+              <div className="fld">
+                <span className="k">Due back</span>
+                <input
+                  value={asset.due}
+                  onChange={(e) => updateAsset(asset.id, { due: e.target.value })}
+                />
+              </div>
             </div>
             <div className="section-h"><span>MAINTENANCE</span><span className="line" /></div>
-            <div className="kv">
-              <span className="k">Last svc</span><span className="v">{asset.last}</span>
-              <span className="k">Next due</span><span className="v">2026-07-15</span>
-              <span className="k">Total hrs</span><span className="v">2,184</span>
-              <span className="k">PM cycle</span><span className="v">90 days</span>
+            <div style={{ padding: "0 12px" }}>
+              <div className="fld">
+                <span className="k">Last svc</span>
+                <input
+                  value={asset.last}
+                  onChange={(e) => updateAsset(asset.id, { last: e.target.value })}
+                  placeholder="YYYY-MM-DD"
+                />
+              </div>
             </div>
-            <div className="section-h"><span>HISTORY</span><span className="line" /></div>
+            <div className="section-h"><span>ACTIONS</span><span className="line" /></div>
             <div style={{ padding: "0 12px 12px" }}>
-              {ASSET_HISTORY.map((h, i) => (
-                <div
-                  key={i}
-                  style={{
-                    display: "flex",
-                    gap: 8,
-                    padding: "4px 0",
-                    fontFamily: "var(--font-mono)",
-                    fontSize: 11,
-                    borderBottom: "1px solid var(--color-line-faint)",
-                  }}
-                >
-                  <span style={{ width: 50, color: "var(--color-fg-faint)" }}>{h.d}</span>
-                  <span style={{ flex: 1 }}>{h.e}</span>
-                  <span style={{ color: "var(--color-fg-faint)" }}>{h.t}</span>
-                </div>
-              ))}
+              <button
+                className="tb-btn danger"
+                onClick={handleDecommission}
+                style={{ width: "100%", justifyContent: "center" }}
+              >
+                <I.Cross size={13} /> Decommission asset
+              </button>
+              <div
+                className="mono"
+                style={{
+                  fontSize: 10,
+                  color: "var(--color-fg-faint)",
+                  marginTop: 6,
+                  textAlign: "center",
+                }}
+              >
+                Removes {asset.id} from the fleet.
+              </div>
             </div>
           </div>
         )}
