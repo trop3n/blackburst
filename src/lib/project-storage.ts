@@ -4,6 +4,7 @@ import { useLedWall } from "@/modules/led-wall/store";
 import { useRack } from "@/modules/rack-builder/store";
 import { useSystem } from "@/modules/system-designer/store";
 import { SYSTEM_EDGES, SYSTEM_NODES, WALL_LAYOUTS } from "@/lib/data";
+import { DOC_TREE } from "@/lib/docs-data";
 import { ASSETS } from "@/lib/inventory-data";
 import { DEFAULT_RACK } from "@/lib/rack-data";
 
@@ -65,8 +66,9 @@ const SPECS = {
     store: useInventory as unknown as StoreSpec["store"],
   },
   docs: {
-    fields: ["activeId", "expanded"],
+    fields: ["tree", "activeId", "expanded"],
     defaults: {
+      tree: DOC_TREE,
       activeId: "d-prj-ros",
       expanded: ["d-prj", "d-spec", "d-sop"],
     },
