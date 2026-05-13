@@ -2,17 +2,20 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { INITIAL_COMMENTS } from "@/lib/docs-comments";
 import { DOC_TREE } from "@/lib/docs-tree";
-import type { DocComment, DocNode } from "@/types";
+import { bumpVersion, INITIAL_VERSIONS, nowStamp } from "@/lib/docs-versions";
+import type { DocComment, DocNode, DocVersion } from "@/types";
 
 interface DocsState {
   tree: DocNode[];
   activeId: string;
   expanded: string[];
   comments: Record<string, DocComment[]>;
+  versions: Record<string, DocVersion[]>;
   setActive: (id: string) => void;
   toggle: (id: string) => void;
   addDoc: (targetId: string | null, name: string) => string | null;
   addComment: (docId: string, text: string) => void;
+  addVersion: (docId: string, note: string) => string | null;
 }
 
 function collectIds(nodes: DocNode[], out: Set<string> = new Set()): Set<string> {
@@ -71,6 +74,7 @@ export const useDocs = create<DocsState>()(
       activeId: "d-prj-ros",
       expanded: ["d-prj", "d-spec", "d-sop"],
       comments: INITIAL_COMMENTS,
+      versions: INITIAL_VERSIONS,
       setActive: (activeId) => set({ activeId }),
       toggle: (id) => {
         const cur = get().expanded;
@@ -113,6 +117,23 @@ export const useDocs = create<DocsState>()(
         set({
           comments: { ...state.comments, [docId]: [entry, ...existing] },
         });
+      },
+      addVersion: (docId, rawNote) => {
+        const note = rawNote.trim();
+        if (!note) return null;
+        const state = get();
+        const existing = state.versions[docId] ?? [];
+        const nextV = bumpVersion(existing[0]?.v);
+        const entry: DocVersion = {
+          v: nextV,
+          who: "You",
+          when: nowStamp(),
+          note,
+        };
+        set({
+          versions: { ...state.versions, [docId]: [entry, ...existing] },
+        });
+        return nextV;
       },
     }),
     { name: "blackburst:docs:v2" },

@@ -4,7 +4,6 @@ import { goto } from "@/lib/nav";
 import {
   DOC_BODIES,
   DOC_LINKED_BY_ID,
-  DOC_VERSIONS_BY_ID,
   RECENT_DOCS,
 } from "@/lib/docs-data";
 import type { DocNode } from "@/types";
@@ -122,6 +121,8 @@ export function DocsModule() {
   const addDoc = useDocs((s) => s.addDoc);
   const commentsMap = useDocs((s) => s.comments);
   const addComment = useDocs((s) => s.addComment);
+  const versionsMap = useDocs((s) => s.versions);
+  const addVersion = useDocs((s) => s.addVersion);
   const [search, setSearch] = useState("");
   const [draft, setDraft] = useState("");
 
@@ -144,7 +145,7 @@ export function DocsModule() {
     [tree, activeNode],
   );
 
-  const versions = DOC_VERSIONS_BY_ID[activeId] ?? [];
+  const versions = versionsMap[activeId] ?? [];
   const linked = DOC_LINKED_BY_ID[activeId] ?? [];
   const comments = commentsMap[activeId] ?? [];
   const body = DOC_BODIES[activeId];
@@ -154,6 +155,11 @@ export function DocsModule() {
   function onAdd() {
     const name = window.prompt("New document name:");
     if (name && name.trim()) addDoc(activeId, name);
+  }
+
+  function onAddVersion() {
+    const note = window.prompt("Version note (what changed?):");
+    if (note && note.trim()) addVersion(activeId, note);
   }
 
   function submitComment() {
@@ -266,7 +272,17 @@ export function DocsModule() {
       </div>
 
       <div className="right-pane">
-        <div className="pane-hd"><span>VERSION HISTORY</span></div>
+        <div className="pane-hd">
+          <span>VERSION HISTORY</span>
+          <span className="spacer" />
+          <button
+            className="icon-btn"
+            onClick={onAddVersion}
+            title="Save as new version"
+          >
+            <I.Plus size={12} />
+          </button>
+        </div>
         <div className="version-list">
           {versions.length === 0 ? (
             <div

@@ -10,12 +10,15 @@ import { useRack } from "@/modules/rack-builder/store";
 import { useSystem } from "@/modules/system-designer/store";
 import { useApp } from "@/store/useApp";
 import { useCmdk } from "@/store/useCmdk";
+import { useCmdkRecents } from "@/store/useCmdkRecents";
 import type { DocNode, ModuleId } from "@/types";
 
-type GroupId = "Jump" | "Docs" | "Assets" | "Walls" | "Nodes" | "Rack";
+type SectionId = "Recents" | "Jump" | "Docs" | "Assets" | "Walls" | "Nodes" | "Rack";
+type RowGroup = Exclude<SectionId, "Recents">;
+type Mode = null | "doc" | "asset" | "wall" | "node" | "rack-item" | "module";
 
 interface BaseRow {
-  group: GroupId;
+  group: RowGroup;
   label: string;
   sub: string;
   haystack: string;
@@ -28,7 +31,7 @@ interface ModuleRow extends BaseRow {
 }
 
 interface RefRow extends BaseRow {
-  group: Exclude<GroupId, "Jump">;
+  group: Exclude<RowGroup, "Jump">;
   kind: RefKind;
   id: string;
 }
@@ -43,8 +46,65 @@ const MODULE_ROWS: ModuleRow[] = [
   { group: "Jump", kind: "module", mod: "docs", label: "Documentation Hub", sub: "Module", haystack: "documentation docs hub module" },
 ];
 
-const GROUP_ORDER: GroupId[] = ["Jump", "Docs", "Assets", "Walls", "Nodes", "Rack"];
+const GROUP_ORDER: RowGroup[] = ["Jump", "Docs", "Assets", "Walls", "Nodes", "Rack"];
 const PER_GROUP_LIMIT = 6;
+const RECENTS_LIMIT = 5;
+
+const MODE_TO_GROUP: Record<Exclude<Mode, null>, RowGroup> = {
+  module: "Jump",
+  doc: "Docs",
+  asset: "Assets",
+  wall: "Walls",
+  node: "Nodes",
+  "rack-item": "Rack",
+};
+
+const MODE_PLACEHOLDER: Record<Exclude<Mode, null>, string> = {
+  module: "Jump to a module…",
+  doc: "Find a document…",
+  asset: "Find an asset…",
+  wall: "Find a wall…",
+  node: "Find a system node…",
+  "rack-item": "Find a rack item…",
+};
+
+function parseQuery(raw: string): { mode: Mode; rest: string } {
+  const m = raw.match(/^>(\w+)\s?(.*)$/);
+  if (!m) return { mode: null, rest: raw };
+  const prefix = m[1].toLowerCase();
+  const rest = m[2];
+  if (prefix === "doc" || prefix === "docs") return { mode: "doc", rest };
+  if (prefix === "asset" || prefix === "assets") return { mode: "asset", rest };
+  if (prefix === "wall" || prefix === "walls") return { mode: "wall", rest };
+  if (prefix === "node" || prefix === "nodes") return { mode: "node", rest };
+  if (prefix === "rack") return { mode: "rack-item", rest };
+  if (prefix === "mod" || prefix === "jump" || prefix === "go") return { mode: "module", rest };
+  return { mode: null, rest: raw };
+}
+
+function score(q: string, label: string, haystack: string): number {
+  if (!q) return 1;
+  const labelL = label.toLowerCase();
+  if (labelL === q) return 1000;
+  if (labelL.startsWith(q)) return 800 - (labelL.length - q.length);
+  const boundaryIdx = (() => {
+    if (labelL.startsWith(q)) return 0;
+    const at = labelL.indexOf(` ${q}`);
+    return at < 0 ? -1 : at + 1;
+  })();
+  if (boundaryIdx >= 0) return 600 - boundaryIdx;
+  const subIdx = labelL.indexOf(q);
+  if (subIdx >= 0) return 400 - subIdx;
+  const hayIdx = haystack.indexOf(q);
+  if (hayIdx >= 0) return 200 - hayIdx;
+  let li = 0;
+  for (let i = 0; i < q.length; i++) {
+    const idx = labelL.indexOf(q[i], li);
+    if (idx < 0) return 0;
+    li = idx + 1;
+  }
+  return 50;
+}
 
 function flattenDocs(nodes: DocNode[], out: { id: string; name: string; folder: string }[] = [], folder = ""): typeof out {
   for (const n of nodes) {
@@ -57,6 +117,10 @@ function flattenDocs(nodes: DocNode[], out: { id: string; name: string; folder: 
   return out;
 }
 
+function rowKey(row: CmdRow): string {
+  return row.kind === "module" ? `mod:${row.mod}` : `${row.kind}:${row.id}`;
+}
+
 export function CommandPalette() {
   const open = useCmdk((s) => s.open);
   const setOpen = useCmdk((s) => s.setOpen);
@@ -67,6 +131,8 @@ export function CommandPalette() {
   const docTree = useDocs((s) => s.tree);
   const rackItems = useRack((s) => s.items);
   const setModule = useApp((s) => s.setModule);
+  const recents = useCmdkRecents((s) => s.recents);
+  const pushRecent = useCmdkRecents((s) => s.push);
 
   const [query, setQuery] = useState("");
   const [index, setIndex] = useState(0);
@@ -120,32 +186,57 @@ export function CommandPalette() {
     return [...MODULE_ROWS, ...docs, ...assetRows, ...wallRows, ...nodeRows, ...rackRows];
   }, [assets, walls, nodes, docTree, rackItems]);
 
+  const { mode, rest } = useMemo(() => parseQuery(query), [query]);
+  const q = rest.trim().toLowerCase();
+
   const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    const groups = new Map<GroupId, CmdRow[]>();
-    for (const g of GROUP_ORDER) groups.set(g, []);
-    if (!q) {
-      groups.set("Jump", MODULE_ROWS);
+    const ordered: { group: SectionId; rows: CmdRow[] }[] = [];
+    const isEmpty = !q && !mode;
+    const allowedGroup = mode ? MODE_TO_GROUP[mode] : null;
+
+    if (isEmpty && recents.length > 0) {
+      const recentRows: CmdRow[] = [];
+      for (const r of recents) {
+        const match = allRows.find((row) => rowKey(row) === `${r.kind === "module" ? "mod" : r.kind}:${r.id}`);
+        if (match) recentRows.push(match);
+        if (recentRows.length >= RECENTS_LIMIT) break;
+      }
+      if (recentRows.length) ordered.push({ group: "Recents", rows: recentRows });
+    }
+
+    const buckets = new Map<RowGroup, { row: CmdRow; s: number }[]>();
+    for (const g of GROUP_ORDER) buckets.set(g, []);
+
+    if (isEmpty) {
+      buckets.set("Jump", MODULE_ROWS.map((r) => ({ row: r, s: 1 })));
       for (const r of allRows) {
         if (r.group === "Jump") continue;
-        const bucket = groups.get(r.group)!;
-        if (bucket.length < 3) bucket.push(r);
+        const bucket = buckets.get(r.group)!;
+        if (bucket.length < 3) bucket.push({ row: r, s: 1 });
       }
     } else {
       for (const r of allRows) {
-        if (!r.haystack.includes(q) && !r.label.toLowerCase().includes(q)) continue;
-        const bucket = groups.get(r.group)!;
-        if (bucket.length < PER_GROUP_LIMIT) bucket.push(r);
+        if (allowedGroup && r.group !== allowedGroup) continue;
+        const s = q ? score(q, r.label, r.haystack) : 1;
+        if (s <= 0) continue;
+        buckets.get(r.group)!.push({ row: r, s });
+      }
+      for (const items of buckets.values()) {
+        items.sort((a, b) => b.s - a.s);
+        if (items.length > PER_GROUP_LIMIT) items.length = PER_GROUP_LIMIT;
       }
     }
-    const ordered: { group: GroupId; rows: CmdRow[] }[] = [];
+
     for (const g of GROUP_ORDER) {
-      const rows = groups.get(g) ?? [];
-      if (rows.length) ordered.push({ group: g, rows });
+      if (mode && g !== allowedGroup) continue;
+      const items = buckets.get(g) ?? [];
+      if (items.length === 0) continue;
+      ordered.push({ group: g, rows: items.map((x) => x.row) });
     }
+
     const flat = ordered.flatMap((s) => s.rows);
     return { sections: ordered, flat };
-  }, [allRows, query]);
+  }, [allRows, q, mode, recents]);
 
   useEffect(() => {
     setIndex(0);
@@ -171,8 +262,13 @@ export function CommandPalette() {
 
   function dispatch(row: CmdRow) {
     setOpen(false);
-    if (row.kind === "module") setModule(row.mod);
-    else goto({ kind: row.kind, id: row.id });
+    if (row.kind === "module") {
+      setModule(row.mod);
+      pushRecent({ kind: "module", id: row.mod, label: row.label, sub: row.sub });
+    } else {
+      goto({ kind: row.kind, id: row.id });
+      pushRecent({ kind: row.kind, id: row.id, label: row.label, sub: row.sub });
+    }
   }
 
   function onKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
@@ -186,6 +282,11 @@ export function CommandPalette() {
       e.preventDefault();
       const row = filtered.flat[index];
       if (row) dispatch(row);
+      return;
+    }
+    if (e.key === "Backspace" && mode && rest === "") {
+      e.preventDefault();
+      setQuery("");
       return;
     }
     if (!total) return;
@@ -205,6 +306,9 @@ export function CommandPalette() {
   }
 
   let flatCursor = 0;
+  const placeholder = mode
+    ? MODE_PLACEHOLDER[mode]
+    : "Jump to a doc, asset, wall, node, rack item… (try >doc, >asset)";
 
   return (
     <div className="cmdk-overlay" onMouseDown={() => setOpen(false)}>
@@ -214,10 +318,11 @@ export function CommandPalette() {
       >
         <div className="cmdk-input-row">
           <I.Search size={14} />
+          {mode && <span className="cmdk-mode">{mode.toUpperCase()}</span>}
           <input
             ref={inputRef}
             className="cmdk-input"
-            placeholder="Jump to a doc, asset, wall, node, rack item…"
+            placeholder={placeholder}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={onKeyDown}
@@ -236,7 +341,7 @@ export function CommandPalette() {
                   const active = i === index;
                   return (
                     <div
-                      key={`${row.group}-${"mod" in row ? row.mod : row.id}`}
+                      key={`${section.group}-${rowKey(row)}`}
                       className="cmdk-row"
                       data-cmdk-row={i}
                       data-active={active ? "1" : "0"}
@@ -260,6 +365,7 @@ export function CommandPalette() {
           <span><kbd>↑</kbd><kbd>↓</kbd> select</span>
           <span><kbd>↵</kbd> open</span>
           <span><kbd>ESC</kbd> close</span>
+          <span><kbd>&gt;</kbd>doc / asset / wall / node / rack</span>
           <span style={{ marginLeft: "auto" }}>{filtered.flat.length} results</span>
         </div>
       </div>

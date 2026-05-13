@@ -6,6 +6,7 @@ import { useSystem } from "@/modules/system-designer/store";
 import { SYSTEM_EDGES, SYSTEM_NODES, WALL_LAYOUTS } from "@/lib/data";
 import { INITIAL_COMMENTS } from "@/lib/docs-comments";
 import { DOC_TREE } from "@/lib/docs-tree";
+import { INITIAL_VERSIONS } from "@/lib/docs-versions";
 import { ASSETS } from "@/lib/inventory-data";
 import { DEFAULT_RACK } from "@/lib/rack-data";
 
@@ -67,12 +68,13 @@ const SPECS = {
     store: useInventory as unknown as StoreSpec["store"],
   },
   docs: {
-    fields: ["tree", "activeId", "expanded", "comments"],
+    fields: ["tree", "activeId", "expanded", "comments", "versions"],
     defaults: {
       tree: DOC_TREE,
       activeId: "d-prj-ros",
       expanded: ["d-prj", "d-spec", "d-sop"],
       comments: INITIAL_COMMENTS,
+      versions: INITIAL_VERSIONS,
     },
     store: useDocs as unknown as StoreSpec["store"],
   },
