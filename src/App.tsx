@@ -1,4 +1,6 @@
 import { useEffect } from "react";
+import { CommandPalette } from "@/components/CommandPalette";
+import { SettingsPanel } from "@/components/SettingsPanel";
 import { Rail } from "@/components/shell/Rail";
 import { StatusBar } from "@/components/shell/StatusBar";
 import { Tabs } from "@/components/shell/Tabs";
@@ -9,6 +11,7 @@ import { LedWallModule } from "@/modules/led-wall/LedWallModule";
 import { RackBuilderModule } from "@/modules/rack-builder/RackBuilderModule";
 import { SystemDesignerModule } from "@/modules/system-designer/SystemDesignerModule";
 import { ACCENTS, useApp } from "@/store/useApp";
+import { useCmdk } from "@/store/useCmdk";
 
 export default function App() {
   const module = useApp((s) => s.module);
@@ -24,6 +27,18 @@ export default function App() {
     root.style.setProperty("--accent-faint", a.faint);
   }, [tweaks]);
 
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      const cmd = e.metaKey || e.ctrlKey;
+      if (cmd && (e.key === "k" || e.key === "K")) {
+        e.preventDefault();
+        useCmdk.getState().toggle();
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
   return (
     <div className="app">
       <Rail />
@@ -37,6 +52,8 @@ export default function App() {
         {module === "docs" && <DocsModule />}
       </main>
       <StatusBar />
+      <CommandPalette />
+      <SettingsPanel />
     </div>
   );
 }

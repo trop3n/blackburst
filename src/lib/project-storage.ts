@@ -4,7 +4,7 @@ import { useLedWall } from "@/modules/led-wall/store";
 import { useRack } from "@/modules/rack-builder/store";
 import { useSystem } from "@/modules/system-designer/store";
 import { SYSTEM_EDGES, SYSTEM_NODES, WALL_LAYOUTS } from "@/lib/data";
-import { DOC_TREE } from "@/lib/docs-data";
+import { DOC_TREE } from "@/lib/docs-tree";
 import { ASSETS } from "@/lib/inventory-data";
 import { DEFAULT_RACK } from "@/lib/rack-data";
 

@@ -1,10 +1,11 @@
 import { useDocs } from "@/modules/docs/store";
 import { useInventory } from "@/modules/inventory/store";
 import { useLedWall } from "@/modules/led-wall/store";
+import { useRack } from "@/modules/rack-builder/store";
 import { useSystem } from "@/modules/system-designer/store";
 import { useApp } from "@/store/useApp";
 
-export type RefKind = "asset" | "wall" | "node" | "doc";
+export type RefKind = "asset" | "wall" | "node" | "doc" | "rack-item";
 
 export interface RefTarget {
   kind: RefKind;
@@ -30,5 +31,11 @@ export function goto(target: RefTarget) {
       setModule("docs");
       useDocs.getState().setActive(target.id);
       break;
+    case "rack-item": {
+      setModule("rack");
+      const iid = Number(target.id);
+      if (Number.isFinite(iid)) useRack.getState().setSelectedIid(iid);
+      break;
+    }
   }
 }

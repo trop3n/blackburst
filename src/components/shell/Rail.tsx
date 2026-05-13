@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { I } from "@/components/Icon";
 import { useApp } from "@/store/useApp";
+import { useSettings } from "@/store/useSettings";
 import type { ModuleId } from "@/types";
 
 interface RailButtonProps {
@@ -30,6 +31,7 @@ const ITEMS: { id: ModuleId; label: string; icon: ReactNode }[] = [
 export function Rail() {
   const module = useApp((s) => s.module);
   const setModule = useApp((s) => s.setModule);
+  const openSettings = useSettings((s) => s.setOpen);
 
   return (
     <aside className="rail">
@@ -51,7 +53,7 @@ export function Rail() {
         className="rail-section"
         style={{ borderBottom: 0, borderTop: "1px solid var(--color-line)" }}
       >
-        <RailButton label="SET">
+        <RailButton label="SET" onClick={() => openSettings(true)}>
           <I.Settings size={16} />
         </RailButton>
       </div>

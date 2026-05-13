@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { DOC_TREE } from "@/lib/docs-data";
+import { DOC_TREE } from "@/lib/docs-tree";
 import type { DocNode } from "@/types";
 
 interface DocsState {

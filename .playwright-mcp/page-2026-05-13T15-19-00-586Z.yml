@@ -1,0 +1,152 @@
+- generic [ref=e3]:
+  - complementary [ref=e4]:
+    - generic [ref=e5]: BB
+    - generic [ref=e6]:
+      - button "WALL" [ref=e7] [cursor=pointer]:
+        - img [ref=e9]
+        - generic [ref=e11]: WALL
+      - button "SYS" [ref=e12] [cursor=pointer]:
+        - img [ref=e14]
+        - generic [ref=e19]: SYS
+      - button "RACK" [ref=e20] [cursor=pointer]:
+        - img [ref=e22]
+        - generic [ref=e24]: RACK
+      - button "INV" [ref=e25] [cursor=pointer]:
+        - img [ref=e27]
+        - generic [ref=e31]: INV
+      - button "DOCS" [ref=e32] [cursor=pointer]:
+        - img [ref=e34]
+        - generic [ref=e37]: DOCS
+    - button "SET" [ref=e40] [cursor=pointer]:
+      - img [ref=e42]
+      - generic [ref=e45]: SET
+  - banner [ref=e46]:
+    - generic [ref=e47]:
+      - generic [ref=e48] [cursor=pointer]:
+        - combobox "PRJ-2440" [ref=e49]:
+          - option "PRJ-2451 — Atrium Lobby Wall"
+          - option "PRJ-2447 — Auditorium Refresh"
+          - option "PRJ-2440 — Broadcast Studio B" [selected]
+        - generic [ref=e50]: PRJ-2440
+        - img [ref=e51]
+      - generic [ref=e53]: Broadcast Studio B
+      - generic [ref=e54]: KCR Media
+    - generic [ref=e55]:
+      - generic [ref=e56]: PROJECTS
+      - generic [ref=e57]: /
+      - generic [ref=e58]: PRJ-2440
+      - generic [ref=e59]: /
+      - generic [ref=e60]: Documentation Hub
+    - generic [ref=e62]:
+      - button "Search assets, docs, panels… ⌘K" [ref=e63] [cursor=pointer]:
+        - img [ref=e64]
+        - generic [ref=e67]: Search assets, docs, panels…
+        - generic [ref=e68]: ⌘K
+      - button "Import" [ref=e69] [cursor=pointer]:
+        - img [ref=e70]
+        - text: Import
+      - button "Export" [ref=e72] [cursor=pointer]:
+        - img [ref=e73]
+        - text: Export
+      - button "Save Rev" [ref=e75] [cursor=pointer]:
+        - img [ref=e76]
+        - text: Save Rev
+      - generic [ref=e79]: MR
+  - main [ref=e80]:
+    - generic [ref=e81]:
+      - generic [ref=e82]:
+        - generic [ref=e83]: DOCS TREE
+        - button "New document" [ref=e84] [cursor=pointer]:
+          - img [ref=e85]
+      - generic [ref=e87]:
+        - img [ref=e88]
+        - textbox "Search docs…" [ref=e91]
+      - generic [ref=e92]:
+        - generic [ref=e93]:
+          - generic [ref=e94] [cursor=pointer]:
+            - img [ref=e95]
+            - img [ref=e98]
+            - generic [ref=e100]: Helios Auditorium
+          - generic [ref=e101] [cursor=pointer]:
+            - img [ref=e103]
+            - generic [ref=e106]: Run-of-Show v3.2
+          - generic [ref=e107] [cursor=pointer]:
+            - img [ref=e109]
+            - generic [ref=e112]: Cue Sheet — Day 1
+          - generic [ref=e113] [cursor=pointer]:
+            - img [ref=e115]
+            - generic [ref=e118]: Patch List
+          - generic [ref=e119] [cursor=pointer]:
+            - img [ref=e121]
+            - generic [ref=e124]: Handoff Notes
+          - generic [ref=e125] [cursor=pointer]:
+            - img [ref=e126]
+            - img [ref=e129]
+            - generic [ref=e131]: Equipment Specs
+          - generic [ref=e132] [cursor=pointer]:
+            - img [ref=e134]
+            - generic [ref=e137]: Brompton SX40 — Manual
+          - generic [ref=e138] [cursor=pointer]:
+            - img [ref=e140]
+            - generic [ref=e143]: ROE Ruby RB2.6 — Spec
+          - generic [ref=e144] [cursor=pointer]:
+            - img [ref=e146]
+            - generic [ref=e149]: L-Acoustics LA12X — Spec
+          - generic [ref=e150] [cursor=pointer]:
+            - img [ref=e151]
+            - img [ref=e154]
+            - generic [ref=e156]: SOPs
+          - generic [ref=e157] [cursor=pointer]:
+            - img [ref=e159]
+            - generic [ref=e162]: Load-In Procedure
+          - generic [ref=e163] [cursor=pointer]:
+            - img [ref=e165]
+            - generic [ref=e168]: Wall Calibration
+          - generic [ref=e169] [cursor=pointer]:
+            - img [ref=e171]
+            - generic [ref=e174]: Strike & Pack-Out
+        - generic [ref=e176]: RECENT
+        - generic [ref=e178] [cursor=pointer]:
+          - img [ref=e179]
+          - generic [ref=e182]: Cue Sheet — Day 1
+          - generic [ref=e183]: 12m
+        - generic [ref=e184] [cursor=pointer]:
+          - img [ref=e185]
+          - generic [ref=e188]: ROE Ruby RB2.6 — Spec
+          - generic [ref=e189]: 1h
+        - generic [ref=e190] [cursor=pointer]:
+          - img [ref=e191]
+          - generic [ref=e194]: Load-In Procedure
+          - generic [ref=e195]: 3h
+    - generic [ref=e196]:
+      - generic [ref=e197]:
+        - generic [ref=e198]: Helios Auditorium
+        - generic [ref=e199]: /
+        - generic [ref=e200]: Cue Sheet — Day 1
+        - button "Preview" [ref=e201] [cursor=pointer]:
+          - img [ref=e202]
+          - text: Preview
+        - button "Export PDF" [ref=e205] [cursor=pointer]:
+          - img [ref=e206]
+          - text: Export PDF
+      - generic [ref=e208]:
+        - heading "Cue Sheet — Day 1" [level=1] [ref=e209]
+        - generic [ref=e211]: NO CONTENT YET
+        - paragraph [ref=e212]: This document doesn't have a body yet. Open it in an editor to start writing.
+    - generic [ref=e213]:
+      - generic [ref=e215]: VERSION HISTORY
+      - generic [ref=e217]: No versions recorded.
+      - generic [ref=e219]: LINKED REFERENCES
+      - generic [ref=e221]: No linked references.
+      - generic [ref=e222]:
+        - generic [ref=e223]: COMMENTS
+        - generic [ref=e224]: 0 OPEN
+      - generic [ref=e226]: No comments.
+  - contentinfo [ref=e227]:
+    - generic [ref=e228]: READY
+    - generic [ref=e230]: REV 0000
+    - generic [ref=e231]: SAVED —
+    - generic [ref=e232]: 2 ERRORS · 1 WARN
+    - generic [ref=e234]: PRJ-2440
+    - generic [ref=e235]: UTC-05
+    - generic [ref=e236]: 10:19:00

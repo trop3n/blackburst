@@ -2,6 +2,7 @@ import { useRef } from "react";
 import { I } from "@/components/Icon";
 import { exportProject, importProject } from "@/lib/project-io";
 import { useApp } from "@/store/useApp";
+import { useCmdk } from "@/store/useCmdk";
 import type { ModuleId } from "@/types";
 
 const MODULE_LABELS: Record<ModuleId, string> = {
@@ -19,6 +20,7 @@ export function Topbar() {
   const currentProjectId = useApp((s) => s.currentProjectId);
   const setCurrentProjectId = useApp((s) => s.setCurrentProjectId);
   const saveRev = useApp((s) => s.saveRev);
+  const openCmdk = useCmdk((s) => s.setOpen);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSaveRev = () => {
@@ -67,11 +69,11 @@ export function Topbar() {
       </div>
       <div className="spacer" />
       <div className="topbar-section" style={{ borderRight: 0, paddingRight: 0 }}>
-        <div className="cmdk">
+        <button className="cmdk" type="button" onClick={() => openCmdk(true)}>
           <I.Search size={12} />
           <span>Search assets, docs, panels…</span>
           <kbd>⌘K</kbd>
-        </div>
+        </button>
         <button className="tb-btn" onClick={() => fileInputRef.current?.click()}>
           <I.Folder size={13} /> Import
         </button>
