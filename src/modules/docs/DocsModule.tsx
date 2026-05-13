@@ -3,7 +3,6 @@ import { I } from "@/components/Icon";
 import { goto } from "@/lib/nav";
 import {
   DOC_BODIES,
-  DOC_COMMENTS_BY_ID,
   DOC_LINKED_BY_ID,
   DOC_VERSIONS_BY_ID,
   RECENT_DOCS,
@@ -121,7 +120,10 @@ export function DocsModule() {
   const expandedArr = useDocs((s) => s.expanded);
   const toggle = useDocs((s) => s.toggle);
   const addDoc = useDocs((s) => s.addDoc);
+  const commentsMap = useDocs((s) => s.comments);
+  const addComment = useDocs((s) => s.addComment);
   const [search, setSearch] = useState("");
+  const [draft, setDraft] = useState("");
 
   const q = search.trim().toLowerCase();
   const filtered = useMemo<FilterResult | null>(
@@ -144,13 +146,27 @@ export function DocsModule() {
 
   const versions = DOC_VERSIONS_BY_ID[activeId] ?? [];
   const linked = DOC_LINKED_BY_ID[activeId] ?? [];
-  const comments = DOC_COMMENTS_BY_ID[activeId] ?? [];
+  const comments = commentsMap[activeId] ?? [];
   const body = DOC_BODIES[activeId];
   const currentVersion = versions[0]?.v;
+  const trimmedDraft = draft.trim();
 
   function onAdd() {
     const name = window.prompt("New document name:");
     if (name && name.trim()) addDoc(activeId, name);
+  }
+
+  function submitComment() {
+    if (!trimmedDraft) return;
+    addComment(activeId, trimmedDraft);
+    setDraft("");
+  }
+
+  function onComposerKey(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+    if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+      e.preventDefault();
+      submitComment();
+    }
   }
 
   return (
@@ -314,9 +330,30 @@ export function DocsModule() {
           </span>
         </div>
         <div style={{ padding: "0 12px 12px", fontSize: 11.5 }}>
+          <div className="comment-composer">
+            <textarea
+              className="comment-input"
+              placeholder="Add a comment…"
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              onKeyDown={onComposerKey}
+              rows={2}
+            />
+            <div className="comment-composer-row">
+              <span className="comment-hint mono">⌘↵ to post</span>
+              <button
+                className="tb-btn"
+                type="button"
+                onClick={submitComment}
+                disabled={!trimmedDraft}
+              >
+                Comment
+              </button>
+            </div>
+          </div>
           {comments.length === 0 ? (
             <div style={{ padding: "8px 0", color: "var(--color-fg-faint)" }}>
-              No comments.
+              No comments yet.
             </div>
           ) : (
             comments.map((cm, i) => (

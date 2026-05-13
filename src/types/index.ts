@@ -121,6 +121,12 @@ export interface DocVersion {
   note: string;
 }
 
+export interface DocComment {
+  who: string;
+  t: string;
+  c: string;
+}
+
 export interface PatchEntry {
   id: string;
   src: string;

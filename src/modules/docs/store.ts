@@ -1,15 +1,18 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { INITIAL_COMMENTS } from "@/lib/docs-comments";
 import { DOC_TREE } from "@/lib/docs-tree";
-import type { DocNode } from "@/types";
+import type { DocComment, DocNode } from "@/types";
 
 interface DocsState {
   tree: DocNode[];
   activeId: string;
   expanded: string[];
+  comments: Record<string, DocComment[]>;
   setActive: (id: string) => void;
   toggle: (id: string) => void;
   addDoc: (targetId: string | null, name: string) => string | null;
+  addComment: (docId: string, text: string) => void;
 }
 
 function collectIds(nodes: DocNode[], out: Set<string> = new Set()): Set<string> {
@@ -67,6 +70,7 @@ export const useDocs = create<DocsState>()(
       tree: DOC_TREE,
       activeId: "d-prj-ros",
       expanded: ["d-prj", "d-spec", "d-sop"],
+      comments: INITIAL_COMMENTS,
       setActive: (activeId) => set({ activeId }),
       toggle: (id) => {
         const cur = get().expanded;
@@ -99,6 +103,16 @@ export const useDocs = create<DocsState>()(
           : [...state.expanded, parentId];
         set({ tree: next, expanded, activeId: id });
         return id;
+      },
+      addComment: (docId, rawText) => {
+        const text = rawText.trim();
+        if (!text) return;
+        const state = get();
+        const existing = state.comments[docId] ?? [];
+        const entry: DocComment = { who: "You", t: "now", c: text };
+        set({
+          comments: { ...state.comments, [docId]: [entry, ...existing] },
+        });
       },
     }),
     { name: "blackburst:docs:v2" },
