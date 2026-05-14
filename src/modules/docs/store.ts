@@ -9,6 +9,7 @@ interface DocsState {
   tree: DocNode[];
   activeId: string;
   expanded: string[];
+  recentIds: string[];
   comments: Record<string, DocComment[]>;
   versions: Record<string, DocVersion[]>;
   setActive: (id: string) => void;
@@ -17,6 +18,8 @@ interface DocsState {
   addComment: (docId: string, text: string) => void;
   addVersion: (docId: string, note: string) => string | null;
 }
+
+const MAX_RECENT_DOCS = 6;
 
 function collectIds(nodes: DocNode[], out: Set<string> = new Set()): Set<string> {
   for (const n of nodes) {
@@ -73,9 +76,23 @@ export const useDocs = create<DocsState>()(
       tree: DOC_TREE,
       activeId: "d-prj-ros",
       expanded: ["d-prj", "d-spec", "d-sop"],
+      recentIds: [],
       comments: INITIAL_COMMENTS,
       versions: INITIAL_VERSIONS,
-      setActive: (activeId) => set({ activeId }),
+      setActive: (activeId) => {
+        const state = get();
+        if (state.activeId === activeId) {
+          set({ activeId });
+          return;
+        }
+        const node = findNode(state.tree, activeId);
+        if (!node || node.kind !== "doc") {
+          set({ activeId });
+          return;
+        }
+        const next = [activeId, ...state.recentIds.filter((id) => id !== activeId)].slice(0, MAX_RECENT_DOCS);
+        set({ activeId, recentIds: next });
+      },
       toggle: (id) => {
         const cur = get().expanded;
         set({

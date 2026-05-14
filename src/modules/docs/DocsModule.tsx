@@ -1,10 +1,9 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { I } from "@/components/Icon";
 import { goto } from "@/lib/nav";
 import {
   DOC_BODIES,
   DOC_LINKED_BY_ID,
-  RECENT_DOCS,
 } from "@/lib/docs-data";
 import type { DocNode } from "@/types";
 import { useDocs } from "./store";
@@ -108,7 +107,7 @@ function filterTree(nodes: DocNode[], q: string): FilterResult {
   return { tree: walk(nodes), matchFolders };
 }
 
-function printDoc() {
+function exportDocPdf() {
   window.print();
 }
 
@@ -123,8 +122,31 @@ export function DocsModule() {
   const addComment = useDocs((s) => s.addComment);
   const versionsMap = useDocs((s) => s.versions);
   const addVersion = useDocs((s) => s.addVersion);
+  const recentIds = useDocs((s) => s.recentIds);
   const [search, setSearch] = useState("");
   const [draft, setDraft] = useState("");
+  const [previewing, setPreviewing] = useState(false);
+
+  useEffect(() => {
+    if (!previewing) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        setPreviewing(false);
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [previewing]);
+
+  const recentDocs = useMemo(
+    () =>
+      recentIds
+        .map((id) => findNode(tree, id))
+        .filter((n): n is DocNode => !!n && n.kind === "doc")
+        .slice(0, 5),
+    [recentIds, tree],
+  );
 
   const q = search.trim().toLowerCase();
   const filtered = useMemo<FilterResult | null>(
@@ -220,18 +242,31 @@ export function DocsModule() {
             )}
           </div>
           <div className="section-h"><span>RECENT</span><span className="line" /></div>
-          {RECENT_DOCS.map((r) => (
+          {recentDocs.length === 0 ? (
             <div
-              key={r.id}
-              className="list-row"
-              onClick={() => setActive(r.id)}
-              style={{ cursor: "pointer" }}
+              style={{
+                padding: "8px 12px",
+                fontSize: 11,
+                color: "var(--color-fg-faint)",
+              }}
             >
-              <I.File size={12} />
-              <span className="lbl">{r.n}</span>
-              <span className="meta">{r.t}</span>
+              Open a document to populate recents.
             </div>
-          ))}
+          ) : (
+            recentDocs.map((d, i) => (
+              <div
+                key={d.id}
+                className="list-row"
+                onClick={() => setActive(d.id)}
+                style={{ cursor: "pointer" }}
+                data-active={d.id === activeId ? "1" : "0"}
+              >
+                <I.File size={12} />
+                <span className="lbl">{d.name}</span>
+                <span className="meta">{i === 0 ? "now" : `#${i + 1}`}</span>
+              </div>
+            ))
+          )}
         </div>
       </div>
 
@@ -248,10 +283,10 @@ export function DocsModule() {
           {currentVersion && (
             <span className="chip accent">{currentVersion} · CURRENT</span>
           )}
-          <button className="tb-btn" onClick={printDoc}>
+          <button className="tb-btn" onClick={() => setPreviewing(true)}>
             <I.Eye size={13} /> Preview
           </button>
-          <button className="tb-btn" onClick={printDoc}>
+          <button className="tb-btn" onClick={exportDocPdf}>
             <I.Export size={13} /> Export PDF
           </button>
         </div>
@@ -387,6 +422,44 @@ export function DocsModule() {
           )}
         </div>
       </div>
+
+      {previewing && (
+        <div className="docs-preview-overlay">
+          <div className="docs-preview-toolbar">
+            <span className="mono" style={{ fontSize: 11, color: "var(--color-fg-faint)" }}>
+              PREVIEW · {activeNode?.name ?? "Untitled"}
+              {currentVersion ? ` · ${currentVersion}` : ""}
+            </span>
+            <span style={{ flex: 1 }} />
+            <button className="tb-btn" type="button" onClick={exportDocPdf}>
+              <I.Export size={13} /> Export PDF
+            </button>
+            <button
+              className="tb-btn"
+              type="button"
+              onClick={() => setPreviewing(false)}
+              title="Exit preview (Esc)"
+            >
+              <I.Cross size={12} /> Exit
+            </button>
+          </div>
+          <div className="docs-preview-sheet">
+            <div className="docs-page">
+              {body ?? (
+                <>
+                  <h1>{activeNode?.name ?? "Untitled"}</h1>
+                  <div className="meta-row">
+                    <span>NO CONTENT YET</span>
+                  </div>
+                  <p style={{ color: "var(--color-fg-faint)" }}>
+                    This document doesn't have a body yet. Open it in an editor to start writing.
+                  </p>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

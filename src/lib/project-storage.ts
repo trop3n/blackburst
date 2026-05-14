@@ -3,6 +3,7 @@ import { useInventory } from "@/modules/inventory/store";
 import { useLedWall } from "@/modules/led-wall/store";
 import { useRack } from "@/modules/rack-builder/store";
 import { useSystem } from "@/modules/system-designer/store";
+import { useCmdkRecents } from "@/store/useCmdkRecents";
 import { SYSTEM_EDGES, SYSTEM_NODES, WALL_LAYOUTS } from "@/lib/data";
 import { INITIAL_COMMENTS } from "@/lib/docs-comments";
 import { DOC_TREE } from "@/lib/docs-tree";
@@ -68,15 +69,23 @@ const SPECS = {
     store: useInventory as unknown as StoreSpec["store"],
   },
   docs: {
-    fields: ["tree", "activeId", "expanded", "comments", "versions"],
+    fields: ["tree", "activeId", "expanded", "recentIds", "comments", "versions"],
     defaults: {
       tree: DOC_TREE,
       activeId: "d-prj-ros",
       expanded: ["d-prj", "d-spec", "d-sop"],
+      recentIds: [],
       comments: INITIAL_COMMENTS,
       versions: INITIAL_VERSIONS,
     },
     store: useDocs as unknown as StoreSpec["store"],
+  },
+  cmdkRecents: {
+    fields: ["recents"],
+    defaults: {
+      recents: [],
+    },
+    store: useCmdkRecents as unknown as StoreSpec["store"],
   },
 } as const satisfies Record<string, StoreSpec>;
 

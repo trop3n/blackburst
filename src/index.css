@@ -1174,6 +1174,38 @@ button { font-family: inherit; color: inherit; }
   color: var(--color-fg);
   max-width: none;
 }
+
+.docs-preview-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--color-bg-0);
+  display: flex;
+  flex-direction: column;
+  z-index: 60;
+}
+.docs-preview-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-bottom: 1px solid var(--color-line);
+  background: var(--color-bg-1);
+}
+.docs-preview-sheet {
+  flex: 1;
+  overflow: auto;
+  padding: 24px;
+  display: flex;
+  justify-content: center;
+}
+.docs-preview-sheet .docs-page {
+  width: 100%;
+  max-width: 760px;
+  background: var(--color-bg-1);
+  border: 1px solid var(--color-line);
+  border-radius: 4px;
+  padding: 48px 64px;
+}
 .docs-page h1 {
   font-family: var(--font-mono);
   font-size: 22px;
