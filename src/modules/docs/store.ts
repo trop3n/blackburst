@@ -17,6 +17,7 @@ interface DocsState {
   toggle: (id: string) => void;
   addDoc: (targetId: string | null, name: string) => string | null;
   setBody: (docId: string, text: string) => void;
+  clearBody: (docId: string) => void;
   addComment: (docId: string, text: string) => void;
   addVersion: (docId: string, note: string) => string | null;
 }
@@ -131,6 +132,12 @@ export const useDocs = create<DocsState>()(
       setBody: (docId, text) => {
         const state = get();
         set({ bodies: { ...state.bodies, [docId]: text } });
+      },
+      clearBody: (docId) => {
+        const state = get();
+        if (!(docId in state.bodies)) return;
+        const { [docId]: _omit, ...rest } = state.bodies;
+        set({ bodies: rest });
       },
       addComment: (docId, rawText) => {
         const text = rawText.trim();

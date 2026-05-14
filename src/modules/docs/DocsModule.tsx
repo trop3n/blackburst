@@ -126,11 +126,13 @@ export function DocsModule() {
   const recentIds = useDocs((s) => s.recentIds);
   const bodiesMap = useDocs((s) => s.bodies);
   const setBody = useDocs((s) => s.setBody);
+  const clearBody = useDocs((s) => s.clearBody);
   const [search, setSearch] = useState("");
   const [draft, setDraft] = useState("");
   const [previewing, setPreviewing] = useState(false);
   const [editing, setEditing] = useState(false);
   const [bodyDraft, setBodyDraft] = useState("");
+  const [bodyDraftInitial, setBodyDraftInitial] = useState("");
 
   useEffect(() => {
     if (!previewing) return;
@@ -188,7 +190,22 @@ export function DocsModule() {
     const initial =
       customBody ?? `# ${activeNode?.name ?? "Untitled"}\n\nStart writing…\n`;
     setBodyDraft(initial);
+    setBodyDraftInitial(initial);
     setEditing(true);
+  }
+
+  function confirmDiscard() {
+    if (!editing || bodyDraft === bodyDraftInitial) return true;
+    return window.confirm("Discard unsaved edits to this document?");
+  }
+
+  function guardedSetActive(nextId: string) {
+    if (nextId === activeId) {
+      setActive(nextId);
+      return;
+    }
+    if (!confirmDiscard()) return;
+    setActive(nextId);
   }
 
   function saveEdit() {
@@ -198,6 +215,11 @@ export function DocsModule() {
 
   function cancelEdit() {
     setEditing(false);
+  }
+
+  function onRevert() {
+    if (!window.confirm("Revert to the default content? Your custom version will be removed.")) return;
+    clearBody(activeId);
   }
 
   function onEditorKey(e: React.KeyboardEvent<HTMLTextAreaElement>) {
@@ -211,6 +233,7 @@ export function DocsModule() {
   }
 
   function onAdd() {
+    if (!confirmDiscard()) return;
     const name = window.prompt("New document name:");
     if (name && name.trim()) addDoc(activeId, name);
   }
@@ -270,7 +293,7 @@ export function DocsModule() {
                   node={n}
                   depth={0}
                   activeId={activeId}
-                  setActive={setActive}
+                  setActive={guardedSetActive}
                   expanded={expanded}
                   toggle={toggle}
                 />
@@ -293,7 +316,7 @@ export function DocsModule() {
               <div
                 key={d.id}
                 className="list-row"
-                onClick={() => setActive(d.id)}
+                onClick={() => guardedSetActive(d.id)}
                 style={{ cursor: "pointer" }}
                 data-active={d.id === activeId ? "1" : "0"}
               >
@@ -342,6 +365,15 @@ export function DocsModule() {
               <button className="tb-btn" onClick={startEdit}>
                 <I.Edit size={13} /> Edit
               </button>
+              {customBody !== undefined && stockBody !== undefined && (
+                <button
+                  className="tb-btn"
+                  onClick={onRevert}
+                  title="Discard your custom body and restore the default"
+                >
+                  <I.Undo size={13} /> Revert
+                </button>
+              )}
               <button className="tb-btn" onClick={exportDocPdf}>
                 <I.Export size={13} /> Export PDF
               </button>

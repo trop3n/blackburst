@@ -165,6 +165,12 @@ export const I = {
       <path d="M20 6 9 17l-5-5" />
     </Icon>
   ),
+  Undo: ({ size = 14 }: { size?: number }) => (
+    <Icon size={size}>
+      <path d="M9 14 4 9l5-5" />
+      <path d="M4 9h11a5 5 0 0 1 5 5v0a5 5 0 0 1-5 5h-4" />
+    </Icon>
+  ),
 };
 
 export default I;
