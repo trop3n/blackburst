@@ -6,6 +6,7 @@ import {
   DOC_LINKED_BY_ID,
 } from "@/lib/docs-data";
 import type { DocNode } from "@/types";
+import { MarkdownBody } from "./MarkdownBody";
 import { useDocs } from "./store";
 
 interface TreeNodeProps {
@@ -123,9 +124,13 @@ export function DocsModule() {
   const versionsMap = useDocs((s) => s.versions);
   const addVersion = useDocs((s) => s.addVersion);
   const recentIds = useDocs((s) => s.recentIds);
+  const bodiesMap = useDocs((s) => s.bodies);
+  const setBody = useDocs((s) => s.setBody);
   const [search, setSearch] = useState("");
   const [draft, setDraft] = useState("");
   const [previewing, setPreviewing] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [bodyDraft, setBodyDraft] = useState("");
 
   useEffect(() => {
     if (!previewing) return;
@@ -170,9 +175,30 @@ export function DocsModule() {
   const versions = versionsMap[activeId] ?? [];
   const linked = DOC_LINKED_BY_ID[activeId] ?? [];
   const comments = commentsMap[activeId] ?? [];
-  const body = DOC_BODIES[activeId];
+  const customBody = bodiesMap[activeId];
+  const stockBody = DOC_BODIES[activeId];
   const currentVersion = versions[0]?.v;
   const trimmedDraft = draft.trim();
+
+  useEffect(() => {
+    setEditing(false);
+  }, [activeId]);
+
+  function startEdit() {
+    const initial =
+      customBody ?? `# ${activeNode?.name ?? "Untitled"}\n\nStart writing…\n`;
+    setBodyDraft(initial);
+    setEditing(true);
+  }
+
+  function saveEdit() {
+    setBody(activeId, bodyDraft);
+    setEditing(false);
+  }
+
+  function cancelEdit() {
+    setEditing(false);
+  }
 
   function onAdd() {
     const name = window.prompt("New document name:");
@@ -283,25 +309,53 @@ export function DocsModule() {
           {currentVersion && (
             <span className="chip accent">{currentVersion} · CURRENT</span>
           )}
-          <button className="tb-btn" onClick={() => setPreviewing(true)}>
-            <I.Eye size={13} /> Preview
-          </button>
-          <button className="tb-btn" onClick={exportDocPdf}>
-            <I.Export size={13} /> Export PDF
-          </button>
+          {editing ? (
+            <>
+              <button className="tb-btn" type="button" onClick={cancelEdit}>
+                <I.Cross size={12} /> Cancel
+              </button>
+              <button className="tb-btn primary" type="button" onClick={saveEdit}>
+                <I.Check size={13} /> Save
+              </button>
+            </>
+          ) : (
+            <>
+              <button className="tb-btn" onClick={() => setPreviewing(true)}>
+                <I.Eye size={13} /> Preview
+              </button>
+              <button className="tb-btn" onClick={startEdit}>
+                <I.Edit size={13} /> Edit
+              </button>
+              <button className="tb-btn" onClick={exportDocPdf}>
+                <I.Export size={13} /> Export PDF
+              </button>
+            </>
+          )}
         </div>
 
         <div className="docs-page">
-          {body ?? (
-            <>
-              <h1>{activeNode?.name ?? "Untitled"}</h1>
-              <div className="meta-row">
-                <span>NO CONTENT YET</span>
-              </div>
-              <p style={{ color: "var(--color-fg-faint)" }}>
-                This document doesn't have a body yet. Open it in an editor to start writing.
-              </p>
-            </>
+          {editing ? (
+            <textarea
+              className="docs-edit-area"
+              value={bodyDraft}
+              onChange={(e) => setBodyDraft(e.target.value)}
+              autoFocus
+              spellCheck={false}
+            />
+          ) : customBody !== undefined ? (
+            <MarkdownBody text={customBody} />
+          ) : (
+            stockBody ?? (
+              <>
+                <h1>{activeNode?.name ?? "Untitled"}</h1>
+                <div className="meta-row">
+                  <span>NO CONTENT YET</span>
+                </div>
+                <p style={{ color: "var(--color-fg-faint)" }}>
+                  This document doesn't have a body yet. Click <b>Edit</b> to start writing.
+                </p>
+              </>
+            )
           )}
         </div>
       </div>
@@ -445,16 +499,20 @@ export function DocsModule() {
           </div>
           <div className="docs-preview-sheet">
             <div className="docs-page">
-              {body ?? (
-                <>
-                  <h1>{activeNode?.name ?? "Untitled"}</h1>
-                  <div className="meta-row">
-                    <span>NO CONTENT YET</span>
-                  </div>
-                  <p style={{ color: "var(--color-fg-faint)" }}>
-                    This document doesn't have a body yet. Open it in an editor to start writing.
-                  </p>
-                </>
+              {customBody !== undefined ? (
+                <MarkdownBody text={customBody} />
+              ) : (
+                stockBody ?? (
+                  <>
+                    <h1>{activeNode?.name ?? "Untitled"}</h1>
+                    <div className="meta-row">
+                      <span>NO CONTENT YET</span>
+                    </div>
+                    <p style={{ color: "var(--color-fg-faint)" }}>
+                      This document doesn't have a body yet. Click <b>Edit</b> to start writing.
+                    </p>
+                  </>
+                )
               )}
             </div>
           </div>

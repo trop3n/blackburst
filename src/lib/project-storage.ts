@@ -69,12 +69,13 @@ const SPECS = {
     store: useInventory as unknown as StoreSpec["store"],
   },
   docs: {
-    fields: ["tree", "activeId", "expanded", "recentIds", "comments", "versions"],
+    fields: ["tree", "activeId", "expanded", "recentIds", "bodies", "comments", "versions"],
     defaults: {
       tree: DOC_TREE,
       activeId: "d-prj-ros",
       expanded: ["d-prj", "d-spec", "d-sop"],
       recentIds: [],
+      bodies: {},
       comments: INITIAL_COMMENTS,
       versions: INITIAL_VERSIONS,
     },

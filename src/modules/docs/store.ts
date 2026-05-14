@@ -10,11 +10,13 @@ interface DocsState {
   activeId: string;
   expanded: string[];
   recentIds: string[];
+  bodies: Record<string, string>;
   comments: Record<string, DocComment[]>;
   versions: Record<string, DocVersion[]>;
   setActive: (id: string) => void;
   toggle: (id: string) => void;
   addDoc: (targetId: string | null, name: string) => string | null;
+  setBody: (docId: string, text: string) => void;
   addComment: (docId: string, text: string) => void;
   addVersion: (docId: string, note: string) => string | null;
 }
@@ -77,6 +79,7 @@ export const useDocs = create<DocsState>()(
       activeId: "d-prj-ros",
       expanded: ["d-prj", "d-spec", "d-sop"],
       recentIds: [],
+      bodies: {},
       comments: INITIAL_COMMENTS,
       versions: INITIAL_VERSIONS,
       setActive: (activeId) => {
@@ -124,6 +127,10 @@ export const useDocs = create<DocsState>()(
           : [...state.expanded, parentId];
         set({ tree: next, expanded, activeId: id });
         return id;
+      },
+      setBody: (docId, text) => {
+        const state = get();
+        set({ bodies: { ...state.bodies, [docId]: text } });
       },
       addComment: (docId, rawText) => {
         const text = rawText.trim();

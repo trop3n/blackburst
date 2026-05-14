@@ -154,6 +154,17 @@ export const I = {
       <path d="M12 1v4M12 19v4M4.2 4.2l2.8 2.8M17 17l2.8 2.8M1 12h4M19 12h4M4.2 19.8L7 17M17 7l2.8-2.8" />
     </Icon>
   ),
+  Edit: ({ size = 14 }: { size?: number }) => (
+    <Icon size={size}>
+      <path d="M12 20h9" />
+      <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" />
+    </Icon>
+  ),
+  Check: ({ size = 14 }: { size?: number }) => (
+    <Icon size={size}>
+      <path d="M20 6 9 17l-5-5" />
+    </Icon>
+  ),
 };
 
 export default I;
