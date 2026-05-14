@@ -1,6 +1,7 @@
 import { Fragment, useRef, useState } from "react";
 import { I } from "@/components/Icon";
 import { PATCH_SHEET } from "@/lib/data";
+import { useApp } from "@/store/useApp";
 import type { Lane, PatchLane, SystemEdge, SystemNode } from "@/types";
 import { useSystem } from "./store";
 
@@ -91,6 +92,7 @@ function pathFor(e: SystemEdge, nodes: SystemNode[]): string {
 }
 
 export function SystemDesignerModule() {
+  const canvasStyle = useApp((s) => s.tweaks.canvasStyle);
   const nodes = useSystem((s) => s.nodes);
   const edges = useSystem((s) => s.edges);
   const lanes = useSystem((s) => s.lanes);
@@ -329,7 +331,7 @@ export function SystemDesignerModule() {
           <div
             ref={canvasRef}
             className="led-canvas"
-            data-canvas-style="schematic"
+            data-canvas-style={canvasStyle}
             data-edge-draft={edgeDraft?.lane ?? undefined}
             style={{ cursor: edgeDraft ? "crosshair" : "default" }}
             onDragOver={onCanvasDragOver}

@@ -3,6 +3,7 @@ import { I } from "@/components/Icon";
 import { exportProject, importProject } from "@/lib/project-io";
 import { useApp } from "@/store/useApp";
 import { useCmdk } from "@/store/useCmdk";
+import { useSettings } from "@/store/useSettings";
 import type { ModuleId } from "@/types";
 
 const MODULE_LABELS: Record<ModuleId, string> = {
@@ -21,6 +22,7 @@ export function Topbar() {
   const setCurrentProjectId = useApp((s) => s.setCurrentProjectId);
   const saveRev = useApp((s) => s.saveRev);
   const openCmdk = useCmdk((s) => s.setOpen);
+  const openSettings = useSettings((s) => s.setOpen);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSaveRev = () => {
@@ -89,6 +91,15 @@ export function Topbar() {
         </button>
         <button className="tb-btn primary" onClick={handleSaveRev}>
           <I.Plus size={13} /> Save Rev
+        </button>
+        <button
+          className="icon-btn"
+          type="button"
+          onClick={() => openSettings(true)}
+          title="Workspace settings"
+          aria-label="Open settings"
+        >
+          <I.Settings size={14} />
         </button>
         <div className="user-chip">
           <div className="avatar">MR</div>

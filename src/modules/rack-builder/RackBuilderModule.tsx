@@ -1,6 +1,7 @@
 import { Fragment, useEffect } from "react";
 import { I } from "@/components/Icon";
 import { RACK_CATALOG, RACK_COLOR_MAP } from "@/lib/rack-data";
+import { useApp } from "@/store/useApp";
 import type { RackSize } from "@/types";
 import { fits, useRack } from "./store";
 
@@ -9,6 +10,7 @@ const RACK_W = 360;
 const RACK_SIZES: RackSize[] = [24, 42, 48];
 
 export function RackBuilderModule() {
+  const canvasStyle = useApp((s) => s.tweaks.canvasStyle);
   const items = useRack((s) => s.items);
   const selectedIid = useRack((s) => s.selectedIid);
   const rackSize = useRack((s) => s.rackSize);
@@ -274,7 +276,7 @@ export function RackBuilderModule() {
 
         <div
           className="led-canvas"
-          data-canvas-style="schematic"
+          data-canvas-style={canvasStyle}
           style={{ cursor: "default", overflow: "auto" }}
         >
           <div className="canvas-overlay tl">

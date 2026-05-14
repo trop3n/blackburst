@@ -339,6 +339,14 @@ button { font-family: inherit; color: inherit; }
   min-height: 0;
   overflow: hidden;
 }
+[data-shell="palette"] .app {
+  grid-template-columns: 1fr;
+  grid-template-areas:
+    "topbar"
+    "main"
+    "statusbar";
+}
+[data-shell="palette"] .rail { display: none; }
 [data-shell="palette"] .main { grid-template-columns: 1fr; }
 [data-shell="palette"] .left-pane,
 [data-shell="palette"] .right-pane { display: none; }
