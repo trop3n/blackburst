@@ -200,6 +200,16 @@ export function DocsModule() {
     setEditing(false);
   }
 
+  function onEditorKey(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+    if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+      e.preventDefault();
+      saveEdit();
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      cancelEdit();
+    }
+  }
+
   function onAdd() {
     const name = window.prompt("New document name:");
     if (name && name.trim()) addDoc(activeId, name);
@@ -311,6 +321,12 @@ export function DocsModule() {
           )}
           {editing ? (
             <>
+              <span
+                className="mono"
+                style={{ fontSize: 10, color: "var(--color-fg-faint)" }}
+              >
+                ⌘↵ save · Esc cancel
+              </span>
               <button className="tb-btn" type="button" onClick={cancelEdit}>
                 <I.Cross size={12} /> Cancel
               </button>
@@ -339,6 +355,7 @@ export function DocsModule() {
               className="docs-edit-area"
               value={bodyDraft}
               onChange={(e) => setBodyDraft(e.target.value)}
+              onKeyDown={onEditorKey}
               autoFocus
               spellCheck={false}
             />
