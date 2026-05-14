@@ -16,9 +16,11 @@ interface TreeNodeProps {
   setActive: (id: string) => void;
   expanded: Set<string>;
   toggle: (id: string) => void;
+  onRename: (node: DocNode) => void;
+  onDelete: (node: DocNode) => void;
 }
 
-function DocTreeNode({ node, depth, activeId, setActive, expanded, toggle }: TreeNodeProps) {
+function DocTreeNode({ node, depth, activeId, setActive, expanded, toggle, onRename, onDelete }: TreeNodeProps) {
   const isOpen = expanded.has(node.id);
   return (
     <>
@@ -42,6 +44,28 @@ function DocTreeNode({ node, depth, activeId, setActive, expanded, toggle }: Tre
         <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
           {node.name}
         </span>
+        <span className="docs-node-actions">
+          <button
+            type="button"
+            title="Rename"
+            onClick={(e) => {
+              e.stopPropagation();
+              onRename(node);
+            }}
+          >
+            <I.Edit size={11} />
+          </button>
+          <button
+            type="button"
+            title="Delete"
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(node);
+            }}
+          >
+            <I.Cross size={11} />
+          </button>
+        </span>
       </div>
       {node.kind === "folder" &&
         isOpen &&
@@ -54,6 +78,8 @@ function DocTreeNode({ node, depth, activeId, setActive, expanded, toggle }: Tre
             setActive={setActive}
             expanded={expanded}
             toggle={toggle}
+            onRename={onRename}
+            onDelete={onDelete}
           />
         ))}
     </>
@@ -119,6 +145,8 @@ export function DocsModule() {
   const expandedArr = useDocs((s) => s.expanded);
   const toggle = useDocs((s) => s.toggle);
   const addDoc = useDocs((s) => s.addDoc);
+  const renameDoc = useDocs((s) => s.renameDoc);
+  const deleteDoc = useDocs((s) => s.deleteDoc);
   const commentsMap = useDocs((s) => s.comments);
   const addComment = useDocs((s) => s.addComment);
   const versionsMap = useDocs((s) => s.versions);
@@ -238,6 +266,25 @@ export function DocsModule() {
     if (name && name.trim()) addDoc(activeId, name);
   }
 
+  function onRenameNode(node: DocNode) {
+    const next = window.prompt(`Rename "${node.name}" to:`, node.name);
+    if (next === null) return;
+    const trimmed = next.trim();
+    if (!trimmed || trimmed === node.name) return;
+    renameDoc(node.id, trimmed);
+  }
+
+  function onDeleteNode(node: DocNode) {
+    if (node.kind === "folder" && (node.children?.length ?? 0) > 0) {
+      window.alert("Empty this folder before deleting it.");
+      return;
+    }
+    const label = node.kind === "folder" ? "folder" : "document";
+    if (!window.confirm(`Delete ${label} "${node.name}"? This cannot be undone.`)) return;
+    if (node.id === activeId && editing) setEditing(false);
+    deleteDoc(node.id);
+  }
+
   function onAddVersion() {
     const note = window.prompt("Version note (what changed?):");
     if (note && note.trim()) addVersion(activeId, note);
@@ -296,6 +343,8 @@ export function DocsModule() {
                   setActive={guardedSetActive}
                   expanded={expanded}
                   toggle={toggle}
+                  onRename={onRenameNode}
+                  onDelete={onDeleteNode}
                 />
               ))
             )}

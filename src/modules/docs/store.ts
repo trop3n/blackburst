@@ -18,6 +18,8 @@ interface DocsState {
   addDoc: (targetId: string | null, name: string) => string | null;
   setBody: (docId: string, text: string) => void;
   clearBody: (docId: string) => void;
+  renameDoc: (docId: string, newName: string) => boolean;
+  deleteDoc: (docId: string) => boolean;
   addComment: (docId: string, text: string) => void;
   addVersion: (docId: string, note: string) => string | null;
 }
@@ -71,6 +73,35 @@ function insertChild(nodes: DocNode[], parentId: string, child: DocNode): DocNod
     }
     return n;
   });
+}
+
+function renameNode(nodes: DocNode[], id: string, name: string): DocNode[] {
+  return nodes.map((n) => {
+    if (n.id === id) return { ...n, name };
+    if (n.children) return { ...n, children: renameNode(n.children, id, name) };
+    return n;
+  });
+}
+
+function removeNode(nodes: DocNode[], id: string): DocNode[] {
+  const out: DocNode[] = [];
+  for (const n of nodes) {
+    if (n.id === id) continue;
+    if (n.children) out.push({ ...n, children: removeNode(n.children, id) });
+    else out.push(n);
+  }
+  return out;
+}
+
+function firstDocId(nodes: DocNode[]): string | null {
+  for (const n of nodes) {
+    if (n.kind === "doc") return n.id;
+    if (n.children) {
+      const hit = firstDocId(n.children);
+      if (hit) return hit;
+    }
+  }
+  return null;
 }
 
 export const useDocs = create<DocsState>()(
@@ -138,6 +169,36 @@ export const useDocs = create<DocsState>()(
         if (!(docId in state.bodies)) return;
         const { [docId]: _omit, ...rest } = state.bodies;
         set({ bodies: rest });
+      },
+      renameDoc: (docId, rawName) => {
+        const name = rawName.trim();
+        if (!name) return false;
+        const state = get();
+        const node = findNode(state.tree, docId);
+        if (!node || node.name === name) return false;
+        set({ tree: renameNode(state.tree, docId, name) });
+        return true;
+      },
+      deleteDoc: (docId) => {
+        const state = get();
+        const node = findNode(state.tree, docId);
+        if (!node) return false;
+        if (node.kind === "folder" && (node.children?.length ?? 0) > 0) return false;
+
+        const nextTree = removeNode(state.tree, docId);
+        const { [docId]: _b, ...bodies } = state.bodies;
+        const { [docId]: _c, ...comments } = state.comments;
+        const { [docId]: _v, ...versions } = state.versions;
+        const recentIds = state.recentIds.filter((id) => id !== docId);
+        const expanded = state.expanded.filter((id) => id !== docId);
+
+        let activeId = state.activeId;
+        if (activeId === docId) {
+          activeId = recentIds.find((id) => !!findNode(nextTree, id)) ?? firstDocId(nextTree) ?? "";
+        }
+
+        set({ tree: nextTree, bodies, comments, versions, recentIds, expanded, activeId });
+        return true;
       },
       addComment: (docId, rawText) => {
         const text = rawText.trim();

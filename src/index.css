@@ -1163,6 +1163,26 @@ button { font-family: inherit; color: inherit; }
 .docs-node[data-active="1"] { background: var(--accent-faint); color: var(--accent); }
 .docs-node .ico { color: var(--color-fg-faint); display: inline-flex; }
 .docs-node[data-active="1"] .ico { color: var(--accent); }
+.docs-node-actions {
+  display: none;
+  gap: 2px;
+  align-items: center;
+}
+.docs-node:hover .docs-node-actions { display: inline-flex; }
+.docs-node-actions button {
+  background: none;
+  border: 0;
+  padding: 2px 3px;
+  color: var(--color-fg-faint);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 2px;
+}
+.docs-node-actions button:hover {
+  color: var(--accent);
+  background: var(--color-bg-2);
+}
 
 .docs-page {
   flex: 1;
