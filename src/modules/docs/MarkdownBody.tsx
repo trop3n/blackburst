@@ -77,8 +77,17 @@ function tokenize(raw: string): Block[] {
   return blocks;
 }
 
+function safeHref(url: string): string | null {
+  const u = url.trim();
+  if (/^(https?:|mailto:)/i.test(u)) return u;
+  if (u.startsWith("/") || u.startsWith("#") || u.startsWith("./") || u.startsWith("../")) return u;
+  return null;
+}
+
 function renderInline(s: string): ReactNode {
-  const matches = Array.from(s.matchAll(/(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)/g));
+  const matches = Array.from(
+    s.matchAll(/(\[[^\]]+\]\([^)]+\)|\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)/g),
+  );
   if (matches.length === 0) return s;
   const parts: ReactNode[] = [];
   let last = 0;
@@ -86,7 +95,26 @@ function renderInline(s: string): ReactNode {
     const idx = m.index ?? 0;
     if (idx > last) parts.push(s.slice(last, idx));
     const tok = m[0];
-    if (tok.startsWith("**")) {
+    if (tok.startsWith("[")) {
+      const close = tok.indexOf("](");
+      const text = tok.slice(1, close);
+      const url = tok.slice(close + 2, -1);
+      const href = safeHref(url);
+      if (href) {
+        const external = /^https?:/i.test(href);
+        parts.push(
+          <a
+            key={k}
+            href={href}
+            {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+          >
+            {text}
+          </a>,
+        );
+      } else {
+        parts.push(tok);
+      }
+    } else if (tok.startsWith("**")) {
       parts.push(<strong key={k}>{tok.slice(2, -2)}</strong>);
     } else if (tok.startsWith("*")) {
       parts.push(<em key={k}>{tok.slice(1, -1)}</em>);
