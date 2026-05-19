@@ -1683,3 +1683,43 @@ button { font-family: inherit; color: inherit; }
   font-size: 10px;
   color: var(--color-fg-faint);
 }
+
+@media print {
+  @page { margin: 16mm; }
+  body * { visibility: hidden !important; }
+  body:has(.docs-preview-overlay) .docs-preview-overlay .docs-page,
+  body:has(.docs-preview-overlay) .docs-preview-overlay .docs-page * {
+    visibility: visible !important;
+  }
+  body:not(:has(.docs-preview-overlay)) .docs-page,
+  body:not(:has(.docs-preview-overlay)) .docs-page * {
+    visibility: visible !important;
+  }
+  .docs-preview-overlay,
+  .docs-preview-sheet {
+    position: static !important;
+    background: white !important;
+    overflow: visible !important;
+    padding: 0 !important;
+    border: none !important;
+  }
+  .docs-page {
+    position: absolute !important;
+    inset: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    background: white !important;
+    color: black !important;
+    max-width: none !important;
+    overflow: visible !important;
+  }
+  .docs-page,
+  .docs-page * {
+    background: white !important;
+    color: black !important;
+    box-shadow: none !important;
+  }
+  .docs-page a { text-decoration: underline; }
+  .docs-page code { border: 1px solid #bbb !important; }
+  .docs-page pre { border: 1px solid #888 !important; }
+}
