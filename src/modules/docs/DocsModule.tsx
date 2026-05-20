@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { I } from "@/components/Icon";
 import { goto } from "@/lib/nav";
 import {
@@ -227,14 +227,14 @@ export function DocsModule() {
     return window.confirm("Discard unsaved edits to this document?");
   }
 
-  function guardedSetActive(nextId: string) {
-    if (nextId === activeId) {
-      setActive(nextId);
-      return;
-    }
-    if (!confirmDiscard()) return;
-    setActive(nextId);
-  }
+  const confirmDiscardRef = useRef(confirmDiscard);
+  confirmDiscardRef.current = confirmDiscard;
+
+  useEffect(() => {
+    const setLeaveGuard = useDocs.getState().setLeaveGuard;
+    setLeaveGuard(() => confirmDiscardRef.current());
+    return () => setLeaveGuard(null);
+  }, []);
 
   function saveEdit() {
     setBody(activeId, bodyDraft);
@@ -340,7 +340,7 @@ export function DocsModule() {
                   node={n}
                   depth={0}
                   activeId={activeId}
-                  setActive={guardedSetActive}
+                  setActive={setActive}
                   expanded={expanded}
                   toggle={toggle}
                   onRename={onRenameNode}
@@ -365,7 +365,7 @@ export function DocsModule() {
               <div
                 key={d.id}
                 className="list-row"
-                onClick={() => guardedSetActive(d.id)}
+                onClick={() => setActive(d.id)}
                 style={{ cursor: "pointer" }}
                 data-active={d.id === activeId ? "1" : "0"}
               >

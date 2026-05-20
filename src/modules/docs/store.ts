@@ -13,6 +13,8 @@ interface DocsState {
   bodies: Record<string, string>;
   comments: Record<string, DocComment[]>;
   versions: Record<string, DocVersion[]>;
+  leaveGuard: (() => boolean) | null;
+  setLeaveGuard: (fn: (() => boolean) | null) => void;
   setActive: (id: string) => void;
   toggle: (id: string) => void;
   addDoc: (targetId: string | null, name: string) => string | null;
@@ -114,12 +116,15 @@ export const useDocs = create<DocsState>()(
       bodies: {},
       comments: INITIAL_COMMENTS,
       versions: INITIAL_VERSIONS,
+      leaveGuard: null,
+      setLeaveGuard: (fn) => set({ leaveGuard: fn }),
       setActive: (activeId) => {
         const state = get();
         if (state.activeId === activeId) {
           set({ activeId });
           return;
         }
+        if (state.leaveGuard && !state.leaveGuard()) return;
         const node = findNode(state.tree, activeId);
         if (!node || node.kind !== "doc") {
           set({ activeId });
