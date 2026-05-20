@@ -22,9 +22,15 @@ interface DocsState {
   clearBody: (docId: string) => void;
   renameDoc: (docId: string, newName: string) => boolean;
   deleteDoc: (docId: string) => boolean;
+  moveNode: (dragId: string, targetId: string, pos: DropPos) => boolean;
   addComment: (docId: string, text: string) => void;
+  editComment: (docId: string, index: number, text: string) => void;
+  deleteComment: (docId: string, index: number) => void;
   addVersion: (docId: string, note: string) => string | null;
+  restoreVersion: (docId: string, v: string) => boolean;
 }
+
+export type DropPos = "before" | "after" | "inside";
 
 const MAX_RECENT_DOCS = 6;
 
@@ -91,6 +97,55 @@ function removeNode(nodes: DocNode[], id: string): DocNode[] {
     if (n.id === id) continue;
     if (n.children) out.push({ ...n, children: removeNode(n.children, id) });
     else out.push(n);
+  }
+  return out;
+}
+
+function detachNode(nodes: DocNode[], id: string): { tree: DocNode[]; node: DocNode | null } {
+  let found: DocNode | null = null;
+  function walk(list: DocNode[]): DocNode[] {
+    const out: DocNode[] = [];
+    for (const n of list) {
+      if (n.id === id) {
+        found = n;
+        continue;
+      }
+      out.push(n.children ? { ...n, children: walk(n.children) } : n);
+    }
+    return out;
+  }
+  const tree = walk(nodes);
+  return { tree, node: found };
+}
+
+function isDescendant(node: DocNode, maybeChildId: string): boolean {
+  if (node.id === maybeChildId) return true;
+  return (node.children ?? []).some((c) => isDescendant(c, maybeChildId));
+}
+
+function insertRelative(
+  nodes: DocNode[],
+  targetId: string,
+  pos: DropPos,
+  node: DocNode,
+): DocNode[] {
+  if (pos === "inside") {
+    return nodes.map((n) => {
+      if (n.id === targetId && n.kind === "folder") {
+        return { ...n, children: [...(n.children ?? []), node] };
+      }
+      if (n.children) return { ...n, children: insertRelative(n.children, targetId, pos, node) };
+      return n;
+    });
+  }
+  const out: DocNode[] = [];
+  for (const n of nodes) {
+    if (n.id === targetId) {
+      if (pos === "before") out.push(node, n);
+      else out.push(n, node);
+      continue;
+    }
+    out.push(n.children ? { ...n, children: insertRelative(n.children, targetId, pos, node) } : n);
   }
   return out;
 }
@@ -205,6 +260,25 @@ export const useDocs = create<DocsState>()(
         set({ tree: nextTree, bodies, comments, versions, recentIds, expanded, activeId });
         return true;
       },
+      moveNode: (dragId, targetId, pos) => {
+        if (dragId === targetId) return false;
+        const state = get();
+        const dragNode = findNode(state.tree, dragId);
+        const targetNode = findNode(state.tree, targetId);
+        if (!dragNode || !targetNode) return false;
+        if (isDescendant(dragNode, targetId)) return false;
+        if (pos === "inside" && targetNode.kind !== "folder") return false;
+
+        const { tree: detached, node } = detachNode(state.tree, dragId);
+        if (!node) return false;
+        const nextTree = insertRelative(detached, targetId, pos, node);
+        const expanded =
+          pos === "inside" && !state.expanded.includes(targetId)
+            ? [...state.expanded, targetId]
+            : state.expanded;
+        set({ tree: nextTree, expanded });
+        return true;
+      },
       addComment: (docId, rawText) => {
         const text = rawText.trim();
         if (!text) return;
@@ -214,6 +288,22 @@ export const useDocs = create<DocsState>()(
         set({
           comments: { ...state.comments, [docId]: [entry, ...existing] },
         });
+      },
+      editComment: (docId, index, rawText) => {
+        const text = rawText.trim();
+        if (!text) return;
+        const state = get();
+        const existing = state.comments[docId];
+        if (!existing || !existing[index]) return;
+        const next = existing.map((c, i) => (i === index ? { ...c, c: text } : c));
+        set({ comments: { ...state.comments, [docId]: next } });
+      },
+      deleteComment: (docId, index) => {
+        const state = get();
+        const existing = state.comments[docId];
+        if (!existing || !existing[index]) return;
+        const next = existing.filter((_, i) => i !== index);
+        set({ comments: { ...state.comments, [docId]: next } });
       },
       addVersion: (docId, rawNote) => {
         const note = rawNote.trim();
@@ -226,11 +316,19 @@ export const useDocs = create<DocsState>()(
           who: "You",
           when: nowStamp(),
           note,
+          body: state.bodies[docId],
         };
         set({
           versions: { ...state.versions, [docId]: [entry, ...existing] },
         });
         return nextV;
+      },
+      restoreVersion: (docId, v) => {
+        const state = get();
+        const entry = (state.versions[docId] ?? []).find((x) => x.v === v);
+        if (!entry || entry.body === undefined) return false;
+        set({ bodies: { ...state.bodies, [docId]: entry.body } });
+        return true;
       },
     }),
     { name: "blackburst:docs:v2" },

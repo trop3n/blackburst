@@ -7,7 +7,9 @@ import {
 } from "@/lib/docs-data";
 import type { DocNode } from "@/types";
 import { MarkdownBody } from "./MarkdownBody";
-import { useDocs } from "./store";
+import { useDocs, type DropPos } from "./store";
+
+const TREE_MIME = "application/x-blackburst-doctree";
 
 interface TreeNodeProps {
   node: DocNode;
@@ -18,16 +20,52 @@ interface TreeNodeProps {
   toggle: (id: string) => void;
   onRename: (node: DocNode) => void;
   onDelete: (node: DocNode) => void;
+  onMove: (dragId: string, targetId: string, pos: DropPos) => void;
+  dndEnabled: boolean;
 }
 
-function DocTreeNode({ node, depth, activeId, setActive, expanded, toggle, onRename, onDelete }: TreeNodeProps) {
+function dropPosFor(e: React.DragEvent<HTMLDivElement>, isFolder: boolean): DropPos {
+  const rect = e.currentTarget.getBoundingClientRect();
+  const ratio = (e.clientY - rect.top) / rect.height;
+  if (isFolder) {
+    if (ratio < 0.3) return "before";
+    if (ratio > 0.7) return "after";
+    return "inside";
+  }
+  return ratio < 0.5 ? "before" : "after";
+}
+
+function DocTreeNode({ node, depth, activeId, setActive, expanded, toggle, onRename, onDelete, onMove, dndEnabled }: TreeNodeProps) {
   const isOpen = expanded.has(node.id);
+  const [dropPos, setDropPos] = useState<DropPos | null>(null);
   return (
     <>
       <div
         className="docs-node"
         data-active={node.id === activeId ? "1" : "0"}
+        data-drop={dropPos ?? undefined}
         style={{ paddingLeft: 8 + depth * 14 }}
+        draggable={dndEnabled}
+        onDragStart={(e) => {
+          e.stopPropagation();
+          e.dataTransfer.effectAllowed = "move";
+          e.dataTransfer.setData(TREE_MIME, node.id);
+        }}
+        onDragOver={(e) => {
+          if (!dndEnabled || !e.dataTransfer.types.includes(TREE_MIME)) return;
+          e.preventDefault();
+          e.dataTransfer.dropEffect = "move";
+          setDropPos(dropPosFor(e, node.kind === "folder"));
+        }}
+        onDragLeave={() => setDropPos(null)}
+        onDrop={(e) => {
+          if (!dndEnabled) return;
+          const dragId = e.dataTransfer.getData(TREE_MIME);
+          const pos = dropPosFor(e, node.kind === "folder");
+          setDropPos(null);
+          if (dragId && dragId !== node.id) onMove(dragId, node.id, pos);
+        }}
+        onDragEnd={() => setDropPos(null)}
         onClick={() => {
           if (node.kind === "folder") toggle(node.id);
           else setActive(node.id);
@@ -80,6 +118,8 @@ function DocTreeNode({ node, depth, activeId, setActive, expanded, toggle, onRen
             toggle={toggle}
             onRename={onRename}
             onDelete={onDelete}
+            onMove={onMove}
+            dndEnabled={dndEnabled}
           />
         ))}
     </>
@@ -149,8 +189,12 @@ export function DocsModule() {
   const deleteDoc = useDocs((s) => s.deleteDoc);
   const commentsMap = useDocs((s) => s.comments);
   const addComment = useDocs((s) => s.addComment);
+  const editComment = useDocs((s) => s.editComment);
+  const deleteComment = useDocs((s) => s.deleteComment);
+  const moveNode = useDocs((s) => s.moveNode);
   const versionsMap = useDocs((s) => s.versions);
   const addVersion = useDocs((s) => s.addVersion);
+  const restoreVersion = useDocs((s) => s.restoreVersion);
   const recentIds = useDocs((s) => s.recentIds);
   const bodiesMap = useDocs((s) => s.bodies);
   const setBody = useDocs((s) => s.setBody);
@@ -290,10 +334,27 @@ export function DocsModule() {
     if (note && note.trim()) addVersion(activeId, note);
   }
 
+  function onRestoreVersion(v: string) {
+    if (!window.confirm(`Restore ${v}? This replaces the current document body.`)) return;
+    restoreVersion(activeId, v);
+  }
+
   function submitComment() {
     if (!trimmedDraft) return;
     addComment(activeId, trimmedDraft);
     setDraft("");
+  }
+
+  function onEditComment(index: number, current: string) {
+    const next = window.prompt("Edit comment:", current);
+    if (next === null) return;
+    if (!next.trim() || next.trim() === current) return;
+    editComment(activeId, index, next);
+  }
+
+  function onDeleteComment(index: number) {
+    if (!window.confirm("Delete this comment?")) return;
+    deleteComment(activeId, index);
   }
 
   function onComposerKey(e: React.KeyboardEvent<HTMLTextAreaElement>) {
@@ -345,6 +406,8 @@ export function DocsModule() {
                   toggle={toggle}
                   onRename={onRenameNode}
                   onDelete={onDeleteNode}
+                  onMove={moveNode}
+                  dndEnabled={!q}
                 />
               ))
             )}
@@ -489,6 +552,16 @@ export function DocsModule() {
                   <span>{v.who}</span>
                   <span>{v.when}</span>
                 </div>
+                {v.body !== undefined && v.body !== customBody && (
+                  <button
+                    type="button"
+                    className="version-restore"
+                    title="Restore this version"
+                    onClick={() => onRestoreVersion(v.v)}
+                  >
+                    <I.Undo size={11} /> Restore
+                  </button>
+                )}
               </div>
             ))
           )}
@@ -560,13 +633,21 @@ export function DocsModule() {
             </div>
           ) : (
             comments.map((cm, i) => (
-              <div
-                key={i}
-                style={{ padding: "8px 0", borderBottom: "1px solid var(--color-line-faint)" }}
-              >
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
+              <div key={i} className="comment-row">
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3, alignItems: "center" }}>
                   <span className="mono" style={{ fontSize: 10, color: "var(--accent)" }}>{cm.who}</span>
+                  <span className="spacer" />
                   <span className="mono" style={{ fontSize: 10, color: "var(--color-fg-faint)" }}>{cm.t}</span>
+                  {cm.who === "You" && (
+                    <span className="comment-actions">
+                      <button type="button" title="Edit" onClick={() => onEditComment(i, cm.c)}>
+                        <I.Edit size={11} />
+                      </button>
+                      <button type="button" title="Delete" onClick={() => onDeleteComment(i)}>
+                        <I.Cross size={11} />
+                      </button>
+                    </span>
+                  )}
                 </div>
                 <div style={{ color: "var(--color-fg)" }}>{cm.c}</div>
               </div>

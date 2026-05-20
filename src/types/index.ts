@@ -119,6 +119,7 @@ export interface DocVersion {
   who: string;
   when: string;
   note: string;
+  body?: string;
 }
 
 export interface DocComment {
