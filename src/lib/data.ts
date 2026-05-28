@@ -29,8 +29,8 @@ export const WALL_LAYOUTS: WallLayout[] = [
 ];
 
 export const FAULT_PANELS: FaultPanel[] = [
-  { c: 7, r: 3 },
-  { c: 12, r: 5 },
+  { c: 6, r: 2 },
+  { c: 11, r: 4 },
 ];
 
 export const SYSTEM_NODES: SystemNode[] = [

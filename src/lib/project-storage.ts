@@ -152,3 +152,9 @@ export function writeBucket(projectId: string, buckets: ProjectStateBuckets) {
   all[projectId] = buckets;
   saveAll(all);
 }
+
+export function initProjectState(projectId: string) {
+  const all = loadAll();
+  const buckets = all[projectId] ?? defaultBucket();
+  applyState(buckets);
+}

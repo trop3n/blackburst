@@ -1,5 +1,4 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
 import { ASSETS } from "@/lib/inventory-data";
 import type { Asset, AssetStatus } from "@/types";
 
@@ -21,9 +20,7 @@ interface InventoryState {
   removeAsset: (id: string) => void;
 }
 
-export const useInventory = create<InventoryState>()(
-  persist(
-    (set) => ({
+export const useInventory = create<InventoryState>()((set) => ({
       assets: ASSETS,
       cat: "All gear",
       selected: "BMD-S40-001",
@@ -71,6 +68,4 @@ export const useInventory = create<InventoryState>()(
           assets: s.assets.filter((a) => a.id !== id),
         })),
     }),
-    { name: "blackburst:inventory:v2" },
-  ),
 );

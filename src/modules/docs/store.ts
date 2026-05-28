@@ -1,5 +1,4 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
 import { INITIAL_COMMENTS } from "@/lib/docs-comments";
 import { DOC_TREE } from "@/lib/docs-tree";
 import { bumpVersion, INITIAL_VERSIONS, nowStamp } from "@/lib/docs-versions";
@@ -161,9 +160,7 @@ function firstDocId(nodes: DocNode[]): string | null {
   return null;
 }
 
-export const useDocs = create<DocsState>()(
-  persist(
-    (set, get) => ({
+export const useDocs = create<DocsState>()((set, get) => ({
       tree: DOC_TREE,
       activeId: "d-prj-ros",
       expanded: ["d-prj", "d-spec", "d-sop"],
@@ -331,6 +328,4 @@ export const useDocs = create<DocsState>()(
         return true;
       },
     }),
-    { name: "blackburst:docs:v2" },
-  ),
 );

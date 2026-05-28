@@ -1,5 +1,4 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
 import { SYSTEM_EDGES, SYSTEM_NODES } from "@/lib/data";
 import type { Lane, SystemEdge, SystemNode } from "@/types";
 
@@ -27,9 +26,7 @@ function nextNodeId(existing: SystemNode[]): string {
   return `n${n}`;
 }
 
-export const useSystem = create<SystemState>()(
-  persist(
-    (set) => ({
+export const useSystem = create<SystemState>()((set) => ({
       nodes: SYSTEM_NODES,
       edges: SYSTEM_EDGES,
       lanes: { video: true, audio: true, network: true, power: true },
@@ -77,6 +74,4 @@ export const useSystem = create<SystemState>()(
           ),
         })),
     }),
-    { name: "blackburst:system:v2" },
-  ),
 );

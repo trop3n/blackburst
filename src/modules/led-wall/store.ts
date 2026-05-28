@@ -1,5 +1,4 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
 import { WALL_LAYOUTS } from "@/lib/data";
 import type { WallLayout } from "@/types";
 
@@ -48,9 +47,7 @@ function nextWallId(existing: WallLayout[]): string {
   return `W${n}`;
 }
 
-export const useLedWall = create<LedWallState>()(
-  persist(
-    (set) => ({
+export const useLedWall = create<LedWallState>()((set) => ({
       walls: WALL_LAYOUTS,
       layoutId: "W1",
       selected: null,
@@ -163,6 +160,4 @@ export const useLedWall = create<LedWallState>()(
         }),
       clearMeasure: () => set({ measureFrom: null, measureTo: null }),
     }),
-    { name: "blackburst:led-wall:v2" },
-  ),
 );
