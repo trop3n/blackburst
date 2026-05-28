@@ -590,7 +590,7 @@ export function SystemDesignerModule() {
                     <button
                       className="icon-btn"
                       aria-label={`Remove edge to ${peer.name}`}
-                      onClick={() => removeEdge(e.from, e.to)}
+                      onClick={() => removeEdge(e.from, e.to, e.lane)}
                       style={{ marginLeft: 4 }}
                     >
                       <I.Cross size={11} />

@@ -18,7 +18,7 @@ interface SystemState {
   addNode: (seed: Omit<SystemNode, "id">) => string;
   removeNode: (id: string) => void;
   addEdge: (edge: SystemEdge) => void;
-  removeEdge: (from: string, to: string) => void;
+  removeEdge: (from: string, to: string, lane: Lane) => void;
 }
 
 function nextNodeId(existing: SystemNode[]): string {
@@ -44,15 +44,15 @@ export const useSystem = create<SystemState>()(
           nodes: s.nodes.map((n) => (n.id === id ? { ...n, ...patch } : n)),
         })),
       addNode: (seed) => {
-        const id = nextNodeId([]);
+        let newId = "";
         set((s) => {
-          const newId = nextNodeId(s.nodes);
+          newId = nextNodeId(s.nodes);
           return {
             nodes: [...s.nodes, { ...seed, id: newId }],
             selectedNodeId: newId,
           };
         });
-        return id;
+        return newId;
       },
       removeNode: (id) =>
         set((s) => ({
@@ -70,9 +70,11 @@ export const useSystem = create<SystemState>()(
             return s;
           return { edges: [...s.edges, edge] };
         }),
-      removeEdge: (from, to) =>
+      removeEdge: (from, to, lane) =>
         set((s) => ({
-          edges: s.edges.filter((e) => !(e.from === from && e.to === to)),
+          edges: s.edges.filter(
+            (e) => !(e.from === from && e.to === to && e.lane === lane),
+          ),
         })),
     }),
     { name: "blackburst:system:v2" },
