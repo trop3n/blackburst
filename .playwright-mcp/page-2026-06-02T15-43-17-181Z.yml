@@ -1,0 +1,275 @@
+- generic [ref=e3]:
+  - complementary [ref=e4]:
+    - generic [ref=e5]: BB
+    - generic [ref=e6]:
+      - button "WALL" [ref=e7] [cursor=pointer]:
+        - img [ref=e9]
+        - generic [ref=e11]: WALL
+      - button "SYS" [ref=e12] [cursor=pointer]:
+        - img [ref=e14]
+        - generic [ref=e19]: SYS
+      - button "RACK" [ref=e20] [cursor=pointer]:
+        - img [ref=e22]
+        - generic [ref=e24]: RACK
+      - button "INV" [ref=e25] [cursor=pointer]:
+        - img [ref=e27]
+        - generic [ref=e31]: INV
+      - button "DOCS" [ref=e32] [cursor=pointer]:
+        - img [ref=e34]
+        - generic [ref=e37]: DOCS
+    - button "SET" [ref=e40] [cursor=pointer]:
+      - img [ref=e42]
+      - generic [ref=e45]: SET
+  - banner [ref=e46]:
+    - generic [ref=e47]:
+      - generic [ref=e48] [cursor=pointer]:
+        - combobox "PRJ-2440" [ref=e326]:
+          - option "PRJ-2451 — Atrium Lobby Wall"
+          - option "PRJ-2447 — Auditorium Refresh"
+          - option "PRJ-2440 — Broadcast Studio B" [selected]
+        - generic [ref=e50]: PRJ-2440
+        - img [ref=e51]
+      - generic [ref=e53]: Broadcast Studio B
+      - generic [ref=e54]: KCR Media
+    - generic [ref=e55]:
+      - generic [ref=e56]: PROJECTS
+      - generic [ref=e57]: /
+      - generic [ref=e58]: PRJ-2440
+      - generic [ref=e59]: /
+      - generic [ref=e60]: Documentation Hub
+    - generic [ref=e62]:
+      - button "Search assets, docs, panels… ⌘K" [ref=e63] [cursor=pointer]:
+        - img [ref=e64]
+        - generic [ref=e67]: Search assets, docs, panels…
+        - generic [ref=e68]: ⌘K
+      - button "Import" [ref=e69] [cursor=pointer]:
+        - img [ref=e70]
+        - text: Import
+      - button "Export" [ref=e72] [cursor=pointer]:
+        - img [ref=e73]
+        - text: Export
+      - button "Save Rev" [ref=e75] [cursor=pointer]:
+        - img [ref=e76]
+        - text: Save Rev
+      - button "Open settings" [ref=e78] [cursor=pointer]:
+        - img [ref=e79]
+      - generic [ref=e83]: MR
+  - main [ref=e84]:
+    - generic [ref=e85]:
+      - generic [ref=e86]:
+        - generic [ref=e87]: DOCS TREE
+        - button "New document" [ref=e88] [cursor=pointer]:
+          - img [ref=e89]
+      - generic [ref=e91]:
+        - img [ref=e92]
+        - textbox "Search docs…" [ref=e95]
+      - generic [ref=e96]:
+        - generic [ref=e97]:
+          - generic [ref=e98] [cursor=pointer]:
+            - img [ref=e99]
+            - img [ref=e102]
+            - generic [ref=e104]: Helios Auditorium
+          - generic [ref=e105] [cursor=pointer]:
+            - img [ref=e107]
+            - generic [ref=e110]: Run-of-Show v3.2
+          - generic [ref=e111] [cursor=pointer]:
+            - img [ref=e113]
+            - generic [ref=e116]: Cue Sheet — Day 1
+          - generic [ref=e117] [cursor=pointer]:
+            - img [ref=e119]
+            - generic [ref=e122]: Patch List
+            - generic [ref=e123]:
+              - button "Rename" [ref=e124]:
+                - img [ref=e125]
+              - button "Delete" [ref=e127]:
+                - img [ref=e128]
+          - generic [ref=e130] [cursor=pointer]:
+            - img [ref=e132]
+            - generic [ref=e135]: Handoff Notes
+          - generic [ref=e136] [cursor=pointer]:
+            - img [ref=e137]
+            - img [ref=e140]
+            - generic [ref=e142]: Equipment Specs
+          - generic [ref=e143] [cursor=pointer]:
+            - img [ref=e145]
+            - generic [ref=e148]: Brompton SX40 — Manual
+          - generic [ref=e149] [cursor=pointer]:
+            - img [ref=e151]
+            - generic [ref=e154]: ROE Ruby RB2.6 — Spec
+          - generic [ref=e155] [cursor=pointer]:
+            - img [ref=e157]
+            - generic [ref=e160]: L-Acoustics LA12X — Spec
+          - generic [ref=e161] [cursor=pointer]:
+            - img [ref=e162]
+            - img [ref=e165]
+            - generic [ref=e167]: SOPs
+          - generic [ref=e168] [cursor=pointer]:
+            - img [ref=e170]
+            - generic [ref=e173]: Load-In Procedure
+          - generic [ref=e174] [cursor=pointer]:
+            - img [ref=e176]
+            - generic [ref=e179]: Wall Calibration
+          - generic [ref=e180] [cursor=pointer]:
+            - img [ref=e182]
+            - generic [ref=e185]: Strike & Pack-Out
+        - generic [ref=e187]: RECENT
+        - generic [ref=e327]: Open a document to populate recents.
+    - generic [ref=e195]:
+      - generic [ref=e196]:
+        - generic [ref=e197]: Helios Auditorium
+        - generic [ref=e198]: /
+        - generic [ref=e199]: Run-of-Show v3.2
+        - generic [ref=e200]: v3.2 · CURRENT
+        - button "Preview" [ref=e201] [cursor=pointer]:
+          - img [ref=e202]
+          - text: Preview
+        - button "Edit" [ref=e205] [cursor=pointer]:
+          - img [ref=e206]
+          - text: Edit
+        - button "Export PDF" [ref=e208] [cursor=pointer]:
+          - img [ref=e209]
+          - text: Export PDF
+      - generic [ref=e211]:
+        - heading "Run-of-Show — Helios Auditorium Refresh" [level=1] [ref=e328]
+        - generic [ref=e329]:
+          - generic [ref=e330]: REV v3.2
+          - generic [ref=e331]: EDITED Apr 28, 14:22 by M. Reyes
+          - generic [ref=e332]: ● LOCKED FOR SHOW
+        - paragraph [ref=e333]: This document is the operational reference for the Helios Auditorium load-in and main session days. All cue numbers, signal paths, and asset IDs are linked to live records — clicking a reference opens the corresponding asset, system node, or panel.
+        - heading "01 · System Overview" [level=2] [ref=e334]
+        - paragraph [ref=e335]:
+          - text: The room is driven by a redundant Brompton SX40 pair (
+          - generic [ref=e336] [cursor=pointer]: ↗ BMD-S40-001
+          - text: /
+          - generic [ref=e337] [cursor=pointer]: ↗ BMD-S40-002
+          - text: ) feeding the
+          - generic [ref=e338] [cursor=pointer]: ↗ W1 · Main Lobby Wall
+          - text: (P2.6, 18×8 cabinets, 9000×2080 native). Audio reinforcement is via
+          - generic [ref=e339] [cursor=pointer]: ↗ DGC-SD12-001
+          - text: through
+          - generic [ref=e340] [cursor=pointer]: ↗ LA-12X-001
+          - text: .
+        - generic [ref=e341]:
+          - strong [ref=e342]: NOTE
+          - generic [ref=e343]:
+            - text: "SX40 #1 carries the left half of the wall, SX40 #2 the right. Failover is manual — see"
+            - generic [ref=e344] [cursor=pointer]: ↗ SOP · Wall Calibration §4
+            - text: .
+        - heading "02 · Load-In · Day 1 (07:00 – 16:00)" [level=2] [ref=e345]
+        - list [ref=e346]:
+          - listitem [ref=e347]:
+            - code [ref=e348]: 07:00
+            - text: — Truck arrival; rigging walk-through with FOH
+          - listitem [ref=e349]:
+            - code [ref=e350]: 08:00
+            - text: — Truss to height; pickup points marked at 6 hangs · 84 kg/pt
+          - listitem [ref=e351]:
+            - code [ref=e352]: 10:30
+            - text: — Panel hang begins (left half first); ref
+            - generic [ref=e353] [cursor=pointer]: ↗ SOP · Load-In §2.4
+          - listitem [ref=e354]:
+            - code [ref=e355]: 13:00
+            - text: — Processor power-up; data sync via
+            - generic [ref=e356] [cursor=pointer]: ↗ 10GbE A/B
+          - listitem [ref=e357]:
+            - code [ref=e358]: 14:30
+            - text: — Calibration sweep — see
+            - generic [ref=e359] [cursor=pointer]: ↗ SOP · Wall Calibration
+          - listitem [ref=e360]:
+            - code [ref=e361]: 15:30
+            - text: — Audio system checks; FOH walk
+          - listitem [ref=e362]:
+            - code [ref=e363]: 16:00
+            - text: — End of Day 1; system held overnight in standby
+        - heading "03 · Show · Day 2 (09:00 – 21:00)" [level=2] [ref=e364]
+        - paragraph [ref=e365]:
+          - text: Director cues delivered over
+          - code [ref=e366]: Stage Manager → Cue 1
+          - text: ". Standby pages issued 5 min before each major change. Two warnings flagged on the system:"
+          - generic [ref=e367] [cursor=pointer]: ↗ Panel C7,R3 fault
+          - text: and
+          - generic [ref=e368] [cursor=pointer]: "↗ SX40 #1 thermal"
+          - text: — both have hot-swap spares staged stage-left.
+        - heading "04 · Strike · Day 3 (06:00 – 11:00)" [level=2] [ref=e369]
+        - paragraph [ref=e370]:
+          - text: Reverse load-in order. Power down via SOP. All assets returned to crates and checked back into
+          - generic [ref=e371] [cursor=pointer]: ↗ Inventory
+          - text: with QC pass.
+    - generic [ref=e265]:
+      - generic [ref=e266]:
+        - generic [ref=e267]: VERSION HISTORY
+        - button "Save as new version" [ref=e268] [cursor=pointer]:
+          - img [ref=e269]
+      - generic [ref=e271]:
+        - generic [ref=e372] [cursor=pointer]:
+          - generic [ref=e373]: ●v3.2 · Adjusted cue 14 timing
+          - generic [ref=e374]:
+            - generic [ref=e375]: M. Reyes
+            - generic [ref=e376]: Apr 28, 14:22
+        - generic [ref=e377] [cursor=pointer]:
+          - generic [ref=e378]: v3.1 · Inserted IMAG sub-cues
+          - generic [ref=e379]:
+            - generic [ref=e380]: M. Reyes
+            - generic [ref=e381]: Apr 27, 09:08
+        - generic [ref=e382] [cursor=pointer]:
+          - generic [ref=e383]: v3.0 · Tech rehearsal pass
+          - generic [ref=e384]:
+            - generic [ref=e385]: K. Tanaka
+            - generic [ref=e386]: Apr 24, 17:55
+        - generic [ref=e387] [cursor=pointer]:
+          - generic [ref=e388]: v2.4 · Pre-production lock
+          - generic [ref=e389]:
+            - generic [ref=e390]: S. Larsson
+            - generic [ref=e391]: Apr 19, 11:30
+        - generic [ref=e392] [cursor=pointer]:
+          - generic [ref=e393]: v2.3 · Speaker order change
+          - generic [ref=e394]:
+            - generic [ref=e395]: S. Larsson
+            - generic [ref=e396]: Apr 17, 16:02
+      - generic [ref=e283]: LINKED REFERENCES
+      - generic [ref=e284]:
+        - generic [ref=e285] [cursor=pointer]:
+          - generic [ref=e286]: ASSET
+          - generic [ref=e287]: BMD-S40-001 · Brompton SX40
+        - generic [ref=e288] [cursor=pointer]:
+          - generic [ref=e289]: ASSET
+          - generic [ref=e290]: ROE-RB2.6-A1 · 24-pack
+        - generic [ref=e291] [cursor=pointer]:
+          - generic [ref=e292]: WALL
+          - generic [ref=e293]: W1 · Main Lobby Wall
+        - generic [ref=e294] [cursor=pointer]:
+          - generic [ref=e295]: NODE
+          - generic [ref=e296]: "n4 · SX40 Processor #1"
+        - generic [ref=e297] [cursor=pointer]:
+          - generic [ref=e298]: DOC
+          - generic [ref=e299]: SOP · Wall Calibration
+        - generic [ref=e300] [cursor=pointer]:
+          - generic [ref=e301]: DOC
+          - generic [ref=e302]: Patch List · Day 1
+      - generic [ref=e306]:
+        - generic [ref=e307]: COMMENTS
+        - generic [ref=e308]: 2 OPEN
+      - generic [ref=e309]:
+        - generic [ref=e310]:
+          - textbox "Add a comment…" [ref=e311]
+          - generic [ref=e312]:
+            - generic [ref=e313]: ⌘↵ to post
+            - button "Comment" [disabled] [ref=e314] [cursor=pointer]
+        - generic [ref=e397]:
+          - generic [ref=e398]:
+            - generic [ref=e399]: K. Tanaka
+            - generic [ref=e400]: 12m
+          - generic [ref=e401]: Shifted cue 14 by +2s — confirmed with director.
+        - generic [ref=e402]:
+          - generic [ref=e403]:
+            - generic [ref=e404]: S. Larsson
+            - generic [ref=e405]: 1h
+          - generic [ref=e406]: "Need a hot spare staged stage-left for SX40 #1."
+  - contentinfo [ref=e316]:
+    - generic [ref=e317]: READY
+    - generic [ref=e319]: REV 0000
+    - generic [ref=e320]: SAVED —
+    - generic [ref=e321]: 2 ERRORS · 1 WARN
+    - generic [ref=e323]: PRJ-2440
+    - generic [ref=e324]: UTC-05
+    - generic [ref=e325]: 10:43:16

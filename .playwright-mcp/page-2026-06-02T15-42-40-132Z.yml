@@ -1,0 +1,270 @@
+- generic [ref=e3]:
+  - complementary [ref=e4]:
+    - generic [ref=e5]: BB
+    - generic [ref=e6]:
+      - button "WALL" [ref=e7] [cursor=pointer]:
+        - img [ref=e9]
+        - generic [ref=e11]: WALL
+      - button "SYS" [ref=e12] [cursor=pointer]:
+        - img [ref=e14]
+        - generic [ref=e19]: SYS
+      - button "RACK" [ref=e20] [cursor=pointer]:
+        - img [ref=e22]
+        - generic [ref=e24]: RACK
+      - button "INV" [ref=e25] [cursor=pointer]:
+        - img [ref=e27]
+        - generic [ref=e31]: INV
+      - button "DOCS" [ref=e32] [cursor=pointer]:
+        - img [ref=e34]
+        - generic [ref=e37]: DOCS
+    - button "SET" [ref=e40] [cursor=pointer]:
+      - img [ref=e42]
+      - generic [ref=e45]: SET
+  - banner [ref=e46]:
+    - generic [ref=e47]:
+      - generic [ref=e48] [cursor=pointer]:
+        - combobox "PRJ-2451" [ref=e49]:
+          - option "PRJ-2451 — Atrium Lobby Wall" [selected]
+          - option "PRJ-2447 — Auditorium Refresh"
+          - option "PRJ-2440 — Broadcast Studio B"
+        - generic [ref=e50]: PRJ-2451
+        - img [ref=e51]
+      - generic [ref=e53]: Atrium Lobby Wall
+      - generic [ref=e54]: Northwind HQ
+    - generic [ref=e55]:
+      - generic [ref=e56]: PROJECTS
+      - generic [ref=e57]: /
+      - generic [ref=e58]: PRJ-2451
+      - generic [ref=e59]: /
+      - generic [ref=e60]: Documentation Hub
+    - generic [ref=e62]:
+      - button "Search assets, docs, panels… ⌘K" [ref=e63] [cursor=pointer]:
+        - img [ref=e64]
+        - generic [ref=e67]: Search assets, docs, panels…
+        - generic [ref=e68]: ⌘K
+      - button "Import" [ref=e69] [cursor=pointer]:
+        - img [ref=e70]
+        - text: Import
+      - button "Export" [ref=e72] [cursor=pointer]:
+        - img [ref=e73]
+        - text: Export
+      - button "Save Rev" [ref=e75] [cursor=pointer]:
+        - img [ref=e76]
+        - text: Save Rev
+      - button "Open settings" [ref=e78] [cursor=pointer]:
+        - img [ref=e79]
+      - generic [ref=e83]: MR
+  - main [ref=e84]:
+    - generic [ref=e453]:
+      - generic [ref=e454]:
+        - generic [ref=e455]: DOCS TREE
+        - button "New document" [ref=e456] [cursor=pointer]:
+          - img [ref=e457]
+      - generic [ref=e459]:
+        - img [ref=e460]
+        - textbox "Search docs…" [ref=e463]
+      - generic [ref=e464]:
+        - generic [ref=e465]:
+          - generic [ref=e466] [cursor=pointer]:
+            - img [ref=e467]
+            - img [ref=e470]
+            - generic [ref=e472]: Helios Auditorium
+          - generic [ref=e473] [cursor=pointer]:
+            - img [ref=e475]
+            - generic [ref=e478]: Run-of-Show v3.2
+          - generic [ref=e479] [cursor=pointer]:
+            - img [ref=e481]
+            - generic [ref=e484]: Cue Sheet — Day 1
+          - generic [ref=e485] [cursor=pointer]:
+            - img [ref=e487]
+            - generic [ref=e490]: Patch List
+            - generic [ref=e684]:
+              - button "Rename" [ref=e685]:
+                - img [ref=e686]
+              - button "Delete" [ref=e688]:
+                - img [ref=e689]
+          - generic [ref=e491] [cursor=pointer]:
+            - img [ref=e493]
+            - generic [ref=e496]: Handoff Notes
+          - generic [ref=e497] [cursor=pointer]:
+            - img [ref=e498]
+            - img [ref=e501]
+            - generic [ref=e503]: Equipment Specs
+          - generic [ref=e504] [cursor=pointer]:
+            - img [ref=e506]
+            - generic [ref=e509]: Brompton SX40 — Manual
+          - generic [ref=e510] [cursor=pointer]:
+            - img [ref=e512]
+            - generic [ref=e515]: ROE Ruby RB2.6 — Spec
+          - generic [ref=e516] [cursor=pointer]:
+            - img [ref=e518]
+            - generic [ref=e521]: L-Acoustics LA12X — Spec
+          - generic [ref=e522] [cursor=pointer]:
+            - img [ref=e523]
+            - img [ref=e526]
+            - generic [ref=e528]: SOPs
+          - generic [ref=e529] [cursor=pointer]:
+            - img [ref=e531]
+            - generic [ref=e534]: Load-In Procedure
+          - generic [ref=e535] [cursor=pointer]:
+            - img [ref=e537]
+            - generic [ref=e540]: Wall Calibration
+          - generic [ref=e541] [cursor=pointer]:
+            - img [ref=e543]
+            - generic [ref=e546]: Strike & Pack-Out
+        - generic [ref=e548]: RECENT
+        - generic [ref=e691] [cursor=pointer]:
+          - img [ref=e692]
+          - generic [ref=e695]: Patch List
+          - generic [ref=e696]: now
+    - generic [ref=e551]:
+      - generic [ref=e552]:
+        - generic [ref=e553]: Helios Auditorium
+        - generic [ref=e554]: /
+        - generic [ref=e555]: Patch List
+        - generic [ref=e556]: v2.1 · CURRENT
+        - button "Preview" [ref=e557] [cursor=pointer]:
+          - img [ref=e558]
+          - text: Preview
+        - button "Edit" [ref=e561] [cursor=pointer]:
+          - img [ref=e562]
+          - text: Edit
+        - button "Export PDF" [ref=e564] [cursor=pointer]:
+          - img [ref=e565]
+          - text: Export PDF
+      - generic [ref=e567]:
+        - heading "Patch List — Day 1" [level=1] [ref=e697]
+        - generic [ref=e698]:
+          - generic [ref=e699]: REV v2.1
+          - generic [ref=e700]: EDITED Apr 27, 17:40 by K. Tanaka
+        - paragraph [ref=e701]:
+          - text: Source-to-destination patch for Helios Day 1. Lane labels mirror the
+          - generic [ref=e702] [cursor=pointer]: ↗ System Designer
+          - text: view. Every patch is paired with a labeled cable on the runlist.
+        - heading "Video" [level=2] [ref=e703]
+        - list [ref=e704]:
+          - listitem [ref=e705]:
+            - code [ref=e706]: VID-01
+            - text: ·
+            - generic [ref=e707] [cursor=pointer]: ↗ Resolume Mac Pro
+            - text: →
+            - generic [ref=e708] [cursor=pointer]: ↗ vMix M4 IN-A
+            - text: "· SDI #1 · 30m"
+          - listitem [ref=e709]:
+            - code [ref=e710]: VID-02
+            - text: ·
+            - generic [ref=e711] [cursor=pointer]: ↗ PTZ · Stage
+            - text: "→ vMix M4 IN-B · SDI #2 · 18m"
+          - listitem [ref=e712]:
+            - code [ref=e713]: VID-03
+            - text: · vMix M4 OUT-A →
+            - generic [ref=e714] [cursor=pointer]: "↗ SX40 #1"
+            - text: "· SDI #3 · 6m"
+          - listitem [ref=e715]:
+            - code [ref=e716]: VID-04
+            - text: · vMix M4 OUT-B →
+            - generic [ref=e717] [cursor=pointer]: "↗ SX40 #2"
+            - text: "· SDI #4 · 6m"
+        - heading "Network" [level=2] [ref=e718]
+        - list [ref=e719]:
+          - listitem [ref=e720]:
+            - code [ref=e721]: NET-01
+            - text: "· SX40 #1 10GbE A →"
+            - generic [ref=e722] [cursor=pointer]: ↗ W1 · East Half
+          - listitem [ref=e723]:
+            - code [ref=e724]: NET-02
+            - text: "· SX40 #1 10GbE B → W1 · East Half (redundant)"
+          - listitem [ref=e725]:
+            - code [ref=e726]: NET-03
+            - text: "· SX40 #2 10GbE A → W1 · West Half"
+          - listitem [ref=e727]:
+            - code [ref=e728]: NET-04
+            - text: "· SX40 #2 10GbE B → W1 · West Half (redundant)"
+        - heading "Audio" [level=2] [ref=e729]
+        - list [ref=e730]:
+          - listitem [ref=e731]:
+            - code [ref=e732]: AUD-01
+            - text: · Mic 1–8 →
+            - generic [ref=e733] [cursor=pointer]: ↗ SD12 Local I/O 1
+            - text: · Cat-6a
+          - listitem [ref=e734]:
+            - code [ref=e735]: AUD-02
+            - text: · SD12 main out →
+            - generic [ref=e736] [cursor=pointer]: ↗ LA12X
+            - text: · AES/EBU pair 1
+          - listitem [ref=e737]:
+            - code [ref=e738]: AUD-03
+            - text: · LA12X CH 1–2 → FOH array (L/R)
+          - listitem [ref=e739]:
+            - code [ref=e740]: AUD-04
+            - text: · LA12X CH 3 → sub array (mono)
+        - heading "Power" [level=2] [ref=e741]
+        - list [ref=e742]:
+          - listitem [ref=e743]:
+            - code [ref=e744]: PWR-01
+            - text: ·
+            - generic [ref=e745] [cursor=pointer]: ↗ Distro 200A
+            - text: CB-1 → Processor rack (32A 1ϕ)
+          - listitem [ref=e746]:
+            - code [ref=e747]: PWR-02
+            - text: · Distro CB-2 → Audio rack (16A 1ϕ)
+          - listitem [ref=e748]:
+            - code [ref=e749]: PWR-03
+            - text: · Distro CB-3 → W1 wall pwr (63A 3ϕ)
+    - generic [ref=e612]:
+      - generic [ref=e613]:
+        - generic [ref=e614]: VERSION HISTORY
+        - button "Save as new version" [ref=e615] [cursor=pointer]:
+          - img [ref=e616]
+      - generic [ref=e618]:
+        - generic [ref=e750] [cursor=pointer]:
+          - generic [ref=e751]: ●v2.1 · Swapped PWR-02/03 labeling
+          - generic [ref=e752]:
+            - generic [ref=e753]: K. Tanaka
+            - generic [ref=e754]: Apr 27, 17:40
+        - generic [ref=e755] [cursor=pointer]:
+          - generic [ref=e756]: v2.0 · Initial tech-week patch
+          - generic [ref=e757]:
+            - generic [ref=e758]: K. Tanaka
+            - generic [ref=e759]: Apr 24, 09:40
+      - generic [ref=e645]: LINKED REFERENCES
+      - generic [ref=e646]:
+        - generic [ref=e647] [cursor=pointer]:
+          - generic [ref=e648]: NODE
+          - generic [ref=e649]: n3 · vMix M4
+        - generic [ref=e650] [cursor=pointer]:
+          - generic [ref=e651]: NODE
+          - generic [ref=e652]: "n4 · SX40 #1"
+        - generic [ref=e653] [cursor=pointer]:
+          - generic [ref=e654]: NODE
+          - generic [ref=e655]: "n5 · SX40 #2"
+        - generic [ref=e656] [cursor=pointer]:
+          - generic [ref=e657]: ASSET
+          - generic [ref=e658]: DGC-SD12-001 · DiGiCo SD12
+        - generic [ref=e659] [cursor=pointer]:
+          - generic [ref=e660]: ASSET
+          - generic [ref=e661]: LA-12X-001 · L-Acoustics LA12X
+        - generic [ref=e662] [cursor=pointer]:
+          - generic [ref=e663]: ASSET
+          - generic [ref=e664]: DST-200A-01 · Distro 200A
+        - generic [ref=e760] [cursor=pointer]:
+          - generic [ref=e761]: WALL
+          - generic [ref=e762]: W1 · Main Lobby Wall
+      - generic [ref=e665]:
+        - generic [ref=e666]: COMMENTS
+        - generic [ref=e667]: 0 OPEN
+      - generic [ref=e668]:
+        - generic [ref=e669]:
+          - textbox "Add a comment…" [ref=e670]
+          - generic [ref=e671]:
+            - generic [ref=e672]: ⌘↵ to post
+            - button "Comment" [disabled] [ref=e673] [cursor=pointer]
+        - generic [ref=e763]: No comments yet.
+  - contentinfo [ref=e443]:
+    - generic [ref=e444]: READY
+    - generic [ref=e446]: REV 0042
+    - generic [ref=e447]: SAVED 14:22:08
+    - generic [ref=e448]: 2 ERRORS · 1 WARN
+    - generic [ref=e450]: PRJ-2451
+    - generic [ref=e451]: UTC-05
+    - generic [ref=e452]: 10:42:39

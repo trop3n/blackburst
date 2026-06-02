@@ -13,12 +13,24 @@ import { DEFAULT_RACK } from "@/lib/rack-data";
 
 export const BUCKETS_KEY = "blackburst:projects:v1";
 
+// Autosave: the module stores no longer persist themselves, so the current
+// project's bucket is written here on every change (debounced) and flushed on
+// page hide. Without this, edits are only saved when switching projects.
+let activeProjectId: string | null = null;
+let applying = false;
+let autosaveStarted = false;
+let saveTimer: ReturnType<typeof setTimeout> | null = null;
+const SAVE_DEBOUNCE_MS = 250;
+
 interface StoreSpec {
   fields: readonly string[];
   defaults: Record<string, unknown>;
   store: {
     getState: () => Record<string, unknown>;
     setState: (s: Record<string, unknown>) => void;
+    subscribe: (
+      listener: (state: Record<string, unknown>, prev: Record<string, unknown>) => void,
+    ) => () => void;
   };
 }
 
@@ -126,18 +138,28 @@ function defaultBucket(): ProjectStateBuckets {
 }
 
 export function applyState(buckets: ProjectStateBuckets) {
-  for (const [key, spec] of Object.entries(SPECS)) {
-    const slice = { ...spec.defaults, ...(buckets[key] ?? {}) };
-    spec.store.setState(slice);
+  applying = true;
+  try {
+    for (const [key, spec] of Object.entries(SPECS)) {
+      const slice = { ...spec.defaults, ...(buckets[key] ?? {}) };
+      spec.store.setState(slice);
+    }
+  } finally {
+    applying = false;
   }
 }
 
 export function switchProject(fromId: string, toId: string) {
   if (fromId === toId) return;
+  if (saveTimer != null) {
+    clearTimeout(saveTimer);
+    saveTimer = null;
+  }
   const all = loadAll();
   all[fromId] = snapshotCurrent();
   const next = all[toId] ?? defaultBucket();
   applyState(next);
+  activeProjectId = toId;
   saveAll(all);
 }
 
@@ -153,8 +175,36 @@ export function writeBucket(projectId: string, buckets: ProjectStateBuckets) {
   saveAll(all);
 }
 
+function flushSave() {
+  if (saveTimer != null) {
+    clearTimeout(saveTimer);
+    saveTimer = null;
+  }
+  if (activeProjectId != null) saveCurrentBucket(activeProjectId);
+}
+
+function scheduleSave() {
+  if (applying || activeProjectId == null) return;
+  if (saveTimer != null) clearTimeout(saveTimer);
+  saveTimer = setTimeout(flushSave, SAVE_DEBOUNCE_MS);
+}
+
+function startAutosave() {
+  if (autosaveStarted) return;
+  autosaveStarted = true;
+  for (const spec of Object.values(SPECS)) spec.store.subscribe(scheduleSave);
+  if (typeof window !== "undefined") {
+    window.addEventListener("pagehide", flushSave);
+    window.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "hidden") flushSave();
+    });
+  }
+}
+
 export function initProjectState(projectId: string) {
   const all = loadAll();
   const buckets = all[projectId] ?? defaultBucket();
   applyState(buckets);
+  activeProjectId = projectId;
+  startAutosave();
 }

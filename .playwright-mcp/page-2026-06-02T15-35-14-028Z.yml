@@ -1,0 +1,337 @@
+- generic [ref=e3]:
+  - complementary [ref=e4]:
+    - generic [ref=e5]: BB
+    - generic [ref=e6]:
+      - button "WALL" [ref=e7] [cursor=pointer]:
+        - img [ref=e9]
+        - generic [ref=e11]: WALL
+      - button "SYS" [active] [ref=e12] [cursor=pointer]:
+        - img [ref=e14]
+        - generic [ref=e19]: SYS
+      - button "RACK" [ref=e20] [cursor=pointer]:
+        - img [ref=e22]
+        - generic [ref=e24]: RACK
+      - button "INV" [ref=e25] [cursor=pointer]:
+        - img [ref=e27]
+        - generic [ref=e31]: INV
+      - button "DOCS" [ref=e32] [cursor=pointer]:
+        - img [ref=e34]
+        - generic [ref=e37]: DOCS
+    - button "SET" [ref=e40] [cursor=pointer]:
+      - img [ref=e42]
+      - generic [ref=e45]: SET
+  - banner [ref=e46]:
+    - generic [ref=e47]:
+      - generic [ref=e48] [cursor=pointer]:
+        - combobox "PRJ-2440" [ref=e49]:
+          - option "PRJ-2451 — Atrium Lobby Wall"
+          - option "PRJ-2447 — Auditorium Refresh"
+          - option "PRJ-2440 — Broadcast Studio B" [selected]
+        - generic [ref=e50]: PRJ-2440
+        - img [ref=e51]
+      - generic [ref=e53]: Broadcast Studio B
+      - generic [ref=e54]: KCR Media
+    - generic [ref=e55]:
+      - generic [ref=e56]: PROJECTS
+      - generic [ref=e57]: /
+      - generic [ref=e58]: PRJ-2440
+      - generic [ref=e59]: /
+      - generic [ref=e60]: System Designer
+    - generic [ref=e62]:
+      - button "Search assets, docs, panels… ⌘K" [ref=e63] [cursor=pointer]:
+        - img [ref=e64]
+        - generic [ref=e67]: Search assets, docs, panels…
+        - generic [ref=e68]: ⌘K
+      - button "Import" [ref=e69] [cursor=pointer]:
+        - img [ref=e70]
+        - text: Import
+      - button "Export" [ref=e72] [cursor=pointer]:
+        - img [ref=e73]
+        - text: Export
+      - button "Save Rev" [ref=e75] [cursor=pointer]:
+        - img [ref=e76]
+        - text: Save Rev
+      - button "Open settings" [ref=e78] [cursor=pointer]:
+        - img [ref=e79]
+      - generic [ref=e83]: MR
+  - main [ref=e84]:
+    - generic [ref=e674]:
+      - generic [ref=e676]: DEVICE PALETTE
+      - generic [ref=e677]:
+        - img [ref=e678]
+        - textbox "Drag to canvas…" [ref=e681]
+      - generic [ref=e682]:
+        - generic [ref=e684]: VIDEO SOURCES
+        - generic [ref=e686]:
+          - img [ref=e687]
+          - generic [ref=e689]: Resolume Mac
+        - generic [ref=e690]:
+          - img [ref=e691]
+          - generic [ref=e693]: Disguise gx 2c
+        - generic [ref=e694]:
+          - img [ref=e695]
+          - generic [ref=e697]: BMD HyperDeck
+        - generic [ref=e698]:
+          - img [ref=e699]
+          - generic [ref=e701]: PTZ Camera
+        - generic [ref=e703]: PROCESSORS
+        - generic [ref=e705]:
+          - img [ref=e706]
+          - generic [ref=e708]: Brompton SX40
+        - generic [ref=e709]:
+          - img [ref=e710]
+          - generic [ref=e712]: Brompton Tessera S8
+        - generic [ref=e713]:
+          - img [ref=e714]
+          - generic [ref=e716]: Novastar MX40
+        - generic [ref=e717]:
+          - img [ref=e718]
+          - generic [ref=e720]: Megapixel Helios
+        - generic [ref=e722]: MIXERS
+        - generic [ref=e724]:
+          - img [ref=e725]
+          - generic [ref=e727]: vMix M4
+        - generic [ref=e728]:
+          - img [ref=e729]
+          - generic [ref=e731]: Blackmagic ATEM
+        - generic [ref=e732]:
+          - img [ref=e733]
+          - generic [ref=e735]: Roland V-160HD
+        - generic [ref=e737]: AUDIO
+        - generic [ref=e739]:
+          - img [ref=e740]
+          - generic [ref=e742]: DiGiCo SD12
+        - generic [ref=e743]:
+          - img [ref=e744]
+          - generic [ref=e746]: Yamaha CL5
+        - generic [ref=e747]:
+          - img [ref=e748]
+          - generic [ref=e750]: Shure ULXD4Q
+        - generic [ref=e752]: POWER
+        - generic [ref=e754]:
+          - img [ref=e755]
+          - generic [ref=e757]: Distro 200A 3ϕ
+        - generic [ref=e758]:
+          - img [ref=e759]
+          - generic [ref=e761]: Lex SQ-12IL
+    - generic [ref=e762]:
+      - generic [ref=e763]:
+        - generic [ref=e764]:
+          - button "GRAPH" [ref=e765] [cursor=pointer]
+          - button "PATCH SHEET" [ref=e766] [cursor=pointer]
+        - generic [ref=e768]: LAYERS
+        - generic [ref=e769]:
+          - button "VIDEO" [ref=e770] [cursor=pointer]: VIDEO
+          - button "AUDIO" [ref=e772] [cursor=pointer]: AUDIO
+          - button "NETWORK" [ref=e774] [cursor=pointer]: NETWORK
+          - button "POWER" [ref=e776] [cursor=pointer]: POWER
+        - button "Auto-Route" [ref=e778] [cursor=pointer]:
+          - img [ref=e779]
+          - text: Auto-Route
+        - button "PDF / CAD" [ref=e781] [cursor=pointer]:
+          - img [ref=e782]
+          - text: PDF / CAD
+      - generic [ref=e784]:
+        - generic:
+          - generic:
+            - generic: SYSTEM
+            - generic: Helios Auditorium · v0042
+          - generic:
+            - generic: NODES
+            - generic: "9"
+            - generic: EDGES
+            - generic: 10/10
+        - img:
+          - generic:
+            - generic: 12G-SDI
+          - generic:
+            - generic: 3G-SDI
+          - generic:
+            - generic: 12G-SDI
+          - generic:
+            - generic: 12G-SDI
+          - generic:
+            - generic: 10GbE A
+          - generic:
+            - generic: 10GbE B
+          - generic:
+            - generic: AES50
+          - generic:
+            - generic: L6-30 · 30A
+          - generic:
+            - generic: L6-30 · 30A
+          - generic:
+            - generic: L21-30 · 30A
+        - generic [ref=e785]:
+          - generic [ref=e786]:
+            - generic [ref=e787]: ●
+            - generic [ref=e788]: SOURCE
+            - generic [ref=e789]: n1
+          - generic [ref=e790]:
+            - generic [ref=e791]: Resolume Mac Pro
+            - generic [ref=e792]:
+              - generic [ref=e793]: res
+              - generic [ref=e794]: 3840×2160
+            - generic [ref=e795]:
+              - generic [ref=e796]: fps
+              - generic [ref=e797]: 60p
+        - generic [ref=e800]:
+          - generic [ref=e801]:
+            - generic [ref=e802]: ●
+            - generic [ref=e803]: SOURCE
+            - generic [ref=e804]: n2
+          - generic [ref=e805]:
+            - generic [ref=e806]: PTZ Cam · Stage
+            - generic [ref=e807]:
+              - generic [ref=e808]: res
+              - generic [ref=e809]: 1920×1080
+            - generic [ref=e810]:
+              - generic [ref=e811]: fps
+              - generic [ref=e812]: 60i
+        - generic [ref=e815]:
+          - generic [ref=e816]:
+            - generic [ref=e817]: ●
+            - generic [ref=e818]: MIXER
+            - generic [ref=e819]: n3
+          - generic [ref=e820]:
+            - generic [ref=e821]: vMix M4 · A1
+            - generic [ref=e822]:
+              - generic [ref=e823]: inputs
+              - generic [ref=e824]: 4×SDI
+            - generic [ref=e825]:
+              - generic [ref=e826]: outputs
+              - generic [ref=e827]: 2×SDI
+        - generic [ref=e831]:
+          - generic [ref=e832]:
+            - generic [ref=e833]: ●
+            - generic [ref=e834]: PROC
+            - generic [ref=e835]: n4
+          - generic [ref=e836]:
+            - generic [ref=e837]: "Brompton SX40 · #1"
+            - generic [ref=e838]:
+              - generic [ref=e839]: ports
+              - generic [ref=e840]: 4×10GbE
+            - generic [ref=e841]:
+              - generic [ref=e842]: load
+              - generic [ref=e843]: 62%
+        - generic [ref=e846]:
+          - generic [ref=e847]:
+            - generic [ref=e848]: ●
+            - generic [ref=e849]: PROC
+            - generic [ref=e850]: n5
+          - generic [ref=e851]:
+            - generic [ref=e852]: "Brompton SX40 · #2"
+            - generic [ref=e853]:
+              - generic [ref=e854]: ports
+              - generic [ref=e855]: 4×10GbE
+            - generic [ref=e856]:
+              - generic [ref=e857]: load
+              - generic [ref=e858]: 48%
+        - generic [ref=e861]:
+          - generic [ref=e862]:
+            - generic [ref=e863]: ●
+            - generic [ref=e864]: WALL
+            - generic [ref=e865]: n6
+          - generic [ref=e866]:
+            - generic [ref=e867]: Main Lobby Wall
+            - generic [ref=e868]:
+              - generic [ref=e869]: panels
+              - generic [ref=e870]: "144"
+            - generic [ref=e871]:
+              - generic [ref=e872]: res
+              - generic [ref=e873]: 9000×4000
+        - generic [ref=e875]:
+          - generic [ref=e876]:
+            - generic [ref=e877]: ●
+            - generic [ref=e878]: AUDIO
+            - generic [ref=e879]: n7
+          - generic [ref=e880]:
+            - generic [ref=e881]: DiGiCo SD12 · FOH
+            - generic [ref=e882]:
+              - generic [ref=e883]: channels
+              - generic [ref=e884]: "96"
+            - generic [ref=e885]:
+              - generic [ref=e886]: aux
+              - generic [ref=e887]: "24"
+        - generic [ref=e890]:
+          - generic [ref=e891]:
+            - generic [ref=e892]: ●
+            - generic [ref=e893]: AMP
+            - generic [ref=e894]: n8
+          - generic [ref=e895]:
+            - generic [ref=e896]: L-Acoustics LA12X
+            - generic [ref=e897]:
+              - generic [ref=e898]: ch
+              - generic [ref=e899]: "4"
+            - generic [ref=e900]:
+              - generic [ref=e901]: w
+              - generic [ref=e902]: 12.8kW
+        - generic [ref=e905]:
+          - generic [ref=e906]:
+            - generic [ref=e907]: ●
+            - generic [ref=e908]: POWER
+            - generic [ref=e909]: n9
+          - generic [ref=e910]:
+            - generic [ref=e911]: Distro · 200A 3ϕ
+            - generic [ref=e912]:
+              - generic [ref=e913]: capacity
+              - generic [ref=e914]: 144kVA
+            - generic [ref=e915]:
+              - generic [ref=e916]: load
+              - generic [ref=e917]: 78kVA
+        - generic: "SCHEMATIC · GRID 16 · AUTO-ROUTE: ORTHOGONAL"
+    - generic [ref=e919]:
+      - generic [ref=e920]:
+        - generic [ref=e921]: NODE INSPECTOR
+        - generic [ref=e922]: n4
+      - generic [ref=e923]:
+        - generic [ref=e924]:
+          - generic [ref=e925]: PROC
+          - generic [ref=e926]: "Brompton SX40 · #1"
+        - generic [ref=e928]: SPECIFICATION
+        - generic [ref=e930]:
+          - generic [ref=e931]: ports
+          - generic [ref=e932]: 4×10GbE
+          - generic [ref=e933]: load
+          - generic [ref=e934]: 62%
+        - generic [ref=e936]: CONNECTIONS
+        - generic [ref=e938] [cursor=pointer]:
+          - generic [ref=e939]: ←
+          - generic [ref=e940]: vMix M4 · A1
+          - generic [ref=e941]: 12G-SDI
+          - button "Remove edge to vMix M4 · A1" [ref=e942]:
+            - img [ref=e943]
+        - generic [ref=e945] [cursor=pointer]:
+          - generic [ref=e946]: →
+          - generic [ref=e947]: Main Lobby Wall
+          - generic [ref=e948]: 10GbE A
+          - button "Remove edge to Main Lobby Wall" [ref=e949]:
+            - img [ref=e950]
+        - generic [ref=e952] [cursor=pointer]:
+          - generic [ref=e953]: ←
+          - generic [ref=e954]: Distro · 200A 3ϕ
+          - generic [ref=e955]: L6-30 · 30A
+          - button "Remove edge to Distro · 200A 3ϕ" [ref=e956]:
+            - img [ref=e957]
+        - generic [ref=e960]: HEALTH
+        - generic [ref=e962]:
+          - generic [ref=e963]: Status
+          - generic [ref=e964]: ● ONLINE
+          - generic [ref=e965]: Last sync
+          - generic [ref=e966]: 14:21:08
+          - generic [ref=e967]: Firmware
+          - generic [ref=e968]: 3.4.12
+          - generic [ref=e969]: Errors (24h)
+          - generic [ref=e970]: "0"
+        - generic [ref=e972]: ACTIONS
+        - button "Remove node" [ref=e974] [cursor=pointer]:
+          - img [ref=e975]
+          - text: Remove node
+  - contentinfo [ref=e323]:
+    - generic [ref=e324]: READY
+    - generic [ref=e326]: REV 0000
+    - generic [ref=e327]: SAVED —
+    - generic [ref=e328]: 2 ERRORS · 1 WARN
+    - generic [ref=e330]: PRJ-2440
+    - generic [ref=e331]: UTC-05
+    - generic [ref=e332]: 10:35:13

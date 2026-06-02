@@ -1,0 +1,278 @@
+- generic [ref=e3]:
+  - complementary [ref=e4]:
+    - generic [ref=e5]: BB
+    - generic [ref=e6]:
+      - button "WALL" [ref=e7] [cursor=pointer]:
+        - img [ref=e9]
+        - generic [ref=e11]: WALL
+      - button "SYS" [ref=e12] [cursor=pointer]:
+        - img [ref=e14]
+        - generic [ref=e19]: SYS
+      - button "RACK" [ref=e20] [cursor=pointer]:
+        - img [ref=e22]
+        - generic [ref=e24]: RACK
+      - button "INV" [ref=e25] [cursor=pointer]:
+        - img [ref=e27]
+        - generic [ref=e31]: INV
+      - button "DOCS" [ref=e32] [cursor=pointer]:
+        - img [ref=e34]
+        - generic [ref=e37]: DOCS
+    - button "SET" [ref=e40] [cursor=pointer]:
+      - img [ref=e42]
+      - generic [ref=e45]: SET
+  - banner [ref=e46]:
+    - generic [ref=e47]:
+      - generic [ref=e48] [cursor=pointer]:
+        - combobox "PRJ-2440" [ref=e49]:
+          - option "PRJ-2451 — Atrium Lobby Wall"
+          - option "PRJ-2447 — Auditorium Refresh"
+          - option "PRJ-2440 — Broadcast Studio B" [selected]
+        - generic [ref=e50]: PRJ-2440
+        - img [ref=e51]
+      - generic [ref=e53]: Broadcast Studio B
+      - generic [ref=e54]: KCR Media
+    - generic [ref=e55]:
+      - generic [ref=e56]: PROJECTS
+      - generic [ref=e57]: /
+      - generic [ref=e58]: PRJ-2440
+      - generic [ref=e59]: /
+      - generic [ref=e60]: Documentation Hub
+    - generic [ref=e62]:
+      - button "Search assets, docs, panels… ⌘K" [ref=e63] [cursor=pointer]:
+        - img [ref=e64]
+        - generic [ref=e67]: Search assets, docs, panels…
+        - generic [ref=e68]: ⌘K
+      - button "Import" [ref=e69] [cursor=pointer]:
+        - img [ref=e70]
+        - text: Import
+      - button "Export" [ref=e72] [cursor=pointer]:
+        - img [ref=e73]
+        - text: Export
+      - button "Save Rev" [ref=e75] [cursor=pointer]:
+        - img [ref=e76]
+        - text: Save Rev
+      - button "Open settings" [ref=e78] [cursor=pointer]:
+        - img [ref=e79]
+      - generic [ref=e83]: MR
+  - main [ref=e84]:
+    - generic [ref=e85]:
+      - generic [ref=e86]:
+        - generic [ref=e87]: DOCS TREE
+        - button "New document" [ref=e88] [cursor=pointer]:
+          - img [ref=e89]
+      - generic [ref=e91]:
+        - img [ref=e92]
+        - textbox "Search docs…" [ref=e95]
+      - generic [ref=e96]:
+        - generic [ref=e97]:
+          - generic [ref=e98] [cursor=pointer]:
+            - img [ref=e99]
+            - img [ref=e102]
+            - generic [ref=e104]: Helios Auditorium
+          - generic [ref=e105] [cursor=pointer]:
+            - img [ref=e107]
+            - generic [ref=e110]: Run-of-Show v3.2
+          - generic [ref=e111] [cursor=pointer]:
+            - img [ref=e113]
+            - generic [ref=e116]: Cue Sheet — Day 1
+            - generic [ref=e326]:
+              - button "Rename" [ref=e327]:
+                - img [ref=e328]
+              - button "Delete" [ref=e330]:
+                - img [ref=e331]
+          - generic [ref=e117] [cursor=pointer]:
+            - img [ref=e119]
+            - generic [ref=e122]: Patch List
+          - generic [ref=e123] [cursor=pointer]:
+            - img [ref=e125]
+            - generic [ref=e128]: Handoff Notes
+          - generic [ref=e129] [cursor=pointer]:
+            - img [ref=e130]
+            - img [ref=e133]
+            - generic [ref=e135]: Equipment Specs
+          - generic [ref=e136] [cursor=pointer]:
+            - img [ref=e138]
+            - generic [ref=e141]: Brompton SX40 — Manual
+          - generic [ref=e142] [cursor=pointer]:
+            - img [ref=e144]
+            - generic [ref=e147]: ROE Ruby RB2.6 — Spec
+          - generic [ref=e148] [cursor=pointer]:
+            - img [ref=e150]
+            - generic [ref=e153]: L-Acoustics LA12X — Spec
+          - generic [ref=e154] [cursor=pointer]:
+            - img [ref=e155]
+            - img [ref=e158]
+            - generic [ref=e160]: SOPs
+          - generic [ref=e161] [cursor=pointer]:
+            - img [ref=e163]
+            - generic [ref=e166]: Load-In Procedure
+          - generic [ref=e167] [cursor=pointer]:
+            - img [ref=e169]
+            - generic [ref=e172]: Wall Calibration
+          - generic [ref=e173] [cursor=pointer]:
+            - img [ref=e175]
+            - generic [ref=e178]: Strike & Pack-Out
+        - generic [ref=e180]: RECENT
+        - generic [ref=e333] [cursor=pointer]:
+          - img [ref=e334]
+          - generic [ref=e337]: Cue Sheet — Day 1
+          - generic [ref=e338]: now
+    - generic [ref=e183]:
+      - generic [ref=e184]:
+        - generic [ref=e185]: Helios Auditorium
+        - generic [ref=e186]: /
+        - generic [ref=e187]: Cue Sheet — Day 1
+        - generic [ref=e188]: v3.2 · CURRENT
+        - button "Preview" [ref=e189] [cursor=pointer]:
+          - img [ref=e190]
+          - text: Preview
+        - button "Edit" [ref=e193] [cursor=pointer]:
+          - img [ref=e194]
+          - text: Edit
+        - button "Export PDF" [ref=e196] [cursor=pointer]:
+          - img [ref=e197]
+          - text: Export PDF
+      - generic [ref=e199]:
+        - heading "Cue Sheet — Day 1" [level=1] [ref=e339]
+        - generic [ref=e340]:
+          - generic [ref=e341]: REV v3.2
+          - generic [ref=e342]: EDITED Apr 28, 14:22 by M. Reyes
+          - generic [ref=e343]: ● LOCKED FOR SHOW
+        - paragraph [ref=e344]:
+          - text: Locked cue list for Day 1 (
+          - generic [ref=e345] [cursor=pointer]: ↗ Run-of-Show v3.2
+          - text: ). Each cue is paired with a director call and a stage-manager standby. Standby is issued 5 min before the cue unless tagged
+          - strong [ref=e346]: HOT
+          - text: .
+        - heading "Act I — Opening Block" [level=2] [ref=e347]
+        - list [ref=e348]:
+          - listitem [ref=e349]:
+            - code [ref=e350]: Q01
+            - text: · 09:00:00 — House to half · audio bed in @ -18 LUFS
+          - listitem [ref=e351]:
+            - code [ref=e352]: Q02
+            - text: · 09:01:30 — IMAG live ·
+            - generic [ref=e353] [cursor=pointer]: ↗ vMix M4
+            - text: →
+            - generic [ref=e354] [cursor=pointer]: "↗ SX40 #1"
+          - listitem [ref=e355]:
+            - code [ref=e356]: Q03
+            - text: · 09:04:00 — Title plate on
+            - generic [ref=e357] [cursor=pointer]: ↗ W1 · Main Lobby Wall
+          - listitem [ref=e358]:
+            - code [ref=e359]: Q04
+            - text: · 09:05:15 — Mic 1 hot · speaker walk-on (M. Reyes call)
+          - listitem [ref=e360]:
+            - code [ref=e361]: Q05
+            - text: · 09:08:00 — Lower-third graphic · standby Q06 30s
+          - listitem [ref=e362]:
+            - code [ref=e363]: Q06
+            - text: · 09:08:30 — IMAG cross-fade · 2s
+        - heading "Act II — Panel Block" [level=2] [ref=e364]
+        - list [ref=e365]:
+          - listitem [ref=e366]:
+            - code [ref=e367]: Q07
+            - text: · 10:15:00 — Panel layout (4-up) ·
+            - generic [ref=e368] [cursor=pointer]: ↗ vMix M4
+          - listitem [ref=e369]:
+            - code [ref=e370]: Q08
+            - text: · 10:18:00 — Audio mix to console scene B (
+            - generic [ref=e371] [cursor=pointer]: ↗ SD12
+            - text: )
+          - listitem [ref=e372]:
+            - code [ref=e373]: Q09
+            - text: · 10:35:00 — Sponsor reel · 90s, locked timecode
+        - heading "Act III — Closing Block" [level=2] [ref=e374]
+        - list [ref=e375]:
+          - listitem [ref=e376]:
+            - code [ref=e377]: Q10
+            - text: · 11:50:00 — Single-cam (Cam-B) · PTZ preset 3
+          - listitem [ref=e378]:
+            - code [ref=e379]: Q11
+            - text: · 11:54:00 — Curtain-call plate · cross-fade 1s
+          - listitem [ref=e380]:
+            - code [ref=e381]: Q12
+            - text: · 11:58:00 — Audio bed up · -22 LUFS · 8s
+          - listitem [ref=e382]:
+            - code [ref=e383]: Q13
+            - text: · 12:00:00 — Strike to walkout loop
+          - listitem [ref=e384]:
+            - code [ref=e385]: Q14
+            - text: · 12:02:00 — House lights full (
+            - strong [ref=e386]: HOT
+            - text: )
+        - generic [ref=e387]:
+          - strong [ref=e388]: STANDBY
+          - generic [ref=e389]:
+            - text: Failover plates staged at
+            - code [ref=e390]: Q03
+            - text: and
+            - code [ref=e391]: Q14
+            - text: ; manual recall via SM panel if
+            - generic [ref=e392] [cursor=pointer]: "↗ SX40 #1"
+            - text: drops. See
+            - generic [ref=e393] [cursor=pointer]: ↗ SOP · Wall Calibration §4
+            - text: .
+    - generic [ref=e244]:
+      - generic [ref=e245]:
+        - generic [ref=e246]: VERSION HISTORY
+        - button "Save as new version" [ref=e247] [cursor=pointer]:
+          - img [ref=e248]
+      - generic [ref=e250]:
+        - generic [ref=e251] [cursor=pointer]:
+          - generic [ref=e252]: ●v3.2 · Locked for show
+          - generic [ref=e253]:
+            - generic [ref=e254]: M. Reyes
+            - generic [ref=e255]: Apr 28, 14:22
+        - generic [ref=e256] [cursor=pointer]:
+          - generic [ref=e257]: v3.1 · Added Q08 audio scene B
+          - generic [ref=e258]:
+            - generic [ref=e259]: M. Reyes
+            - generic [ref=e260]: Apr 27, 17:50
+        - generic [ref=e261] [cursor=pointer]:
+          - generic [ref=e262]: v3.0 · Cue numbering re-aligned to ROS v3.0
+          - generic [ref=e263]:
+            - generic [ref=e264]: K. Tanaka
+            - generic [ref=e265]: Apr 25, 11:08
+      - generic [ref=e277]: LINKED REFERENCES
+      - generic [ref=e278]:
+        - generic [ref=e279] [cursor=pointer]:
+          - generic [ref=e280]: DOC
+          - generic [ref=e281]: Run-of-Show v3.2
+        - generic [ref=e282] [cursor=pointer]:
+          - generic [ref=e283]: ASSET
+          - generic [ref=e284]: "BMD-S40-001 · Brompton SX40 #1"
+        - generic [ref=e285] [cursor=pointer]:
+          - generic [ref=e286]: ASSET
+          - generic [ref=e287]: DGC-SD12-001 · DiGiCo SD12
+        - generic [ref=e288] [cursor=pointer]:
+          - generic [ref=e289]: WALL
+          - generic [ref=e290]: W1 · Main Lobby Wall
+        - generic [ref=e291] [cursor=pointer]:
+          - generic [ref=e292]: NODE
+          - generic [ref=e293]: n3 · vMix M4
+        - generic [ref=e294] [cursor=pointer]:
+          - generic [ref=e295]: DOC
+          - generic [ref=e296]: SOP · Wall Calibration
+      - generic [ref=e297]:
+        - generic [ref=e298]: COMMENTS
+        - generic [ref=e299]: 1 OPEN
+      - generic [ref=e300]:
+        - generic [ref=e301]:
+          - textbox "Add a comment…" [ref=e302]
+          - generic [ref=e303]:
+            - generic [ref=e304]: ⌘↵ to post
+            - button "Comment" [disabled] [ref=e305] [cursor=pointer]
+        - generic [ref=e306]:
+          - generic [ref=e307]:
+            - generic [ref=e308]: M. Reyes
+            - generic [ref=e309]: 20m
+          - generic [ref=e310]: Locking — confirmed Q14 hot with FOH.
+  - contentinfo [ref=e316]:
+    - generic [ref=e317]: READY
+    - generic [ref=e319]: REV 0000
+    - generic [ref=e320]: SAVED —
+    - generic [ref=e321]: 2 ERRORS · 1 WARN
+    - generic [ref=e323]: PRJ-2440
+    - generic [ref=e324]: UTC-05
+    - generic [ref=e325]: 10:33:37
