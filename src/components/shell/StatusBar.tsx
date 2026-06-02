@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { PANEL_LIBRARY } from "@/lib/data";
-import { SHOWS } from "@/lib/inventory-data";
 import { computeWallCalc } from "@/modules/led-wall/calculations";
 import { useLedWall } from "@/modules/led-wall/store";
 import { summarize, validateWall } from "@/modules/led-wall/validation";
@@ -14,6 +13,7 @@ export function StatusBar() {
   const walls = useLedWall((s) => s.walls);
   const layoutId = useLedWall((s) => s.layoutId);
   const inventoryAssets = useInventory((s) => s.assets);
+  const inventoryShows = useInventory((s) => s.shows);
   const latest = revisions[0];
   const [now, setNow] = useState(() => new Date());
 
@@ -31,7 +31,7 @@ export function StatusBar() {
   const panel = PANEL_LIBRARY.find((p) => p.id === layout.panel) ?? PANEL_LIBRARY[0];
   const calc = computeWallCalc(layout, panel);
   const wall = summarize(validateWall(layout, panel, calc));
-  const assets = summarizeAssetIssues(validateAssets(inventoryAssets, SHOWS));
+  const assets = summarizeAssetIssues(validateAssets(inventoryAssets, inventoryShows));
   const errors = wall.errors + assets.errors;
   const warnings = wall.warnings + assets.warnings;
   const level: "ok" | "warn" | "error" =

@@ -1145,6 +1145,27 @@ button { font-family: inherit; color: inherit; }
   text-align: center;
   border-right: 1px solid var(--color-line-faint);
 }
+.gantt-actions {
+  display: none;
+  gap: 2px;
+  align-items: center;
+  margin-left: auto;
+}
+.gantt-label:hover .gantt-actions { display: inline-flex; }
+.gantt-actions button {
+  background: none;
+  border: 0;
+  padding: 2px 3px;
+  color: var(--color-fg-faint);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 2px;
+}
+.gantt-actions button:hover {
+  color: var(--accent);
+  background: var(--color-bg-2);
+}
 
 /* Docs */
 .docs-tree {

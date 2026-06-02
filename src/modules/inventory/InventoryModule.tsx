@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { I } from "@/components/Icon";
-import { ASSET_CATEGORIES, SHOWS } from "@/lib/inventory-data";
-import type { AssetStatus } from "@/types";
+import { ASSET_CATEGORIES } from "@/lib/inventory-data";
+import type { AssetStatus, ShowSchedule } from "@/types";
 import { useInventory } from "./store";
 import { issuesByAsset, summarizeAssetIssues, validateAssets } from "./validation";
 
@@ -11,6 +11,18 @@ const STATUS_OPTIONS: { value: AssetStatus; label: string }[] = [
   { value: "out", label: "OUT" },
   { value: "maint", label: "MAINT" },
 ];
+
+function clampDay(raw: string, fallback: number): number {
+  const n = Math.round(Number(raw));
+  if (!Number.isFinite(n)) return fallback;
+  return Math.max(0, Math.min(14, n));
+}
+
+function nextShowId(shows: ShowSchedule[]): string {
+  let n = 1;
+  while (shows.some((s) => s.id === `SH-${n}`)) n++;
+  return `SH-${n}`;
+}
 
 export function InventoryModule() {
   const assets = useInventory((s) => s.assets);
@@ -25,6 +37,10 @@ export function InventoryModule() {
   const updateAsset = useInventory((s) => s.updateAsset);
   const addAsset = useInventory((s) => s.addAsset);
   const removeAsset = useInventory((s) => s.removeAsset);
+  const shows = useInventory((s) => s.shows);
+  const addShow = useInventory((s) => s.addShow);
+  const updateShow = useInventory((s) => s.updateShow);
+  const removeShow = useInventory((s) => s.removeShow);
   const [filter, setFilter] = useState("");
 
   const filtered = useMemo(() => {
@@ -54,7 +70,7 @@ export function InventoryModule() {
       .sort((x, y) => x.localeCompare(y));
     return [...CAT_OPTIONS, ...extra];
   }, [assets]);
-  const allIssues = useMemo(() => validateAssets(assets, SHOWS), [assets]);
+  const allIssues = useMemo(() => validateAssets(assets, shows), [assets, shows]);
   const issuesIndex = useMemo(() => issuesByAsset(allIssues), [allIssues]);
   const issuesSummary = summarizeAssetIssues(allIssues);
   const selectedIssues = asset ? issuesIndex.get(asset.id) ?? [] : [];
@@ -104,6 +120,35 @@ export function InventoryModule() {
     const fallback = filtered[idx + 1]?.id ?? filtered[idx - 1]?.id ?? assets.find((a) => a.id !== asset.id)?.id ?? "";
     removeAsset(asset.id);
     setSelected(fallback);
+  };
+  const handleNewShow = () => {
+    const name = prompt("Show / job name?")?.trim();
+    if (!name) return;
+    const startRaw = prompt("Start day (1–14)?", "1");
+    if (startRaw === null) return;
+    const endRaw = prompt("End day (1–14)?", "6");
+    if (endRaw === null) return;
+    const start = clampDay(startRaw, 1);
+    const end = Math.max(start + 1, clampDay(endRaw, start + 1));
+    addShow({ id: nextShowId(shows), name, start, end, pct: 0 });
+  };
+  const handleEditShow = (show: ShowSchedule) => {
+    const name = prompt("Show / job name?", show.name)?.trim();
+    if (!name) return;
+    const startRaw = prompt("Start day (1–14)?", String(show.start));
+    if (startRaw === null) return;
+    const endRaw = prompt("End day (1–14)?", String(show.end));
+    if (endRaw === null) return;
+    const pctRaw = prompt("Utilization %?", String(show.pct));
+    if (pctRaw === null) return;
+    const start = clampDay(startRaw, show.start);
+    const end = Math.max(start + 1, clampDay(endRaw, show.end));
+    const pct = Math.max(0, Math.min(100, Math.round(Number(pctRaw)) || 0));
+    updateShow(show.id, { name, start, end, pct });
+  };
+  const handleRemoveShow = (show: ShowSchedule) => {
+    if (!confirm(`Remove show "${show.name}"?`)) return;
+    removeShow(show.id);
   };
 
   const avgUtilization =
@@ -349,7 +394,13 @@ export function InventoryModule() {
         {view === "schedule" && (
           <div style={{ flex: 1, overflow: "auto", background: "var(--color-bg-2)" }}>
             <div style={{ display: "grid", gridTemplateColumns: "200px 1fr" }}>
-              <div className="pane-hd" style={{ borderBottom: "1px solid var(--color-line)" }}>SHOW</div>
+              <div className="pane-hd" style={{ borderBottom: "1px solid var(--color-line)" }}>
+                <span>SHOW</span>
+                <span className="spacer" />
+                <button className="icon-btn" onClick={handleNewShow} title="New show">
+                  <I.Plus size={12} />
+                </button>
+              </div>
               <div className="gantt-hdr">
                 {Array.from({ length: 14 }).map((_, i) => {
                   const day = i + 28;
@@ -362,8 +413,8 @@ export function InventoryModule() {
                   );
                 })}
               </div>
-              {SHOWS.map((s) => (
-                <GanttRow key={s.id} show={s} />
+              {shows.map((s) => (
+                <GanttRow key={s.id} show={s} onEdit={handleEditShow} onRemove={handleRemoveShow} />
               ))}
             </div>
           </div>
@@ -524,7 +575,15 @@ export function InventoryModule() {
   );
 }
 
-function GanttRow({ show: s }: { show: typeof SHOWS[number] }) {
+function GanttRow({
+  show: s,
+  onEdit,
+  onRemove,
+}: {
+  show: ShowSchedule;
+  onEdit: (show: ShowSchedule) => void;
+  onRemove: (show: ShowSchedule) => void;
+}) {
   const borderColor =
     s.kind === "maint" ? "var(--color-err)" : s.kind === "warn" ? "var(--color-warn)" : "var(--color-line-strong)";
   return (
@@ -533,6 +592,14 @@ function GanttRow({ show: s }: { show: typeof SHOWS[number] }) {
         <span className="chip" style={{ borderColor }}>{s.id}</span>
         <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
           {s.name}
+        </span>
+        <span className="gantt-actions">
+          <button type="button" title="Edit show" onClick={() => onEdit(s)}>
+            <I.Edit size={11} />
+          </button>
+          <button type="button" title="Remove show" onClick={() => onRemove(s)}>
+            <I.Cross size={11} />
+          </button>
         </span>
       </div>
       <div className="gantt-track">

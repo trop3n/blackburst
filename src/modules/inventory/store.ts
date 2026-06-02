@@ -1,11 +1,12 @@
 import { create } from "zustand";
-import { ASSETS } from "@/lib/inventory-data";
-import type { Asset, AssetStatus } from "@/types";
+import { ASSETS, SHOWS } from "@/lib/inventory-data";
+import type { Asset, AssetStatus, ShowSchedule } from "@/types";
 
 export type InventoryView = "list" | "schedule";
 
 interface InventoryState {
   assets: Asset[];
+  shows: ShowSchedule[];
   cat: string;
   selected: string;
   view: InventoryView;
@@ -18,10 +19,14 @@ interface InventoryState {
   checkOut: (id: string, show: string, due: string) => void;
   addAsset: (asset: Asset) => void;
   removeAsset: (id: string) => void;
+  addShow: (show: ShowSchedule) => void;
+  updateShow: (id: string, patch: Partial<ShowSchedule>) => void;
+  removeShow: (id: string) => void;
 }
 
 export const useInventory = create<InventoryState>()((set) => ({
       assets: ASSETS,
+      shows: SHOWS,
       cat: "All gear",
       selected: "BMD-S40-001",
       view: "list",
@@ -67,5 +72,12 @@ export const useInventory = create<InventoryState>()((set) => ({
         set((s) => ({
           assets: s.assets.filter((a) => a.id !== id),
         })),
+      addShow: (show) => set((s) => ({ shows: [...s.shows, show] })),
+      updateShow: (id, patch) =>
+        set((s) => ({
+          shows: s.shows.map((sh) => (sh.id === id ? { ...sh, ...patch } : sh)),
+        })),
+      removeShow: (id) =>
+        set((s) => ({ shows: s.shows.filter((sh) => sh.id !== id) })),
     }),
 );

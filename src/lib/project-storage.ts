@@ -8,7 +8,7 @@ import { SYSTEM_EDGES, SYSTEM_NODES, WALL_LAYOUTS } from "@/lib/data";
 import { INITIAL_COMMENTS } from "@/lib/docs-comments";
 import { DOC_TREE } from "@/lib/docs-tree";
 import { INITIAL_VERSIONS } from "@/lib/docs-versions";
-import { ASSETS } from "@/lib/inventory-data";
+import { ASSETS, SHOWS } from "@/lib/inventory-data";
 import { DEFAULT_RACK } from "@/lib/rack-data";
 
 export const BUCKETS_KEY = "blackburst:projects:v1";
@@ -71,9 +71,10 @@ const SPECS = {
     store: useRack as unknown as StoreSpec["store"],
   },
   inv: {
-    fields: ["assets", "cat", "selected", "view"],
+    fields: ["assets", "shows", "cat", "selected", "view"],
     defaults: {
       assets: ASSETS,
+      shows: SHOWS,
       cat: "All gear",
       selected: "BMD-S40-001",
       view: "list",
@@ -168,6 +169,7 @@ export function scaffoldBucket(): ProjectStateBuckets {
     },
     inv: {
       assets: [],
+      shows: [],
       cat: "All gear",
       selected: "",
       view: "list",
