@@ -48,6 +48,12 @@ export function InventoryModule() {
     for (const a of assets) m.set(a.cat, (m.get(a.cat) ?? 0) + 1);
     return m;
   }, [assets]);
+  const sidebarCats = useMemo(() => {
+    const extra = [...new Set(assets.map((a) => a.cat))]
+      .filter((c) => !CAT_OPTIONS.includes(c))
+      .sort((x, y) => x.localeCompare(y));
+    return [...CAT_OPTIONS, ...extra];
+  }, [assets]);
   const allIssues = useMemo(() => validateAssets(assets, SHOWS), [assets]);
   const issuesIndex = useMemo(() => issuesByAsset(allIssues), [allIssues]);
   const issuesSummary = summarizeAssetIssues(allIssues);
@@ -107,20 +113,25 @@ export function InventoryModule() {
 
   return (
     <>
+      <datalist id="asset-cats">
+        {sidebarCats.map((c) => (
+          <option key={c} value={c} />
+        ))}
+      </datalist>
       <div className="left-pane">
         <div className="pane-hd"><span>CATEGORIES</span></div>
         <div style={{ flex: "0 0 auto" }}>
-          {ASSET_CATEGORIES.map((c) => {
-            const live = c.name === "All gear" ? assets.length : countByCat.get(c.name) ?? 0;
+          {["All gear", ...sidebarCats].map((name) => {
+            const live = name === "All gear" ? assets.length : countByCat.get(name) ?? 0;
             return (
               <div
-                key={c.name}
+                key={name}
                 className="list-row"
-                data-active={cat === c.name ? "1" : "0"}
-                onClick={() => setCat(c.name)}
+                data-active={cat === name ? "1" : "0"}
+                onClick={() => setCat(name)}
               >
                 <I.Folder size={12} />
-                <span className="lbl">{c.name}</span>
+                <span className="lbl">{name}</span>
                 <span className="meta">{live}</span>
               </div>
             );
@@ -423,14 +434,11 @@ export function InventoryModule() {
               </div>
               <div className="fld">
                 <span className="k">Category</span>
-                <select
+                <input
+                  list="asset-cats"
                   value={asset.cat}
                   onChange={(e) => updateAsset(asset.id, { cat: e.target.value })}
-                >
-                  {CAT_OPTIONS.map((c) => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
-                </select>
+                />
               </div>
               <div className="fld">
                 <span className="k">Status</span>

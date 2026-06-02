@@ -17,6 +17,7 @@ interface DocsState {
   setActive: (id: string) => void;
   toggle: (id: string) => void;
   addDoc: (targetId: string | null, name: string) => string | null;
+  addFolder: (targetId: string | null, name: string) => string | null;
   setBody: (docId: string, text: string) => void;
   clearBody: (docId: string) => void;
   renameDoc: (docId: string, newName: string) => boolean;
@@ -46,6 +47,13 @@ function nextDocId(nodes: DocNode[]): string {
   let n = 1;
   while (taken.has(`d-user-${n}`)) n++;
   return `d-user-${n}`;
+}
+
+function nextFolderId(nodes: DocNode[]): string {
+  const taken = collectIds(nodes);
+  let n = 1;
+  while (taken.has(`f-user-${n}`)) n++;
+  return `f-user-${n}`;
 }
 
 function findNode(nodes: DocNode[], id: string): DocNode | null {
@@ -215,6 +223,28 @@ export const useDocs = create<DocsState>()((set, get) => ({
           ? state.expanded
           : [...state.expanded, parentId];
         set({ tree: next, expanded, activeId: id });
+        return id;
+      },
+      addFolder: (targetId, rawName) => {
+        const name = rawName.trim();
+        if (!name) return null;
+        const state = get();
+        const tree = state.tree;
+
+        let parentId: string | null = null;
+        if (targetId) {
+          const node = findNode(tree, targetId);
+          if (node?.kind === "folder") parentId = node.id;
+          else if (node) parentId = findParent(tree, node.id)?.id ?? null;
+        }
+
+        const id = nextFolderId(tree);
+        const folder: DocNode = { id, name, kind: "folder", children: [] };
+        const next = parentId ? insertChild(tree, parentId, folder) : [...tree, folder];
+        const expanded = [...state.expanded];
+        if (parentId && !expanded.includes(parentId)) expanded.push(parentId);
+        expanded.push(id);
+        set({ tree: next, expanded });
         return id;
       },
       setBody: (docId, text) => {

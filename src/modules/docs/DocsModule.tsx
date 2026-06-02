@@ -20,6 +20,7 @@ interface TreeNodeProps {
   toggle: (id: string) => void;
   onRename: (node: DocNode) => void;
   onDelete: (node: DocNode) => void;
+  onAddInside: (node: DocNode) => void;
   onMove: (dragId: string, targetId: string, pos: DropPos) => void;
   dndEnabled: boolean;
 }
@@ -35,7 +36,7 @@ function dropPosFor(e: React.DragEvent<HTMLDivElement>, isFolder: boolean): Drop
   return ratio < 0.5 ? "before" : "after";
 }
 
-function DocTreeNode({ node, depth, activeId, setActive, expanded, toggle, onRename, onDelete, onMove, dndEnabled }: TreeNodeProps) {
+function DocTreeNode({ node, depth, activeId, setActive, expanded, toggle, onRename, onDelete, onAddInside, onMove, dndEnabled }: TreeNodeProps) {
   const isOpen = expanded.has(node.id);
   const [dropPos, setDropPos] = useState<DropPos | null>(null);
   return (
@@ -83,6 +84,18 @@ function DocTreeNode({ node, depth, activeId, setActive, expanded, toggle, onRen
           {node.name}
         </span>
         <span className="docs-node-actions">
+          {node.kind === "folder" && (
+            <button
+              type="button"
+              title="New document in folder"
+              onClick={(e) => {
+                e.stopPropagation();
+                onAddInside(node);
+              }}
+            >
+              <I.Plus size={11} />
+            </button>
+          )}
           <button
             type="button"
             title="Rename"
@@ -118,6 +131,7 @@ function DocTreeNode({ node, depth, activeId, setActive, expanded, toggle, onRen
             toggle={toggle}
             onRename={onRename}
             onDelete={onDelete}
+            onAddInside={onAddInside}
             onMove={onMove}
             dndEnabled={dndEnabled}
           />
@@ -185,6 +199,7 @@ export function DocsModule() {
   const expandedArr = useDocs((s) => s.expanded);
   const toggle = useDocs((s) => s.toggle);
   const addDoc = useDocs((s) => s.addDoc);
+  const addFolder = useDocs((s) => s.addFolder);
   const renameDoc = useDocs((s) => s.renameDoc);
   const deleteDoc = useDocs((s) => s.deleteDoc);
   const commentsMap = useDocs((s) => s.comments);
@@ -310,6 +325,17 @@ export function DocsModule() {
     if (name && name.trim()) addDoc(activeId, name);
   }
 
+  function onAddFolder() {
+    const name = window.prompt("New folder name:");
+    if (name && name.trim()) addFolder(null, name);
+  }
+
+  function onAddInside(folder: DocNode) {
+    if (!confirmDiscard()) return;
+    const name = window.prompt(`New document in "${folder.name}":`);
+    if (name && name.trim()) addDoc(folder.id, name);
+  }
+
   function onRenameNode(node: DocNode) {
     const next = window.prompt(`Rename "${node.name}" to:`, node.name);
     if (next === null) return;
@@ -370,6 +396,9 @@ export function DocsModule() {
         <div className="pane-hd">
           <span>DOCS TREE</span>
           <span className="spacer" />
+          <button className="icon-btn" onClick={onAddFolder} title="New folder">
+            <I.Folder size={12} />
+          </button>
           <button className="icon-btn" onClick={onAdd} title="New document">
             <I.Plus size={12} />
           </button>
@@ -406,6 +435,7 @@ export function DocsModule() {
                   toggle={toggle}
                   onRename={onRenameNode}
                   onDelete={onDeleteNode}
+                  onAddInside={onAddInside}
                   onMove={moveNode}
                   dndEnabled={!q}
                 />
