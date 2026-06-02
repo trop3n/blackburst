@@ -9,3 +9,10 @@ dist-ssr
 .env.*
 !.env.example
 *.Zone.Identifier
+*:Zone.Identifier
+
+# Playwright MCP test artifacts (page snapshots, console logs, screenshots)
+.playwright-mcp/
+
+# TypeScript incremental build cache
+*.tsbuildinfo
