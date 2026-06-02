@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { switchProject } from "@/lib/project-storage";
+import { scaffoldBucket, switchProject, writeBucket } from "@/lib/project-storage";
 import type { AccentName, CanvasStyle, Density, ModuleId, Project, Shell } from "@/types";
 
 export interface Tweaks {
@@ -56,6 +56,14 @@ const INITIAL_REVISIONS: Record<string, Revision[]> = {
   "PRJ-2440": [],
 };
 
+function nextProjectId(projects: Project[]): string {
+  const nums = projects
+    .map((p) => Number(p.id.split("-")[1]))
+    .filter((n) => Number.isFinite(n));
+  const max = nums.length ? Math.max(...nums) : 2450;
+  return `PRJ-${max + 1}`;
+}
+
 interface AppState {
   module: ModuleId;
   setModule: (m: ModuleId) => void;
@@ -70,6 +78,7 @@ interface AppState {
   revisions: Revision[];
   saveRev: (note: string) => void;
   setRevisionsForCurrent: (list: Revision[]) => void;
+  addProject: (name: string, client: string) => void;
 }
 
 export const useApp = create<AppState>()(
@@ -126,6 +135,13 @@ export const useApp = create<AppState>()(
           revisionsByProject: { ...s.revisionsByProject, [s.currentProjectId]: list },
           revisions: list,
         })),
+      addProject: (name, client) => {
+        const id = nextProjectId(get().projects);
+        const project: Project = { id, name, client, status: "in-design" };
+        writeBucket(id, scaffoldBucket());
+        set((s) => ({ projects: [...s.projects, project] }));
+        get().setCurrentProjectId(id);
+      },
     }),
     { name: "blackburst:app:v1" },
   ),

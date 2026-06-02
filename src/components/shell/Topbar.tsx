@@ -20,6 +20,7 @@ export function Topbar() {
   const projects = useApp((s) => s.projects);
   const currentProjectId = useApp((s) => s.currentProjectId);
   const setCurrentProjectId = useApp((s) => s.setCurrentProjectId);
+  const addProject = useApp((s) => s.addProject);
   const saveRev = useApp((s) => s.saveRev);
   const openCmdk = useCmdk((s) => s.setOpen);
   const openSettings = useSettings((s) => s.setOpen);
@@ -29,6 +30,13 @@ export function Topbar() {
     const note = window.prompt("Revision note", "");
     if (note === null) return;
     saveRev(note);
+  };
+
+  const handleNewProject = () => {
+    const name = window.prompt("New project name?")?.trim();
+    if (!name) return;
+    const client = window.prompt("Client name?")?.trim() || "—";
+    addProject(name, client);
   };
 
   const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -59,6 +67,15 @@ export function Topbar() {
           <span>{project.id}</span>
           <I.Chev size={10} dir="down" />
         </label>
+        <button
+          className="icon-btn"
+          type="button"
+          onClick={handleNewProject}
+          title="New project"
+          aria-label="New project"
+        >
+          <I.Plus size={13} />
+        </button>
         <span style={{ color: "var(--color-fg)" }}>{project.name}</span>
         <span className="chip">{project.client}</span>
       </div>

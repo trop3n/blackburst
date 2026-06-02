@@ -137,6 +137,63 @@ function defaultBucket(): ProjectStateBuckets {
   return out;
 }
 
+// Starting state for a brand-new project: a clean canvas, not the demo seed.
+// Each module gets enough to avoid its empty-state gaps (one wall so the LED
+// builder has an active layout; a root folder + doc so the docs tree is usable)
+// while everything else starts empty for real data entry.
+export function scaffoldBucket(): ProjectStateBuckets {
+  return {
+    "led-wall": {
+      walls: [{ id: "W1", name: "Wall 1", panel: "ROE-RB2.6", cols: 4, rows: 3, curve: 0, active: true }],
+      layoutId: "W1",
+      selected: null,
+      tool: "select",
+      zoom: 100,
+      showDims: true,
+      showFaults: true,
+      tab: "wall",
+    },
+    system: {
+      nodes: [],
+      edges: [],
+      lanes: { video: true, audio: true, network: true, power: true },
+      selectedNodeId: "",
+      view: "graph",
+    },
+    rack: {
+      items: [],
+      selectedIid: null,
+      rackSize: 42,
+      filter: "All",
+    },
+    inv: {
+      assets: [],
+      cat: "All gear",
+      selected: "",
+      view: "list",
+    },
+    docs: {
+      tree: [
+        {
+          id: "d-root",
+          name: "Documents",
+          kind: "folder",
+          children: [{ id: "d-overview", name: "Overview", kind: "doc" }],
+        },
+      ],
+      activeId: "d-overview",
+      expanded: ["d-root"],
+      recentIds: [],
+      bodies: { "d-overview": "# Overview\n\nStart documenting this project here." },
+      comments: {},
+      versions: {},
+    },
+    cmdkRecents: {
+      recents: [],
+    },
+  };
+}
+
 export function applyState(buckets: ProjectStateBuckets) {
   applying = true;
   try {
