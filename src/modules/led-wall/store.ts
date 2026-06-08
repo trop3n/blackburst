@@ -40,6 +40,7 @@ interface LedWallState {
 }
 
 const MAX_COLS = 50;
+const MAX_ROWS = 30;
 
 function nextWallId(existing: WallLayout[]): string {
   let n = existing.length + 1;
@@ -70,10 +71,15 @@ export const useLedWall = create<LedWallState>()((set) => ({
       setTab: (tab) => set({ tab }),
       updateWall: (id, patch) =>
         set((s) => {
-          const walls = s.walls.map((w) => (w.id === id ? { ...w, ...patch } : w));
+          const clamped: Partial<WallLayout> = { ...patch };
+          if (clamped.cols !== undefined)
+            clamped.cols = Math.max(1, Math.min(MAX_COLS, Math.floor(clamped.cols) || 1));
+          if (clamped.rows !== undefined)
+            clamped.rows = Math.max(1, Math.min(MAX_ROWS, Math.floor(clamped.rows) || 1));
+          const walls = s.walls.map((w) => (w.id === id ? { ...w, ...clamped } : w));
           const next = walls.find((w) => w.id === id);
           const geomChanged =
-            patch.cols !== undefined || patch.rows !== undefined;
+            clamped.cols !== undefined || clamped.rows !== undefined;
           let selected = s.selected;
           if (geomChanged && next && s.layoutId === id && selected) {
             if (selected.c >= next.cols || selected.r >= next.rows) selected = null;
@@ -151,7 +157,7 @@ export const useLedWall = create<LedWallState>()((set) => ({
       addRow: () =>
         set((s) => {
           const layout = s.walls.find((w) => w.id === s.layoutId);
-          if (!layout || layout.rows >= 30) return s;
+          if (!layout || layout.rows >= MAX_ROWS) return s;
           return {
             walls: s.walls.map((w) =>
               w.id === layout.id ? { ...w, rows: w.rows + 1 } : w,

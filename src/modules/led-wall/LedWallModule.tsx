@@ -284,20 +284,20 @@ export function LedWallModule() {
                 paddingLeft: showDims ? 50 : 0,
               }}
             >
-              {showDims && (
-                <>
-                  <div className="dim-arrow h" style={{ width: frameW }}>
-                    {calc.wallWmm}mm · {calc.wallWft.toFixed(1)}ft
-                  </div>
-                  <div className="dim-arrow v" style={{ height: frameH }}>
-                    {calc.wallHmm}mm · {calc.wallHft.toFixed(1)}ft
-                  </div>
-                </>
-              )}
               <div
                 className="led-wall-frame"
                 style={{ width: frameW, height: frameH, cursor: cursorByTool[tool] }}
               >
+                {showDims && (
+                  <>
+                    <div className="dim-arrow h">
+                      {calc.wallWmm}mm · {calc.wallWft.toFixed(1)}ft
+                    </div>
+                    <div className="dim-arrow v">
+                      {calc.wallHmm}mm · {calc.wallHft.toFixed(1)}ft
+                    </div>
+                  </>
+                )}
                 {Array.from({ length: layout.rows }).map((_, r) =>
                   Array.from({ length: layout.cols }).map((_, c) => {
                     const fault =

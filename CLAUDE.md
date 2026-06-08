@@ -29,19 +29,23 @@ State spans three layers; how they interact is the one thing you can't infer fro
 
 3. **`src/lib/project-storage.ts` — the single source of truth for per-project module state.** It keeps a `SPECS` registry mapping each module store to `{ fields, defaults, store }` and persists every project's snapshot under `blackburst:projects:v1`.
    - `initProjectState()` runs **synchronously in `main.tsx` before React renders**, hydrating the module stores from the current project's bucket.
-   - `switchProject(from, to)` (called by `useApp.setCurrentProjectId`) snapshots the live stores into `from`'s bucket, then loads `to`'s bucket (falling back to `defaults`).
+   - `switchProject(from, to)` (called by `useApp.setCurrentProjectId`) snapshots the live stores into `from`'s bucket, then loads `to`'s bucket (falling back to `defaultBucket()`).
+   - **Autosave** (replaced the removed `persist` middleware): `startAutosave` subscribes every store on init, so any change writes the active project's bucket via a 250ms-debounced `saveCurrentBucket`; `pagehide` + `visibilitychange→hidden` flush immediately for reload/close. An `applying` flag held during `applyState` suppresses these writes so loading a bucket never echoes back as a save — **preserve that guard if you add new load paths.**
+   - A brand-new project (`useApp.addProject`) is seeded by `scaffoldBucket()` — a clean canvas (one empty wall, empty system/rack/inventory, a Documents root + Overview doc), *not* `defaultBucket()`'s demo seed.
 
-   ⚠️ **When you add a persisted field to a module store, also add it to that store's `SPECS.<key>.fields` and `defaults`.** Otherwise it is wiped on every project switch and never hydrated on load. Conversely, **transient fields are deliberately omitted from `SPECS.fields`** (e.g. `measureFrom`, `panelSearch`, drag state) so they never persist or travel between projects — keep new ephemeral state out of the registry too.
+   ⚠️ **When you add a persisted field to a module store, also add it to that store's `SPECS.<key>.fields` and `defaults` — and to the matching module in `scaffoldBucket()`.** Otherwise it is wiped on every project switch, never hydrated on load, and missing from newly-created projects. Conversely, **transient fields are deliberately omitted from `SPECS.fields`** (e.g. `measureFrom`, `panelSearch`, drag state) so they never persist or travel between projects — keep new ephemeral state out of the registry too.
 
 `src/lib/project-io.ts` exports/imports a whole project as a `blackburst-project` JSON snapshot (writes `version` 3, reads 2–3) via `snapshotCurrent()` / `applyState()` / `writeBucket()`.
 
 > `handoff.md` is an older session log. Its claim that module stores use `persist` middleware is **outdated** — superseded by the model above. Treat its per-module status notes as historical.
 
+> `design_handoff_stagekit/` is the original HTML/JSX design-reference prototype (StageKit) that `src/` was ported from. It is **not** wired into the build — never import from it; consult it only for intended look and behavior.
+
 ## Conventions
 
 **Cross-module navigation** — use `goto(target)` from `src/lib/nav.ts` to switch module *and* select a target id (`asset`/`wall`/`node`/`doc`/`rack-item`) in one call; this is how linked references work. Use `useApp.getState().setModule(...)` only for a plain module switch with no target.
 
-**Validation modules are pure and store-free** — `led-wall/validation.ts` and `inventory/validation.ts` are pure functions consumed by both the module surface and the global `StatusBar`. Don't import stores into them.
+**Pure compute/validation modules are store-free** — `led-wall/validation.ts` and `inventory/validation.ts` are pure functions consumed by both the module surface and the global `StatusBar`; `led-wall/calculations.ts` (panel / power / resolution / processor math) imports only `@/types`. Don't import stores into any of them.
 
 **Pure-data vs. JSX-data (docs)** — `docs-tree.ts`, `docs-comments.ts`, `docs-versions.ts` are pure data with no React/store imports (so stores can import them without cycles); `docs-data.tsx` re-exports them and adds the JSX stock-body components. Import the pure-data files from stores, never `docs-data.tsx`.
 
