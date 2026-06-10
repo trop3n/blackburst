@@ -55,7 +55,7 @@ export function StatusBar() {
         <span className={`dot ${level}`} /> {statusLabel}
       </div>
       <div className="spacer" />
-      <div className="seg">{project.id}</div>
+      <div className="seg">{project.code}</div>
       <div className="seg">{tz}</div>
       <div className="seg" style={{ color: "var(--accent)" }}>
         {tt}

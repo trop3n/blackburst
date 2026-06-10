@@ -9,9 +9,9 @@ import type {
 } from "@/types";
 
 export const PROJECTS: Project[] = [
-  { id: "PRJ-2451", name: "Atrium Lobby Wall", client: "Northwind HQ", status: "in-design" },
-  { id: "PRJ-2447", name: "Auditorium Refresh", client: "Helios Tech", status: "fabrication" },
-  { id: "PRJ-2440", name: "Broadcast Studio B", client: "KCR Media", status: "delivered" },
+  { id: "PRJ-2451", code: "PRJ-2451", name: "Atrium Lobby Wall", client: "Northwind HQ", status: "in-design" },
+  { id: "PRJ-2447", code: "PRJ-2447", name: "Auditorium Refresh", client: "Helios Tech", status: "fabrication" },
+  { id: "PRJ-2440", code: "PRJ-2440", name: "Broadcast Studio B", client: "KCR Media", status: "delivered" },
 ];
 
 export const PANEL_LIBRARY: Panel[] = [

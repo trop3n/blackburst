@@ -9,7 +9,15 @@ import { INITIAL_COMMENTS } from "@/lib/docs-comments";
 import { DOC_TREE } from "@/lib/docs-tree";
 import { INITIAL_VERSIONS } from "@/lib/docs-versions";
 import { ASSETS, SHOWS } from "@/lib/inventory-data";
+import {
+  beaconUpsertBucket,
+  fetchBucket,
+  subscribeToBucket,
+  unsubscribeBucket,
+  upsertBucket,
+} from "@/lib/project-remote";
 import { DEFAULT_RACK } from "@/lib/rack-data";
+import { isSupabaseConfigured } from "@/lib/supabase";
 
 export const BUCKETS_KEY = "blackburst:projects:v1";
 
@@ -208,11 +216,19 @@ export function applyState(buckets: ProjectStateBuckets) {
   }
 }
 
-export function switchProject(fromId: string, toId: string) {
+export async function switchProject(fromId: string, toId: string) {
   if (fromId === toId) return;
   if (saveTimer != null) {
     clearTimeout(saveTimer);
     saveTimer = null;
+  }
+  if (isSupabaseConfigured) {
+    await upsertBucket(fromId, snapshotCurrent());
+    const bucket = await fetchBucket(toId);
+    applyState(bucket ?? defaultBucket());
+    activeProjectId = toId;
+    subscribeToBucket(toId, applyRemote);
+    return;
   }
   const all = loadAll();
   all[fromId] = snapshotCurrent();
@@ -234,18 +250,40 @@ export function writeBucket(projectId: string, buckets: ProjectStateBuckets) {
   saveAll(all);
 }
 
+function persistActiveBucket() {
+  if (activeProjectId == null) return;
+  if (isSupabaseConfigured) {
+    // Swallow rejects (e.g. a viewer's RLS-denied write) so autosave stays quiet.
+    void upsertBucket(activeProjectId, snapshotCurrent()).catch(() => {});
+  } else {
+    saveCurrentBucket(activeProjectId);
+  }
+}
+
 function flushSave() {
   if (saveTimer != null) {
     clearTimeout(saveTimer);
     saveTimer = null;
   }
-  if (activeProjectId != null) saveCurrentBucket(activeProjectId);
+  if (activeProjectId == null) return;
+  if (isSupabaseConfigured) {
+    beaconUpsertBucket(activeProjectId, snapshotCurrent());
+  } else {
+    saveCurrentBucket(activeProjectId);
+  }
 }
 
 function scheduleSave() {
   if (applying || activeProjectId == null) return;
   if (saveTimer != null) clearTimeout(saveTimer);
-  saveTimer = setTimeout(flushSave, SAVE_DEBOUNCE_MS);
+  saveTimer = setTimeout(persistActiveBucket, SAVE_DEBOUNCE_MS);
+}
+
+// A collaborator's saved bucket. Skip while we're mid-apply or have local
+// unsaved edits pending so a remote write never clobbers in-progress work.
+function applyRemote(data: ProjectStateBuckets) {
+  if (applying || saveTimer != null) return;
+  applyState(data);
 }
 
 function startAutosave() {
@@ -266,4 +304,21 @@ export function initProjectState(projectId: string) {
   applyState(buckets);
   activeProjectId = projectId;
   startAutosave();
+}
+
+export async function initProjectStateFromServer(projectId: string) {
+  const bucket = await fetchBucket(projectId);
+  applyState(bucket ?? defaultBucket());
+  activeProjectId = projectId;
+  startAutosave();
+  subscribeToBucket(projectId, applyRemote);
+}
+
+export function clearActiveProject() {
+  if (saveTimer != null) {
+    clearTimeout(saveTimer);
+    saveTimer = null;
+  }
+  activeProjectId = null;
+  unsubscribeBucket();
 }

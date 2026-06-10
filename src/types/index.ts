@@ -5,11 +5,16 @@ export type Shell = "rail" | "tabs" | "palette";
 export type AccentName = "acid-green" | "amber" | "cyan" | "magenta" | "white";
 export type CanvasStyle = "grid" | "blueprint" | "schematic";
 
+export type MemberRole = "owner" | "editor" | "viewer";
+
 export interface Project {
   id: string;
+  code: string;
   name: string;
   client: string;
   status: string;
+  ownerId?: string;
+  role?: MemberRole;
 }
 
 export interface Panel {

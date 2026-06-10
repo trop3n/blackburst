@@ -12,6 +12,29 @@ Blackburst is an AV/live-production design tool. React 18 + TypeScript + Vite + 
 
 All five modules are functional. Recent sessions focused on Docs (the last hold-out) and shell polish (tabs/palette shells, ⌘K palette). Working tree is clean on `main`.
 
+## Auth & user accounts — implemented (Supabase), pending live verification
+
+Built this session. Magic-link auth, per-user cloud persistence, and project
+sharing via **Supabase**, gated by the `isSupabaseConfigured` master switch
+(`VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY`). Env unset → the app behaves
+exactly as the local `localStorage` model below; env set → magic-link gate +
+server-backed, per-user projects shared by membership (owner/editor/viewer),
+invited by email, with realtime refresh and a first-login local→cloud import.
+
+- New: `src/lib/supabase.ts`, `src/store/useAuth.ts`, `src/components/AuthScreen.tsx`,
+  `src/lib/project-remote.ts`, `src/lib/migrate-local.ts`, `src/store/useShare.ts`,
+  `src/components/SharePanel.tsx`, `supabase/migrations/0001_auth_sharing.sql`,
+  `supabase/README.md`, `.env.example`.
+- Reworked: `useApp` (async bootstrap/actions, `code`/`role` on projects,
+  `partialize`), `project-storage.ts` (async server bootstrap + autosave + realtime),
+  `App.tsx` (auth gate), `Topbar.tsx` (account menu, Share, view-only gating),
+  `project-io.ts`, `main.tsx`, types, `StatusBar`.
+- **Verified:** typecheck + build green; local mode smoke-tested end-to-end
+  (project switch, Save Rev, code display); auth screen + SharePanel rendered.
+- **Not yet verified (needs a real Supabase project):** the whole accounts-mode
+  data path — sign-in, server persistence, sharing/invites/roles, RLS, migration,
+  realtime. Follow `supabase/README.md` to wire it, then test with two accounts.
+
 ## Build / verify
 
 - `npx tsc --noEmit` — typecheck

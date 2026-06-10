@@ -1,9 +1,11 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { I } from "@/components/Icon";
 import { exportProject, importProject } from "@/lib/project-io";
 import { useApp } from "@/store/useApp";
+import { displayNameOf, initialsOf, useAuth } from "@/store/useAuth";
 import { useCmdk } from "@/store/useCmdk";
 import { useSettings } from "@/store/useSettings";
+import { useShare } from "@/store/useShare";
 import type { ModuleId } from "@/types";
 
 const MODULE_LABELS: Record<ModuleId, string> = {
@@ -24,7 +26,13 @@ export function Topbar() {
   const saveRev = useApp((s) => s.saveRev);
   const openCmdk = useCmdk((s) => s.setOpen);
   const openSettings = useSettings((s) => s.setOpen);
+  const authConfigured = useAuth((s) => s.configured);
+  const user = useAuth((s) => s.user);
+  const signOut = useAuth((s) => s.signOut);
+  const openShare = useShare((s) => s.openFor);
+  const [menuOpen, setMenuOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const canEdit = !authConfigured || project.role !== "viewer";
 
   const handleSaveRev = () => {
     const note = window.prompt("Revision note", "");
@@ -60,11 +68,11 @@ export function Topbar() {
           >
             {projects.map((p) => (
               <option key={p.id} value={p.id}>
-                {p.id} — {p.name}
+                {p.code} — {p.name}
               </option>
             ))}
           </select>
-          <span>{project.id}</span>
+          <span>{project.code}</span>
           <I.Chev size={10} dir="down" />
         </label>
         <button
@@ -78,11 +86,14 @@ export function Topbar() {
         </button>
         <span style={{ color: "var(--color-fg)" }}>{project.name}</span>
         <span className="chip">{project.client}</span>
+        {authConfigured && project.role === "viewer" && (
+          <span className="chip warn">view only</span>
+        )}
       </div>
       <div className="topbar-section">
         <span className="crumb mono">PROJECTS</span>
         <span className="crumb-sep">/</span>
-        <span className="crumb mono">{project.id}</span>
+        <span className="crumb mono">{project.code}</span>
         <span className="crumb-sep">/</span>
         <span className="crumb-curr mono">{MODULE_LABELS[module]}</span>
       </div>
@@ -93,7 +104,17 @@ export function Topbar() {
           <span>Search assets, docs, panels…</span>
           <kbd>⌘K</kbd>
         </button>
-        <button className="tb-btn" onClick={() => fileInputRef.current?.click()}>
+        {authConfigured && (
+          <button className="tb-btn" type="button" onClick={() => openShare(currentProjectId)}>
+            Share
+          </button>
+        )}
+        <button
+          className="tb-btn"
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={!canEdit}
+        >
           <I.Folder size={13} /> Import
         </button>
         <input
@@ -106,7 +127,12 @@ export function Topbar() {
         <button className="tb-btn" onClick={exportProject}>
           <I.Export size={13} /> Export
         </button>
-        <button className="tb-btn primary" onClick={handleSaveRev}>
+        <button
+          className="tb-btn primary"
+          type="button"
+          onClick={handleSaveRev}
+          disabled={!canEdit}
+        >
           <I.Plus size={13} /> Save Rev
         </button>
         <button
@@ -118,9 +144,46 @@ export function Topbar() {
         >
           <I.Settings size={14} />
         </button>
-        <div className="user-chip">
-          <div className="avatar">MR</div>
-        </div>
+        {authConfigured ? (
+          <div className="user-chip">
+            <button
+              type="button"
+              className="avatar"
+              onClick={() => setMenuOpen((v) => !v)}
+              title={displayNameOf(user) || "Account"}
+              aria-label="Account menu"
+            >
+              {initialsOf(user)}
+            </button>
+            {menuOpen && (
+              <>
+                <div className="user-menu-scrim" onClick={() => setMenuOpen(false)} />
+                <div className="user-menu">
+                  <div className="user-menu-id">
+                    <span className="user-menu-name">{displayNameOf(user) || "Account"}</span>
+                    {user?.email && displayNameOf(user) !== user.email && (
+                      <span className="user-menu-email">{user.email}</span>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    className="user-menu-item"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      void signOut();
+                    }}
+                  >
+                    Sign out
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        ) : (
+          <div className="user-chip">
+            <div className="avatar">BB</div>
+          </div>
+        )}
       </div>
     </header>
   );

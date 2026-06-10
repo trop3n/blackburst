@@ -1,9 +1,11 @@
+import { upsertBucket } from "@/lib/project-remote";
 import {
   applyState,
   snapshotCurrent,
   writeBucket,
   type ProjectStateBuckets,
 } from "@/lib/project-storage";
+import { isSupabaseConfigured } from "@/lib/supabase";
 import { useApp, type Revision } from "@/store/useApp";
 import type { Project } from "@/types";
 
@@ -42,7 +44,7 @@ export function exportProject() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `Blackburst-${snap.project.id}-${todayStamp()}.json`;
+  a.download = `Blackburst-${snap.project.code}-${todayStamp()}.json`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
@@ -69,7 +71,11 @@ export async function importProject(file: File): Promise<void> {
   const app = useApp.getState();
   const currentId = app.currentProjectId;
   applyState(data.state);
-  writeBucket(currentId, data.state);
+  if (isSupabaseConfigured) {
+    await upsertBucket(currentId, data.state);
+  } else {
+    writeBucket(currentId, data.state);
+  }
   const importedProject = data.project;
   if (importedProject) {
     app.updateCurrentProject({

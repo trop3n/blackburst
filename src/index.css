@@ -1792,3 +1792,228 @@ button { font-family: inherit; color: inherit; }
   .docs-page code { border: 1px solid #bbb !important; }
   .docs-page pre { border: 1px solid #888 !important; }
 }
+
+/* ─────────────────────────────────────────────────────────────
+   Auth gate — magic-link sign-in + boot splash
+   ───────────────────────────────────────────────────────────── */
+.boot-splash,
+.auth-screen {
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(120% 80% at 50% -10%, var(--accent-faint), transparent 60%),
+    var(--color-bg-0);
+}
+.boot-splash {
+  flex-direction: column;
+  gap: 10px;
+  font-family: var(--font-mono);
+  letter-spacing: 0.3em;
+  font-size: var(--text-sm);
+  color: var(--color-fg-faint);
+  text-transform: uppercase;
+}
+.auth-card {
+  width: min(380px, 92vw);
+  background: var(--color-bg-1);
+  border: 1px solid var(--color-line-strong);
+  border-radius: 8px;
+  box-shadow: 0 24px 70px oklch(0 0 0 / 0.6);
+  padding: 28px 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+.auth-brand { display: flex; flex-direction: column; gap: 6px; }
+.auth-logo {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: 0.18em;
+  color: var(--color-fg);
+}
+.auth-tag {
+  font-size: var(--text-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-fg-faint);
+}
+.auth-form { display: flex; flex-direction: column; gap: 10px; }
+.auth-label {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-fg-faint);
+}
+.auth-input {
+  background: var(--color-bg-2);
+  border: 1px solid var(--color-line-strong);
+  color: var(--color-fg);
+  padding: 8px 10px;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  border-radius: 3px;
+  outline: none;
+}
+.auth-input:focus { border-color: var(--accent); }
+.auth-submit { justify-content: center; padding: 8px; }
+.auth-submit:disabled { opacity: 0.6; cursor: default; }
+.auth-hint {
+  margin: 0;
+  font-size: var(--text-xs);
+  line-height: 1.5;
+  color: var(--color-fg-faint);
+}
+.auth-err {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-err);
+}
+.auth-note { display: flex; flex-direction: column; gap: 10px; }
+.auth-note p { margin: 0; font-size: var(--text-sm); color: var(--color-fg); }
+.auth-note code {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  background: var(--color-bg-2);
+  border: 1px solid var(--color-line);
+  border-radius: 2px;
+  padding: 1px 4px;
+  color: var(--color-fg-mute);
+}
+.auth-note .auth-hint { color: var(--color-fg-faint); }
+.auth-note .tb-btn { align-self: flex-start; border-color: var(--color-line-strong); }
+
+/* Account menu (avatar dropdown in the topbar) */
+.user-chip { position: relative; }
+button.avatar { border: 0; padding: 0; cursor: pointer; }
+.user-menu-scrim { position: fixed; inset: 0; z-index: 900; }
+.user-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 901;
+  min-width: 180px;
+  background: var(--color-bg-1);
+  border: 1px solid var(--color-line-strong);
+  border-radius: 6px;
+  box-shadow: 0 16px 44px oklch(0 0 0 / 0.55);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.user-menu-id {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--color-line);
+}
+.user-menu-name { font-size: var(--text-sm); color: var(--color-fg); }
+.user-menu-email {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--color-fg-faint);
+}
+.user-menu-item {
+  text-align: left;
+  background: transparent;
+  border: 0;
+  border-radius: 3px;
+  padding: 6px 8px;
+  font-size: var(--text-sm);
+  color: var(--color-fg-mute);
+  cursor: pointer;
+}
+.user-menu-item:hover { background: var(--color-bg-2); color: var(--color-fg); }
+
+/* Disabled toolbar buttons (viewer / read-only) */
+.tb-btn:disabled { opacity: 0.4; cursor: default; }
+.tb-btn:disabled:hover {
+  background: transparent;
+  color: var(--color-fg-mute);
+  border-color: transparent;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Share panel (reuses .set-overlay / .set-panel / .set-hd / .set-foot)
+   ───────────────────────────────────────────────────────────── */
+.share-group-h {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-fg-faint);
+  padding: 12px 14px 4px;
+}
+.share-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--color-line-faint);
+}
+.share-row:last-child { border-bottom: 0; }
+.share-id { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.share-name {
+  font-size: var(--text-sm);
+  color: var(--color-fg);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.share-you { color: var(--color-fg-faint); }
+.share-email {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--color-fg-faint);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.share-role {
+  background: var(--color-bg-2);
+  border: 1px solid var(--color-line-strong);
+  color: var(--color-fg);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  padding: 3px 6px;
+  border-radius: 2px;
+  outline: none;
+  text-transform: capitalize;
+}
+.share-role:focus { border-color: var(--accent); }
+.share-invite {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  padding: 4px 14px 10px;
+}
+.share-invite-input {
+  flex: 1;
+  background: var(--color-bg-2);
+  border: 1px solid var(--color-line-strong);
+  color: var(--color-fg);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  padding: 5px 8px;
+  border-radius: 2px;
+  outline: none;
+}
+.share-invite-input:focus { border-color: var(--accent); }
+.share-error {
+  margin: 10px 14px 0;
+  font-size: var(--text-sm);
+  color: var(--color-err);
+}
+.share-empty {
+  margin: 0;
+  padding: 8px 14px;
+  font-size: var(--text-sm);
+  color: var(--color-fg-faint);
+}
