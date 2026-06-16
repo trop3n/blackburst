@@ -227,19 +227,18 @@ export const useApp = create<AppState>()(
             // best-effort: pending invites attach on load, never block bootstrap
           }
           let projects = await fetchMyProjects();
+          // Import this browser's local projects on first login even when the
+          // account already has shared ones (self-guarded by a per-user flag).
+          const migrated = await migrateLocalProjects();
+          if (migrated.length > 0) projects = [...projects, ...migrated];
           if (projects.length === 0) {
-            const migrated = await migrateLocalProjects();
-            if (migrated.length > 0) {
-              projects = migrated;
-            } else {
-              const created = await createProjectRemote({
-                name: "Untitled Project",
-                client: "—",
-                code: nextCode(projects),
-                bucket: scaffoldBucket(),
-              });
-              projects = [created];
-            }
+            const created = await createProjectRemote({
+              name: "Untitled Project",
+              client: "—",
+              code: nextCode(projects),
+              bucket: scaffoldBucket(),
+            });
+            projects = [created];
           }
           const persistedId = get().currentProjectId;
           const current = projects.find((p) => p.id === persistedId) ?? projects[0];

@@ -223,7 +223,9 @@ export async function switchProject(fromId: string, toId: string) {
     saveTimer = null;
   }
   if (isSupabaseConfigured) {
-    await upsertBucket(fromId, snapshotCurrent());
+    // Best-effort save-away: a viewer's write is RLS-denied, and a transient
+    // error must never block navigating to another project.
+    await upsertBucket(fromId, snapshotCurrent()).catch(() => {});
     const bucket = await fetchBucket(toId);
     applyState(bucket ?? defaultBucket());
     activeProjectId = toId;
@@ -276,7 +278,12 @@ function flushSave() {
 function scheduleSave() {
   if (applying || activeProjectId == null) return;
   if (saveTimer != null) clearTimeout(saveTimer);
-  saveTimer = setTimeout(persistActiveBucket, SAVE_DEBOUNCE_MS);
+  // Null the handle when it fires so applyRemote (which skips while a save is
+  // pending) resumes applying collaborator updates once editing settles.
+  saveTimer = setTimeout(() => {
+    saveTimer = null;
+    persistActiveBucket();
+  }, SAVE_DEBOUNCE_MS);
 }
 
 // A collaborator's saved bucket. Skip while we're mid-apply or have local

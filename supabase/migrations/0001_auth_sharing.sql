@@ -201,6 +201,10 @@ create policy "invites_select" on public.project_invites
   for select to authenticated using (private.is_member(project_id, 'owner') or lower(email) = lower(auth.email()));
 create policy "invites_insert" on public.project_invites
   for insert to authenticated with check (private.is_member(project_id, 'owner'));
+-- re-inviting an existing email upserts (ON CONFLICT DO UPDATE) its row, so
+-- owners need UPDATE too — without this the re-invite path is default-denied.
+create policy "invites_update" on public.project_invites
+  for update to authenticated using (private.is_member(project_id, 'owner')) with check (private.is_member(project_id, 'owner'));
 create policy "invites_delete" on public.project_invites
   for delete to authenticated using (private.is_member(project_id, 'owner'));
 
