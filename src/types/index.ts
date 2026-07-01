@@ -63,6 +63,16 @@ export interface SystemEdge {
   label: string;
 }
 
+export interface SystemDeviceDef {
+  id: string;
+  cat: string;
+  type: string;
+  name: string;
+  in?: Lane[];
+  out?: Lane[];
+  details: Record<string, string>;
+}
+
 export type RackColor = "accent" | "magenta" | "info" | "warn" | "muted";
 export type RackSize = 24 | 42 | 48;
 

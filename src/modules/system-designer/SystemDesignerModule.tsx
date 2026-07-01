@@ -1,7 +1,9 @@
 import { Fragment, useRef, useState } from "react";
 import { I } from "@/components/Icon";
 import { PATCH_SHEET } from "@/lib/data";
+import { SYSTEM_DEVICES } from "@/lib/system-data";
 import { useApp } from "@/store/useApp";
+import { useCatalog } from "@/store/useCatalog";
 import type { Lane, PatchLane, SystemEdge, SystemNode } from "@/types";
 import { useSystem } from "./store";
 
@@ -23,56 +25,6 @@ const PATCH_LANE_TO_LANE: Record<PatchLane, Lane> = {
 
 const NODE_W = 150;
 const NODE_H_BASE = 56;
-
-interface PaletteGroup {
-  cat: string;
-  type: string;
-  in?: Lane[];
-  out?: Lane[];
-  details: Record<string, string>;
-  items: string[];
-}
-
-const PALETTE_GROUPS: PaletteGroup[] = [
-  {
-    cat: "VIDEO SOURCES",
-    type: "SOURCE",
-    out: ["video", "network"],
-    details: { res: "1920×1080", fps: "60p" },
-    items: ["Resolume Mac", "Disguise gx 2c", "BMD HyperDeck", "PTZ Camera"],
-  },
-  {
-    cat: "PROCESSORS",
-    type: "PROC",
-    in: ["video"],
-    out: ["network"],
-    details: { ports: "4×10GbE", load: "0%" },
-    items: ["Brompton SX40", "Brompton Tessera S8", "Novastar MX40", "Megapixel Helios"],
-  },
-  {
-    cat: "MIXERS",
-    type: "MIXER",
-    in: ["video", "video"],
-    out: ["video"],
-    details: { inputs: "4×SDI", outputs: "2×SDI" },
-    items: ["vMix M4", "Blackmagic ATEM", "Roland V-160HD"],
-  },
-  {
-    cat: "AUDIO",
-    type: "AUDIO",
-    in: ["audio"],
-    out: ["audio"],
-    details: { channels: "32", aux: "8" },
-    items: ["DiGiCo SD12", "Yamaha CL5", "Shure ULXD4Q"],
-  },
-  {
-    cat: "POWER",
-    type: "POWER",
-    out: ["power"],
-    details: { capacity: "—", load: "—" },
-    items: ["Distro 200A 3ϕ", "Lex SQ-12IL"],
-  },
-];
 
 const PALETTE_MIME = "application/x-blackburst-palette";
 
@@ -106,6 +58,31 @@ export function SystemDesignerModule() {
   const removeNode = useSystem((s) => s.removeNode);
   const addEdge = useSystem((s) => s.addEdge);
   const removeEdge = useSystem((s) => s.removeEdge);
+  const devices = useCatalog((s) => s.system);
+  const addSystemDef = useCatalog((s) => s.addSystemDef);
+  const removeSystemDef = useCatalog((s) => s.removeSystemDef);
+  const [paletteSearch, setPaletteSearch] = useState("");
+
+  const addDevice = () => {
+    const name = prompt("Device name?")?.trim();
+    if (!name) return;
+    const cat = prompt("Palette group / category?", "VIDEO SOURCES")?.trim() || "CUSTOM";
+    const type = (
+      prompt("Node type? (SOURCE, PROC, MIXER, AUDIO, POWER…)", "SOURCE")?.trim() || "SOURCE"
+    ).toUpperCase();
+    const laneRaw = prompt("Primary signal? (video, audio, network, power)", "video")?.trim().toLowerCase() ?? "video";
+    const lane = (LANES.includes(laneRaw as Lane) ? laneRaw : "video") as Lane;
+    const role = prompt("Role? (source, sink, inline)", "source")?.trim().toLowerCase() || "source";
+    addSystemDef({
+      id: `sys-custom-${Date.now().toString(36)}`,
+      cat,
+      type,
+      name,
+      in: role === "sink" || role === "inline" ? [lane] : undefined,
+      out: role === "source" || role === "inline" ? [lane] : undefined,
+      details: {},
+    });
+  };
 
   const node = nodes.find((n) => n.id === selectedId);
   const visibleEdges = edges.filter((e) => lanes[e.lane]);
@@ -229,28 +206,36 @@ export function SystemDesignerModule() {
   };
 
   const onCanvasDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    const raw = e.dataTransfer.getData(PALETTE_MIME);
-    if (!raw) return;
+    const id = e.dataTransfer.getData(PALETTE_MIME);
+    if (!id) return;
     e.preventDefault();
-    const [giStr, iiStr] = raw.split(":");
-    const gi = Number(giStr);
-    const ii = Number(iiStr);
-    const group = PALETTE_GROUPS[gi];
-    const name = group?.items[ii];
-    if (!group || !name) return;
+    const dev = SYSTEM_DEVICES.find((d) => d.id === id);
+    if (!dev) return;
     const rect = e.currentTarget.getBoundingClientRect();
     const x = Math.max(0, Math.round(e.clientX - rect.left - NODE_W / 2));
     const y = Math.max(0, Math.round(e.clientY - rect.top - NODE_H_BASE / 2));
     addNode({
-      type: group.type,
-      name,
+      type: dev.type,
+      name: dev.name,
       x,
       y,
-      in: group.in,
-      out: group.out,
-      details: { ...group.details },
+      in: dev.in,
+      out: dev.out,
+      details: { ...dev.details },
     });
   };
+
+  const paletteQuery = paletteSearch.trim().toLowerCase();
+  const visibleDevices = paletteQuery
+    ? SYSTEM_DEVICES.filter(
+        (d) =>
+          d.name.toLowerCase().includes(paletteQuery) ||
+          d.cat.toLowerCase().includes(paletteQuery) ||
+          d.type.toLowerCase().includes(paletteQuery),
+      )
+    : SYSTEM_DEVICES;
+  const paletteCats: string[] = [];
+  for (const d of visibleDevices) if (!paletteCats.includes(d.cat)) paletteCats.push(d.cat);
 
   return (
     <>
@@ -258,33 +243,64 @@ export function SystemDesignerModule() {
       <div className="left-pane">
         <div className="pane-hd">
           <span>DEVICE PALETTE</span>
+          <span className="spacer" />
+          <span className="mono" style={{ fontSize: 10, color: "var(--color-fg-faint)" }}>
+            {visibleDevices.length}
+          </span>
+          <button className="icon-btn" title="Add device" onClick={addDevice}>
+            <I.Plus size={12} />
+          </button>
         </div>
         <div className="search">
           <I.Search size={12} />
-          <input placeholder="Drag to canvas…" />
+          <input
+            placeholder="Search devices…"
+            value={paletteSearch}
+            onChange={(e) => setPaletteSearch(e.target.value)}
+          />
         </div>
         <div className="pane-body">
-          {PALETTE_GROUPS.map((g, gi) => (
-            <Fragment key={g.cat}>
+          {paletteCats.map((cat) => (
+            <Fragment key={cat}>
               <div className="section-h">
-                <span>{g.cat}</span>
+                <span>{cat}</span>
                 <span className="line" />
               </div>
-              {g.items.map((it, ii) => (
-                <div
-                  key={it}
-                  className="list-row"
-                  style={{ cursor: "grab" }}
-                  draggable
-                  onDragStart={(e) => {
-                    e.dataTransfer.setData(PALETTE_MIME, `${gi}:${ii}`);
-                    e.dataTransfer.effectAllowed = "copy";
-                  }}
-                >
-                  <I.Move size={12} />
-                  <span className="lbl">{it}</span>
-                </div>
-              ))}
+              {visibleDevices
+                .filter((d) => d.cat === cat)
+                .map((d) => {
+                  const isCustom = devices.some((c) => c.id === d.id);
+                  return (
+                    <div
+                      key={d.id}
+                      className="list-row"
+                      style={{ cursor: "grab" }}
+                      draggable
+                      onDragStart={(e) => {
+                        e.dataTransfer.setData(PALETTE_MIME, d.id);
+                        e.dataTransfer.effectAllowed = "copy";
+                      }}
+                    >
+                      <I.Move size={12} />
+                      <span className="lbl">{d.name}</span>
+                      {isCustom && (
+                        <button
+                          className="icon-btn"
+                          style={{ marginLeft: "auto" }}
+                          title="Remove custom device"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (confirm(`Remove custom device "${d.name}" from the palette?`)) {
+                              removeSystemDef(d.id);
+                            }
+                          }}
+                        >
+                          <I.Cross size={11} />
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
             </Fragment>
           ))}
         </div>
