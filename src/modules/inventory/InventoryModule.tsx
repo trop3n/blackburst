@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { I } from "@/components/Icon";
-import { ASSET_CATEGORIES } from "@/lib/inventory-data";
+import { ASSET_CATEGORIES, INV_MODELS } from "@/lib/inventory-data";
+import { useCatalog } from "@/store/useCatalog";
 import type { AssetStatus, ShowSchedule } from "@/types";
 import { useInventory } from "./store";
 import { issuesByAsset, summarizeAssetIssues, validateAssets } from "./validation";
@@ -41,7 +42,18 @@ export function InventoryModule() {
   const addShow = useInventory((s) => s.addShow);
   const updateShow = useInventory((s) => s.updateShow);
   const removeShow = useInventory((s) => s.removeShow);
+  const invModels = useCatalog((s) => s.inv);
+  const addInvModel = useCatalog((s) => s.addInvModel);
+  const removeInvModel = useCatalog((s) => s.removeInvModel);
   const [filter, setFilter] = useState("");
+  const [modelSearch, setModelSearch] = useState("");
+
+  const modelQuery = modelSearch.trim().toLowerCase();
+  const visibleModels = modelQuery
+    ? INV_MODELS.filter(
+        (m) => m.model.toLowerCase().includes(modelQuery) || m.cat.toLowerCase().includes(modelQuery),
+      )
+    : INV_MODELS;
 
   const filtered = useMemo(() => {
     const base = cat === "All gear" ? assets : assets.filter((a) => a.cat === cat);
@@ -89,29 +101,60 @@ export function InventoryModule() {
     if (!due) return;
     checkOut(asset.id, show, due);
   };
-  const handleNewAsset = () => {
-    const id = prompt("Asset ID (e.g. BMD-S40-004)?")?.trim();
+  // Create a unit of a known model: category is already resolved, so only the
+  // serial/asset ID is prompted (with a suggested default derived from the model).
+  const createUnit = (model: string, catName: string) => {
+    const base =
+      model
+        .split(/\s+/)
+        .map((w) => w.replace(/[^A-Za-z0-9]/g, ""))
+        .filter(Boolean)
+        .join("-")
+        .toUpperCase() || "ASSET";
+    const n = assets.filter((a) => a.model === model).length + 1;
+    const id = prompt("Asset ID / serial?", `${base}-${String(n).padStart(3, "0")}`)?.trim();
     if (!id) return;
     if (assets.some((a) => a.id === id)) {
       alert(`Asset ID "${id}" already exists.`);
       return;
     }
+    const today = new Date().toISOString().slice(0, 10);
+    addAsset({ id, model, cat: catName, status: "in", show: "—", due: "—", utilization: 0, last: today });
+    setSelected(id);
+  };
+
+  const handleNewAsset = () => {
+    const model = prompt("Model? (a known model auto-fills its category)")?.trim();
+    if (!model) return;
+    const known = INV_MODELS.find((m) => m.model.toLowerCase() === model.toLowerCase());
+    let catName: string;
+    if (known) {
+      catName = known.cat;
+    } else {
+      const entered = prompt("Category?", CAT_OPTIONS[0])?.trim();
+      if (!entered) return;
+      catName = entered;
+      // Remember the new model in the shared catalog for next time.
+      addInvModel({ id: `im-custom-${Date.now().toString(36)}`, model, cat: catName });
+    }
+    createUnit(model, catName);
+  };
+
+  const handleAddModel = () => {
     const model = prompt("Model name?")?.trim();
     if (!model) return;
+    if (INV_MODELS.some((m) => m.model.toLowerCase() === model.toLowerCase())) {
+      alert(`Model "${model}" is already in the catalog.`);
+      return;
+    }
     const catName = prompt("Category?", CAT_OPTIONS[0])?.trim();
     if (!catName) return;
-    const today = new Date().toISOString().slice(0, 10);
-    addAsset({
-      id,
-      model,
-      cat: catName,
-      status: "in",
-      show: "—",
-      due: "—",
-      utilization: 0,
-      last: today,
-    });
-    setSelected(id);
+    addInvModel({ id: `im-custom-${Date.now().toString(36)}`, model, cat: catName });
+  };
+
+  const handleRemoveModel = (id: string, model: string) => {
+    if (!confirm(`Remove model "${model}" from the catalog? Existing assets are unaffected.`)) return;
+    removeInvModel(id);
   };
   const handleDecommission = () => {
     if (!asset) return;
@@ -178,6 +221,54 @@ export function InventoryModule() {
                 <I.Folder size={12} />
                 <span className="lbl">{name}</span>
                 <span className="meta">{live}</span>
+              </div>
+            );
+          })}
+        </div>
+        <div className="pane-hd">
+          <span>MODEL CATALOG</span>
+          <span className="spacer" />
+          <span className="mono" style={{ fontSize: 10, color: "var(--color-fg-faint)" }}>
+            {visibleModels.length}
+          </span>
+          <button className="icon-btn" title="Add model to catalog" onClick={handleAddModel}>
+            <I.Plus size={12} />
+          </button>
+        </div>
+        <div className="search">
+          <I.Search size={12} />
+          <input
+            placeholder="Search models…"
+            value={modelSearch}
+            onChange={(e) => setModelSearch(e.target.value)}
+          />
+        </div>
+        <div style={{ flex: "0 0 auto", maxHeight: 176, overflow: "auto" }}>
+          {visibleModels.map((m) => {
+            const isCustom = invModels.some((c) => c.id === m.id);
+            return (
+              <div
+                key={m.id}
+                className="list-row"
+                title={`Add a unit of ${m.model}`}
+                style={{ cursor: "pointer" }}
+                onClick={() => createUnit(m.model, m.cat)}
+              >
+                <I.Inventory size={12} />
+                <span className="lbl">{m.model}</span>
+                <span className="meta">{m.cat}</span>
+                {isCustom && (
+                  <button
+                    className="icon-btn"
+                    title="Remove model"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRemoveModel(m.id, m.model);
+                    }}
+                  >
+                    <I.Cross size={11} />
+                  </button>
+                )}
               </div>
             );
           })}

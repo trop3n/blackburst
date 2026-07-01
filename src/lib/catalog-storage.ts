@@ -1,4 +1,4 @@
-import type { Panel, RackItemDef, SystemDeviceDef } from "@/types";
+import type { InventoryModelDef, Panel, RackItemDef, SystemDeviceDef } from "@/types";
 
 // User-added hardware, layered on top of the built-in seed catalogs. This is a
 // GLOBAL library (shared across all projects), so it lives under its own key and
@@ -8,12 +8,13 @@ export interface CustomCatalog {
   rack: RackItemDef[];
   system: SystemDeviceDef[];
   panel: Panel[];
+  inv: InventoryModelDef[];
 }
 
 const KEY = "blackburst:catalog:v1";
 
 function emptyCatalog(): CustomCatalog {
-  return { rack: [], system: [], panel: [] };
+  return { rack: [], system: [], panel: [], inv: [] };
 }
 
 export function loadCustomCatalog(): CustomCatalog {
@@ -25,6 +26,7 @@ export function loadCustomCatalog(): CustomCatalog {
       rack: Array.isArray(parsed.rack) ? parsed.rack : [],
       system: Array.isArray(parsed.system) ? parsed.system : [],
       panel: Array.isArray(parsed.panel) ? parsed.panel : [],
+      inv: Array.isArray(parsed.inv) ? parsed.inv : [],
     };
   } catch {
     return emptyCatalog();

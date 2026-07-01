@@ -111,6 +111,12 @@ export interface AssetCategory {
   count: number;
 }
 
+export interface InventoryModelDef {
+  id: string;
+  model: string;
+  cat: string;
+}
+
 export interface ShowSchedule {
   id: string;
   name: string;
