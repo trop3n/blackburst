@@ -19,6 +19,7 @@ import {
 } from "@/lib/project-storage";
 import { isSupabaseConfigured } from "@/lib/supabase";
 import { useAuth } from "@/store/useAuth";
+import { useCatalog } from "@/store/useCatalog";
 import type { AccentName, CanvasStyle, Density, ModuleId, Project, Shell } from "@/types";
 
 export interface Tweaks {
@@ -244,6 +245,12 @@ export const useApp = create<AppState>()(
           const current = projects.find((p) => p.id === persistedId) ?? projects[0];
           await initProjectStateFromServer(current.id);
           const revisions = await fetchRevisions(current.id);
+          try {
+            await useCatalog.getState().hydrateFromServer();
+          } catch {
+            // best-effort: the shared catalog falls back to built-ins if the
+            // catalog_items table isn't reachable (e.g. migration not yet run)
+          }
           set({
             projects,
             currentProjectId: current.id,

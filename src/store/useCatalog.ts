@@ -1,9 +1,16 @@
 import { create } from "zustand";
-import { loadCustomCatalog, saveCustomCatalog } from "@/lib/catalog-storage";
+import {
+  deleteCatalogItem,
+  fetchCatalogItems,
+  insertCatalogItem,
+  type CatalogKind,
+} from "@/lib/catalog-remote";
+import { loadCustomCatalog, saveCustomCatalog, type CustomCatalog } from "@/lib/catalog-storage";
 import { setCustomPanelDefs } from "@/lib/data";
 import { setCustomInvModels } from "@/lib/inventory-data";
 import { setCustomRackDefs } from "@/lib/rack-data";
 import { setCustomSystemDefs } from "@/lib/system-data";
+import { isSupabaseConfigured } from "@/lib/supabase";
 import type { InventoryModelDef, Panel, RackItemDef, SystemDeviceDef } from "@/types";
 
 interface CatalogState {
@@ -19,17 +26,39 @@ interface CatalogState {
   removePanelDef: (id: string) => void;
   addInvModel: (def: InventoryModelDef) => boolean;
   removeInvModel: (id: string) => void;
+  hydrateFromServer: () => Promise<void>;
 }
 
-// Hydrate the merged catalogs once at module load so slot math, the rack pane,
-// the device palette, the panel library, and the inventory model catalog see
-// user additions immediately (both local and accounts mode read the same
-// localStorage-backed library).
-const initial = loadCustomCatalog();
-setCustomRackDefs(initial.rack);
-setCustomSystemDefs(initial.system);
-setCustomPanelDefs(initial.panel);
-setCustomInvModels(initial.inv);
+// Push the merged catalogs into the per-library live bindings so slot math, the
+// palettes, and the pickers all resolve current custom items.
+function applyBindings(c: CustomCatalog) {
+  setCustomRackDefs(c.rack);
+  setCustomSystemDefs(c.system);
+  setCustomPanelDefs(c.panel);
+  setCustomInvModels(c.inv);
+}
+
+// In accounts mode the shared library lives on the server and loads after
+// sign-in (useApp.bootstrap → hydrateFromServer), so start empty. In local mode
+// it's a per-browser library in localStorage, hydrated synchronously here.
+const initial: CustomCatalog = isSupabaseConfigured
+  ? { rack: [], system: [], panel: [], inv: [] }
+  : loadCustomCatalog();
+applyBindings(initial);
+
+// Persist a change. Accounts mode: fire-and-forget server write (the optimistic
+// local update is already applied, matching the project autosave pattern), so a
+// transient error or a missing table never blocks the UI. Local mode: snapshot
+// the affected slice to localStorage.
+function persistAdd(kind: CatalogKind, def: { id: string }, snapshot: Partial<CustomCatalog>) {
+  if (isSupabaseConfigured) void insertCatalogItem(kind, def).catch(() => {});
+  else saveCustomCatalog({ ...loadCustomCatalog(), ...snapshot });
+}
+
+function persistRemove(id: string, snapshot: Partial<CustomCatalog>) {
+  if (isSupabaseConfigured) void deleteCatalogItem(id).catch(() => {});
+  else saveCustomCatalog({ ...loadCustomCatalog(), ...snapshot });
+}
 
 export const useCatalog = create<CatalogState>((set, get) => ({
   rack: initial.rack,
@@ -41,7 +70,7 @@ export const useCatalog = create<CatalogState>((set, get) => ({
     if (get().rack.some((d) => d.id === def.id)) return false;
     const rack = [...get().rack, def];
     setCustomRackDefs(rack);
-    saveCustomCatalog({ ...loadCustomCatalog(), rack });
+    persistAdd("rack", def, { rack });
     set({ rack });
     return true;
   },
@@ -49,7 +78,7 @@ export const useCatalog = create<CatalogState>((set, get) => ({
   removeRackDef: (id) => {
     const rack = get().rack.filter((d) => d.id !== id);
     setCustomRackDefs(rack);
-    saveCustomCatalog({ ...loadCustomCatalog(), rack });
+    persistRemove(id, { rack });
     set({ rack });
   },
 
@@ -57,7 +86,7 @@ export const useCatalog = create<CatalogState>((set, get) => ({
     if (get().system.some((d) => d.id === def.id)) return false;
     const system = [...get().system, def];
     setCustomSystemDefs(system);
-    saveCustomCatalog({ ...loadCustomCatalog(), system });
+    persistAdd("system", def, { system });
     set({ system });
     return true;
   },
@@ -65,7 +94,7 @@ export const useCatalog = create<CatalogState>((set, get) => ({
   removeSystemDef: (id) => {
     const system = get().system.filter((d) => d.id !== id);
     setCustomSystemDefs(system);
-    saveCustomCatalog({ ...loadCustomCatalog(), system });
+    persistRemove(id, { system });
     set({ system });
   },
 
@@ -73,7 +102,7 @@ export const useCatalog = create<CatalogState>((set, get) => ({
     if (get().panel.some((d) => d.id === def.id)) return false;
     const panel = [...get().panel, def];
     setCustomPanelDefs(panel);
-    saveCustomCatalog({ ...loadCustomCatalog(), panel });
+    persistAdd("panel", def, { panel });
     set({ panel });
     return true;
   },
@@ -81,7 +110,7 @@ export const useCatalog = create<CatalogState>((set, get) => ({
   removePanelDef: (id) => {
     const panel = get().panel.filter((d) => d.id !== id);
     setCustomPanelDefs(panel);
-    saveCustomCatalog({ ...loadCustomCatalog(), panel });
+    persistRemove(id, { panel });
     set({ panel });
   },
 
@@ -89,7 +118,7 @@ export const useCatalog = create<CatalogState>((set, get) => ({
     if (get().inv.some((d) => d.id === def.id)) return false;
     const inv = [...get().inv, def];
     setCustomInvModels(inv);
-    saveCustomCatalog({ ...loadCustomCatalog(), inv });
+    persistAdd("inv", def, { inv });
     set({ inv });
     return true;
   },
@@ -97,7 +126,23 @@ export const useCatalog = create<CatalogState>((set, get) => ({
   removeInvModel: (id) => {
     const inv = get().inv.filter((d) => d.id !== id);
     setCustomInvModels(inv);
-    saveCustomCatalog({ ...loadCustomCatalog(), inv });
+    persistRemove(id, { inv });
     set({ inv });
+  },
+
+  // Accounts mode: load the whole shared library from the server after sign-in
+  // and replace the in-memory catalog + live bindings. Best-effort — the caller
+  // swallows errors so an unavailable table just leaves the built-ins showing.
+  hydrateFromServer: async () => {
+    const rows = await fetchCatalogItems();
+    const next: CustomCatalog = { rack: [], system: [], panel: [], inv: [] };
+    for (const r of rows) {
+      if (r.kind === "rack") next.rack.push(r.data as unknown as RackItemDef);
+      else if (r.kind === "system") next.system.push(r.data as unknown as SystemDeviceDef);
+      else if (r.kind === "panel") next.panel.push(r.data as unknown as Panel);
+      else if (r.kind === "inv") next.inv.push(r.data as unknown as InventoryModelDef);
+    }
+    applyBindings(next);
+    set({ rack: next.rack, system: next.system, panel: next.panel, inv: next.inv });
   },
 }));
