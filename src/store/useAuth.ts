@@ -12,6 +12,7 @@ interface AuthState {
   sentTo: string | null;
   init: () => void;
   signInWithMagicLink: (email: string) => Promise<string | null>;
+  verifyOtp: (email: string, token: string) => Promise<string | null>;
   signOut: () => Promise<void>;
   resetSent: () => void;
 }
@@ -55,6 +56,11 @@ export const useAuth = create<AuthState>((set) => ({
     });
     if (error) return error.message;
     set({ sentTo: email });
+    return null;
+  },
+  verifyOtp: async (email, token) => {
+    const { error } = await supabase.auth.verifyOtp({ email, token, type: "email" });
+    if (error) return error.message;
     return null;
   },
   signOut: async () => {

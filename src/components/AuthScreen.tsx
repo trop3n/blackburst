@@ -4,8 +4,10 @@ import { useAuth } from "@/store/useAuth";
 export function AuthScreen() {
   const sentTo = useAuth((s) => s.sentTo);
   const signIn = useAuth((s) => s.signInWithMagicLink);
+  const verifyOtp = useAuth((s) => s.verifyOtp);
   const resetSent = useAuth((s) => s.resetSent);
   const [email, setEmail] = useState("");
+  const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -20,6 +22,17 @@ export function AuthScreen() {
     if (error) setErr(error);
   }
 
+  async function submitCode(e: React.FormEvent) {
+    e.preventDefault();
+    const token = code.trim();
+    if (!token || !sentTo) return;
+    setBusy(true);
+    setErr(null);
+    const error = await verifyOtp(sentTo, token);
+    setBusy(false);
+    if (error) setErr(error);
+  }
+
   return (
     <div className="auth-screen">
       <div className="auth-card">
@@ -29,16 +42,41 @@ export function AuthScreen() {
         </div>
 
         {sentTo ? (
-          <div className="auth-note">
-            <p>Check your inbox.</p>
+          <form className="auth-form" onSubmit={submitCode}>
             <p className="auth-hint">
-              We sent a magic sign-in link to <strong>{sentTo}</strong>. Open it on
-              this device to continue.
+              Check your inbox — we emailed a sign-in link and a 6-digit code to{" "}
+              <strong>{sentTo}</strong>. Open the link on this device, or enter the
+              code below.
             </p>
-            <button className="tb-btn" type="button" onClick={resetSent}>
+            <label className="auth-label" htmlFor="auth-code">
+              Code
+            </label>
+            <input
+              id="auth-code"
+              className="auth-input"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              autoFocus
+              placeholder="123456"
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+            />
+            {err && <p className="auth-err">{err}</p>}
+            <button className="tb-btn primary auth-submit" type="submit" disabled={busy}>
+              {busy ? "Verifying…" : "Verify code"}
+            </button>
+            <button
+              className="tb-btn auth-submit"
+              type="button"
+              onClick={() => {
+                setErr(null);
+                setCode("");
+                resetSent();
+              }}
+            >
               Use a different email
             </button>
-          </div>
+          </form>
         ) : (
           <form className="auth-form" onSubmit={submit}>
             <label className="auth-label" htmlFor="auth-email">

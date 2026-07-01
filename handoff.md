@@ -10,30 +10,70 @@ Blackburst is an AV/live-production design tool. React 18 + TypeScript + Vite + 
 - **Asset & Inventory** (`src/modules/inventory`)
 - **Documentation Hub** (`src/modules/docs`)
 
-All five modules are functional. Recent sessions focused on Docs (the last hold-out) and shell polish (tabs/palette shells, ⌘K palette). Working tree is clean on `main`.
+All five modules are functional. The current focus is **auth & user accounts on Supabase** — built, committed, and now in live end-to-end verification (see the next section). Working tree is clean on `main`.
 
-## Auth & user accounts — implemented (Supabase), pending live verification
+## Auth & user accounts — built + committed; live verification IN PROGRESS
 
-Built this session. Magic-link auth, per-user cloud persistence, and project
-sharing via **Supabase**, gated by the `isSupabaseConfigured` master switch
+Magic-link auth, per-user cloud persistence, and project sharing via
+**Supabase**, gated by the `isSupabaseConfigured` master switch
 (`VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY`). Env unset → the app behaves
 exactly as the local `localStorage` model below; env set → magic-link gate +
 server-backed, per-user projects shared by membership (owner/editor/viewer),
 invited by email, with realtime refresh and a first-login local→cloud import.
 
-- New: `src/lib/supabase.ts`, `src/store/useAuth.ts`, `src/components/AuthScreen.tsx`,
+**Committed on `main`:**
+- `186e7fc` — the 7-phase build. New files: `src/lib/supabase.ts`,
+  `src/store/useAuth.ts`, `src/components/AuthScreen.tsx`,
   `src/lib/project-remote.ts`, `src/lib/migrate-local.ts`, `src/store/useShare.ts`,
   `src/components/SharePanel.tsx`, `supabase/migrations/0001_auth_sharing.sql`,
-  `supabase/README.md`, `.env.example`.
-- Reworked: `useApp` (async bootstrap/actions, `code`/`role` on projects,
-  `partialize`), `project-storage.ts` (async server bootstrap + autosave + realtime),
-  `App.tsx` (auth gate), `Topbar.tsx` (account menu, Share, view-only gating),
-  `project-io.ts`, `main.tsx`, types, `StatusBar`.
-- **Verified:** typecheck + build green; local mode smoke-tested end-to-end
-  (project switch, Save Rev, code display); auth screen + SharePanel rendered.
-- **Not yet verified (needs a real Supabase project):** the whole accounts-mode
-  data path — sign-in, server persistence, sharing/invites/roles, RLS, migration,
-  realtime. Follow `supabase/README.md` to wire it, then test with two accounts.
+  `supabase/README.md`. Reworked `useApp`, `project-storage.ts`, `App.tsx`,
+  `Topbar.tsx`, `project-io.ts`, `main.tsx`, types, `StatusBar`.
+- `6984306` — four bugs fixed during a full read of the never-run server path
+  (2026-06-16), before any live test:
+  1. `switchProject` upserted the from-bucket unguarded → a viewer (RLS-denied)
+     or a transient error threw and blocked navigation. Now best-effort `.catch`.
+  2. The autosave debounce never nulled its timer handle, so `applyRemote`'s
+     `saveTimer != null` guard permanently dropped realtime updates after the
+     first edit. Timer now nulls on fire.
+  3. `project_invites` had no UPDATE policy but `inviteMember` upserts on
+     conflict, so re-inviting an email was RLS-denied. Added the `invites_update`
+     owner policy to the migration.
+  4. `bootstrap` only ran the local→cloud migration when the account had zero
+     server projects, so an invited user lost local data. Migration now runs
+     unconditionally (self-guarded by the per-user `blackburst:migrated:<uid>` flag).
+
+**Live walkthrough — IN PROGRESS (2026-06-17):**
+- Real Supabase project created, ref `ayxrfjaaxwbnkvpsunyz`
+  (URL `https://ayxrfjaaxwbnkvpsunyz.supabase.co`). Migration ran clean; all six
+  tables live (verified HTTP 200 on the PostgREST endpoints).
+- `.env.local` (gitignored) holds the project URL + anon/publishable key. That
+  key is browser-safe by design — **never request, use, or commit the
+  service_role/secret key.** Vite reads env only at startup, so restart
+  `npm run dev` after editing `.env.local`.
+- Accounts mode confirmed active in the browser: `AuthScreen` renders and
+  `signInWithOtp` succeeds (the redirect URL allowlist accepts `localhost:5173`).
+- **Where we are right now:** mid first sign-in for Account A
+  (`jasonkimm12@gmail.com`). Magic link sent; UI on the "Check your inbox"
+  screen. Sign-in is being driven through the Playwright MCP browser, which holds
+  the PKCE code verifier in *its* localStorage — so the magic link must be opened
+  in that same browser. Plan: user copies the email link's URL (without clicking),
+  pastes it, and we navigate the driven browser there to finish the code exchange.
+
+**Still to verify (why this isn't "done"):**
+- Bootstrap after sign-in (Untitled-project creation or local migration),
+  workspace loads, autosave round-trips (edit → reload → restored), Save Rev →
+  `project_revisions`.
+- Two-account test (Account B = `jasonkimm12+b@gmail.com`): invite-by-email +
+  `claim_invites`, editor-can-save / viewer-cannot (RLS), realtime A↔B, plus the
+  re-invite (fix 3) and migration (fix 4) paths.
+- Production: set `VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY` in Vercel, switch
+  the Supabase Site URL to the Vercel origin, and add it to the Redirect URLs.
+
+**PKCE gotcha for driving sign-in:** supabase-js (v2, default `flowType: 'pkce'`)
+stores the code verifier in the localStorage of whichever browser called
+`signInWithOtp`. The magic-link redirect (`?code=…`) must complete in that same
+browser or the exchange fails with a "code verifier" error. If Gmail prefetch
+burns the one-time link, re-send and retry.
 
 ## Build / verify
 
@@ -44,9 +84,9 @@ invited by email, with realtime refresh and a first-login local→cloud import.
 
 ## Architecture conventions
 
-- **Per-module Zustand store** with `persist` middleware. Persist keys are versioned (`blackburst:docs:v2`, `blackburst:inventory:v2`, etc.). Bump the version when promoting fields into a store.
-- **Per-project state buckets** live in `src/lib/project-storage.ts`. Each module's store is registered in `SPECS` with persisted `fields` and `defaults`. `switchProject` snapshots current and loads target; `applyState` merges defaults under incoming slice. **Add new persisted fields here too or they will be wiped on project switch.**
-- **Transient state** (e.g. `draggingIid`) is excluded from `SPECS.fields` and from `partialize` so it never persists.
+- **Per-module Zustand stores have no persistence of their own** — the `persist` middleware was removed; **do not re-add it.** All per-project module data is persisted centrally (see below). The only self-persisting store is `useApp` (`blackburst:app:v1`: shell/tweaks, projects list, revisions, current project).
+- **Per-project state buckets** live in `src/lib/project-storage.ts`. Each module's store is registered in `SPECS` with persisted `fields` and `defaults`. `switchProject` snapshots current and loads target; `applyState` merges defaults under the incoming slice (guarded by the `applying` flag so loads never echo back as saves). Autosave (250ms debounce) replaced per-module persist; in accounts mode the same bucket JSON is upserted to Supabase `project_state` instead of `localStorage`. **Add new persisted fields here too or they will be wiped on project switch.**
+- **Transient state** (e.g. `draggingIid`, `measureFrom`, search text) is deliberately excluded from `SPECS.fields` so it never persists or travels between projects.
 - Cross-module nav goes through `goto(...)` in `src/lib/nav.ts`. Use `useApp.getState().setModule(...)` only for direct module switches without a target id.
 - Validation modules (`src/modules/led-wall/validation.ts`, `src/modules/inventory/validation.ts`) are pure functions consumed by both the module surface and the global `StatusBar`. Keep them store-free.
 - **Pure-data files** to break circular imports: `docs-comments.ts`, `docs-versions.ts`, `docs-tree.ts` are pure data with no React/store imports — `docs-data.tsx` re-exports them and adds the JSX body components.
@@ -69,7 +109,7 @@ invited by email, with realtime refresh and a first-login local→cloud import.
 - **Dirty-state guard** (Docs editor): track initial draft on edit start, compare against current on switch/add; `confirm()` only fires when actually dirty. Pattern: `confirmDiscard()` helper returns bool, called from `guardedSetActive`, `onAdd`, etc.
 - **Hover-action icons** (Docs tree): right-aligned `<span class="docs-node-actions">` inside each row, `display:none` → `inline-flex` on `.docs-node:hover`. Buttons `stopPropagation` so they don't fire the row click.
 - **MarkdownBody renderer** (`src/modules/docs/MarkdownBody.tsx`): handles h1-h3, paragraphs, `- `/`* ` bullets, fenced code blocks, inline `**bold**`/`*italic*`/`` `code` ``. **Uses `Array.from(s.matchAll(pattern))` for tokenizing — the project security hook flags any RegExp `exec` call, so prefer `matchAll`.**
-- **Persist version bumps**: docs went from no persist → v1 (tree+activeId+expanded) → v2 (added recentIds, bodies, comments, versions). When adding a persisted field, also add to `project-storage.ts` `SPECS.docs.fields` and `defaults`.
+- **Adding a persisted field**: register it in `project-storage.ts` `SPECS.<module>.fields` + `defaults` **and** add it to the matching module in `scaffoldBucket()` — otherwise it's wiped on every project switch, never hydrated on load, and missing from newly-created projects. In accounts mode it then travels in the server JSONB automatically. Keep transient/ephemeral fields out of `SPECS.fields`.
 
 ## Module status
 
@@ -140,6 +180,12 @@ Surface these as options on the next session if the user asks "what's next":
 
 ## Git status at handoff
 
-- Branch `main`, working tree clean, up to date with `origin/main`.
-- Last commit: `5778239 Tree rename + delete wired in`.
-- Prior to that: editor shortcuts, dirty-state guard, revert-to-stock, in-place body editor, ⌘K recents/fuzzy/modes, version mutations, comment composer.
+- Branch `main`, working tree clean. `.env.local` exists but is gitignored — it
+  holds the live Supabase URL + anon key for local dev only; set the same two
+  `VITE_SUPABASE_*` vars in Vercel for production.
+- Last commit: `6984306 bug fixes and code review, four bugs resolved`.
+- Prior: `186e7fc` auth & accounts 7-phase build; `01e23be` favicon;
+  `a2fe28f` / `6716af7` Vercel deploy config + README.
+- **Next session resumes the live Supabase walkthrough** (see "Auth & user
+  accounts" above). Immediate step: complete Account A's magic-link sign-in in
+  the Playwright-driven browser, then run the two-account verification.
