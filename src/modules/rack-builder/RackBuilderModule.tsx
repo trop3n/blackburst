@@ -2,12 +2,25 @@ import { Fragment, useEffect } from "react";
 import { I } from "@/components/Icon";
 import { RACK_CATALOG, RACK_COLOR_MAP } from "@/lib/rack-data";
 import { useApp } from "@/store/useApp";
-import type { RackSize } from "@/types";
+import { useCatalog } from "@/store/useCatalog";
+import type { RackColor, RackSize } from "@/types";
 import { fits, useRack } from "./store";
 
 const U_HEIGHT = 14;
 const RACK_W = 360;
 const RACK_SIZES: RackSize[] = [24, 42, 48];
+
+// Colour a user-added device by its category, matching the built-in palette.
+const CAT_COLOR: Record<string, RackColor> = {
+  Processor: "accent",
+  Compute: "accent",
+  Switcher: "magenta",
+  Signal: "magenta",
+  Network: "info",
+  Audio: "info",
+  Power: "warn",
+  Misc: "muted",
+};
 
 export function RackBuilderModule() {
   const canvasStyle = useApp((s) => s.tweaks.canvasStyle);
@@ -30,6 +43,29 @@ export function RackBuilderModule() {
   const placeItem = useRack((s) => s.placeItem);
   const removeItem = useRack((s) => s.removeItem);
   const movePos = useRack((s) => s.movePos);
+  const customRack = useCatalog((s) => s.rack);
+  const addRackDef = useCatalog((s) => s.addRackDef);
+  const removeRackDef = useCatalog((s) => s.removeRackDef);
+
+  const addEquipment = () => {
+    const model = prompt("Model name?")?.trim();
+    if (!model) return;
+    const cat = prompt("Category? (e.g. Processor, Switcher, Audio)", "Processor")?.trim() || "Misc";
+    const u = Math.max(1, Math.round(Number(prompt("Rack units (U)?", "1")) || 1));
+    const w = Math.max(0, Number(prompt("Weight (kg)?", "0")) || 0);
+    const watts = Math.max(0, Math.round(Number(prompt("Power draw (W)?", "0")) || 0));
+    const depth = Math.max(0, Math.round(Number(prompt("Depth (mm)?", "0")) || 0));
+    addRackDef({
+      id: `custom-${Date.now().toString(36)}`,
+      model,
+      cat,
+      u,
+      w,
+      watts,
+      depth,
+      color: CAT_COLOR[cat] ?? "muted",
+    });
+  };
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -127,6 +163,9 @@ export function RackBuilderModule() {
           <span className="mono" style={{ fontSize: 10, color: "var(--color-fg-faint)" }}>
             {visibleCatalog.length}
           </span>
+          <button className="icon-btn" title="Add equipment" onClick={addEquipment}>
+            <I.Plus size={12} />
+          </button>
         </div>
         <div className="search">
           <I.Search size={12} />
@@ -168,6 +207,7 @@ export function RackBuilderModule() {
         <div className="pane-body">
           {visibleCatalog.map((c) => {
             const col = RACK_COLOR_MAP[c.color];
+            const isCustom = customRack.some((d) => d.id === c.id);
             return (
               <div
                 key={c.id}
@@ -223,6 +263,20 @@ export function RackBuilderModule() {
                   >
                     <I.Plus size={11} />
                   </button>
+                  {isCustom && (
+                    <button
+                      className="icon-btn"
+                      title="Remove custom equipment"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (confirm(`Remove custom equipment "${c.model}" from the catalog?`)) {
+                          removeRackDef(c.id);
+                        }
+                      }}
+                    >
+                      <I.Cross size={11} />
+                    </button>
+                  )}
                 </div>
                 <div
                   className="mono"
