@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { I } from "@/components/Icon";
 import { FAULT_PANELS, PANEL_LIBRARY } from "@/lib/data";
 import { useApp } from "@/store/useApp";
+import { useCatalog } from "@/store/useCatalog";
 import { computeWallCalc, PROC_PIXEL_CAPACITY } from "./calculations";
 import { useLedWall } from "./store";
 import { validateWall } from "./validation";
@@ -35,6 +36,28 @@ export function LedWallModule() {
   const addRow = useLedWall((s) => s.addRow);
   const panelSearch = useLedWall((s) => s.panelSearch);
   const setPanelSearch = useLedWall((s) => s.setPanelSearch);
+  const customPanels = useCatalog((s) => s.panel);
+  const addPanelDef = useCatalog((s) => s.addPanelDef);
+  const removePanelDef = useCatalog((s) => s.removePanelDef);
+
+  const addPanel = () => {
+    const model = prompt("Panel model?")?.trim();
+    if (!model) return;
+    const pitch = Number(prompt("Pixel pitch (mm)?", "2.6")) || 2.6;
+    const w = Math.max(1, Math.round(Number(prompt("Panel width (mm)?", "500")) || 500));
+    const h = Math.max(1, Math.round(Number(prompt("Panel height (mm)?", "500")) || 500));
+    const weight = Math.max(0, Number(prompt("Weight (kg)?", "0")) || 0);
+    const watts = Math.max(0, Math.round(Number(prompt("Max power (W)?", "0")) || 0));
+    addPanelDef({ id: `panel-custom-${Date.now().toString(36)}`, model, pitch, w, h, weight, watts });
+  };
+
+  const removePanel = (id: string, model: string) => {
+    if (!confirm(`Remove custom panel "${model}" from the library?`)) return;
+    // Reset any wall still using it to the first built-in panel before removal.
+    const fallback = PANEL_LIBRARY[0].id;
+    for (const w of walls) if (w.panel === id) updateWall(w.id, { panel: fallback });
+    removePanelDef(id);
+  };
 
   const layout = walls.find((l) => l.id === layoutId) ?? walls[0];
   const panel = PANEL_LIBRARY.find((p) => p.id === layout.panel) ?? PANEL_LIBRARY[0];
@@ -137,6 +160,9 @@ export function LedWallModule() {
           <span className="mono" style={{ fontSize: 10, color: "var(--color-fg-faint)" }}>
             {filteredPanels.length}/{PANEL_LIBRARY.length}
           </span>
+          <button className="icon-btn" title="Add panel" onClick={addPanel}>
+            <I.Plus size={12} />
+          </button>
         </div>
         <div className="search">
           <I.Search size={12} />
@@ -147,27 +173,42 @@ export function LedWallModule() {
           />
         </div>
         <div className="pane-body">
-          {filteredPanels.map((p) => (
-            <div
-              key={p.id}
-              className="list-row"
-              data-active={panel.id === p.id ? "1" : "0"}
-              onClick={() => updateWall(layout.id, { panel: p.id })}
-            >
-              <span
-                style={{
-                  width: 8,
-                  height: 8,
-                  background: "var(--accent)",
-                  opacity: panel.id === p.id ? 1 : 0.3,
-                }}
-              />
-              <span className="lbl mono" style={{ fontSize: 11 }}>
-                {p.model}
-              </span>
-              <span className="meta">P{p.pitch}</span>
-            </div>
-          ))}
+          {filteredPanels.map((p) => {
+            const isCustom = customPanels.some((d) => d.id === p.id);
+            return (
+              <div
+                key={p.id}
+                className="list-row"
+                data-active={panel.id === p.id ? "1" : "0"}
+                onClick={() => updateWall(layout.id, { panel: p.id })}
+              >
+                <span
+                  style={{
+                    width: 8,
+                    height: 8,
+                    background: "var(--accent)",
+                    opacity: panel.id === p.id ? 1 : 0.3,
+                  }}
+                />
+                <span className="lbl mono" style={{ fontSize: 11 }}>
+                  {p.model}
+                </span>
+                <span className="meta">P{p.pitch}</span>
+                {isCustom && (
+                  <button
+                    className="icon-btn"
+                    title="Remove custom panel"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removePanel(p.id, p.model);
+                    }}
+                  >
+                    <I.Cross size={11} />
+                  </button>
+                )}
+              </div>
+            );
+          })}
 
           <div className="section-h">
             <span>RIGGING</span>
