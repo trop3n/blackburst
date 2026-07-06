@@ -1,6 +1,7 @@
 import { createProjectRemote, insertRevision, type RemoteProject } from "@/lib/project-remote";
 import { BUCKETS_KEY, scaffoldBucket, type ProjectStateBuckets } from "@/lib/project-storage";
 import { useAuth } from "@/store/useAuth";
+import { confirmDialog } from "@/store/useDialog";
 import type { Revision } from "@/store/useApp";
 import type { Project } from "@/types";
 
@@ -35,8 +36,9 @@ export async function migrateLocalProjects(): Promise<RemoteProject[]> {
     return [];
   }
 
-  const ok = window.confirm(
+  const ok = await confirmDialog(
     `Import ${projects.length} project${projects.length === 1 ? "" : "s"} from this browser into your account?`,
+    { confirmLabel: "Import" },
   );
   if (!ok) {
     localStorage.setItem(flagKey, "declined");

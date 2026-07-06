@@ -4,6 +4,7 @@ import { PATCH_SHEET } from "@/lib/data";
 import { SYSTEM_DEVICES } from "@/lib/system-data";
 import { useApp } from "@/store/useApp";
 import { useCatalog } from "@/store/useCatalog";
+import { confirmDialog, promptDialog } from "@/store/useDialog";
 import type { Lane, PatchLane, SystemEdge, SystemNode } from "@/types";
 import { useSystem } from "./store";
 
@@ -64,16 +65,17 @@ export function SystemDesignerModule() {
   const removeSystemDef = useCatalog((s) => s.removeSystemDef);
   const [paletteSearch, setPaletteSearch] = useState("");
 
-  const addDevice = () => {
-    const name = prompt("Device name?")?.trim();
+  const addDevice = async () => {
+    const name = (await promptDialog("Device name?"))?.trim();
     if (!name) return;
-    const cat = prompt("Palette group / category?", "VIDEO SOURCES")?.trim() || "CUSTOM";
+    const cat = (await promptDialog("Palette group / category?", "VIDEO SOURCES"))?.trim() || "CUSTOM";
     const type = (
-      prompt("Node type? (SOURCE, PROC, MIXER, AUDIO, POWER…)", "SOURCE")?.trim() || "SOURCE"
+      (await promptDialog("Node type? (SOURCE, PROC, MIXER, AUDIO, POWER…)", "SOURCE"))?.trim() || "SOURCE"
     ).toUpperCase();
-    const laneRaw = prompt("Primary signal? (video, audio, network, power)", "video")?.trim().toLowerCase() ?? "video";
+    const laneRaw =
+      (await promptDialog("Primary signal? (video, audio, network, power)", "video"))?.trim().toLowerCase() ?? "video";
     const lane = (LANES.includes(laneRaw as Lane) ? laneRaw : "video") as Lane;
-    const role = prompt("Role? (source, sink, inline)", "source")?.trim().toLowerCase() || "source";
+    const role = (await promptDialog("Role? (source, sink, inline)", "source"))?.trim().toLowerCase() || "source";
     addSystemDef({
       id: `sys-custom-${Date.now().toString(36)}`,
       cat,
@@ -289,11 +291,13 @@ export function SystemDesignerModule() {
                           className="icon-btn"
                           style={{ marginLeft: "auto" }}
                           title="Remove custom device"
-                          onClick={(e) => {
+                          onClick={async (e) => {
                             e.stopPropagation();
-                            if (confirm(`Remove custom device "${d.name}" from the palette?`)) {
-                              removeSystemDef(d.id);
-                            }
+                            const ok = await confirmDialog(
+                              `Remove custom device "${d.name}" from the palette?`,
+                              { danger: true, confirmLabel: "Remove" },
+                            );
+                            if (ok) removeSystemDef(d.id);
                           }}
                         >
                           <I.Cross size={11} />
@@ -637,10 +641,12 @@ export function SystemDesignerModule() {
             </div>
             <button
               className="tb-btn danger"
-              onClick={() => {
-                if (confirm(`Remove node "${node.name}"? Connected edges will also be deleted.`)) {
-                  removeNode(node.id);
-                }
+              onClick={async () => {
+                const ok = await confirmDialog(
+                  `Remove node "${node.name}"? Connected edges will also be deleted.`,
+                  { danger: true, confirmLabel: "Remove" },
+                );
+                if (ok) removeNode(node.id);
               }}
               style={{ width: "100%", justifyContent: "center" }}
             >

@@ -4,6 +4,7 @@ import { exportProject, importProject } from "@/lib/project-io";
 import { useApp } from "@/store/useApp";
 import { displayNameOf, initialsOf, useAuth } from "@/store/useAuth";
 import { useCmdk } from "@/store/useCmdk";
+import { alertDialog, promptDialog } from "@/store/useDialog";
 import { useSettings } from "@/store/useSettings";
 import { useShare } from "@/store/useShare";
 import type { ModuleId } from "@/types";
@@ -34,16 +35,16 @@ export function Topbar() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const canEdit = !authConfigured || project.role !== "viewer";
 
-  const handleSaveRev = () => {
-    const note = window.prompt("Revision note", "");
+  const handleSaveRev = async () => {
+    const note = await promptDialog("Revision note", "");
     if (note === null) return;
     saveRev(note);
   };
 
-  const handleNewProject = () => {
-    const name = window.prompt("New project name?")?.trim();
+  const handleNewProject = async () => {
+    const name = (await promptDialog("New project name?"))?.trim();
     if (!name) return;
-    const client = window.prompt("Client name?")?.trim() || "—";
+    const client = (await promptDialog("Client name?"))?.trim() || "—";
     addProject(name, client);
   };
 
@@ -53,7 +54,7 @@ export function Topbar() {
     try {
       await importProject(file);
     } catch (err) {
-      window.alert(`Import failed: ${err instanceof Error ? err.message : String(err)}`);
+      await alertDialog(`Import failed: ${err instanceof Error ? err.message : String(err)}`);
     }
     e.target.value = "";
   };

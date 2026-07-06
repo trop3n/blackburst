@@ -3,6 +3,7 @@ import { I } from "@/components/Icon";
 import { RACK_CATALOG, RACK_COLOR_MAP } from "@/lib/rack-data";
 import { useApp } from "@/store/useApp";
 import { useCatalog } from "@/store/useCatalog";
+import { confirmDialog, promptDialog } from "@/store/useDialog";
 import type { RackColor, RackSize } from "@/types";
 import { fits, useRack } from "./store";
 
@@ -47,14 +48,14 @@ export function RackBuilderModule() {
   const addRackDef = useCatalog((s) => s.addRackDef);
   const removeRackDef = useCatalog((s) => s.removeRackDef);
 
-  const addEquipment = () => {
-    const model = prompt("Model name?")?.trim();
+  const addEquipment = async () => {
+    const model = (await promptDialog("Model name?"))?.trim();
     if (!model) return;
-    const cat = prompt("Category? (e.g. Processor, Switcher, Audio)", "Processor")?.trim() || "Misc";
-    const u = Math.max(1, Math.round(Number(prompt("Rack units (U)?", "1")) || 1));
-    const w = Math.max(0, Number(prompt("Weight (kg)?", "0")) || 0);
-    const watts = Math.max(0, Math.round(Number(prompt("Power draw (W)?", "0")) || 0));
-    const depth = Math.max(0, Math.round(Number(prompt("Depth (mm)?", "0")) || 0));
+    const cat = (await promptDialog("Category? (e.g. Processor, Switcher, Audio)", "Processor"))?.trim() || "Misc";
+    const u = Math.max(1, Math.round(Number(await promptDialog("Rack units (U)?", "1")) || 1));
+    const w = Math.max(0, Number(await promptDialog("Weight (kg)?", "0")) || 0);
+    const watts = Math.max(0, Math.round(Number(await promptDialog("Power draw (W)?", "0")) || 0));
+    const depth = Math.max(0, Math.round(Number(await promptDialog("Depth (mm)?", "0")) || 0));
     addRackDef({
       id: `custom-${Date.now().toString(36)}`,
       model,
@@ -267,11 +268,13 @@ export function RackBuilderModule() {
                     <button
                       className="icon-btn"
                       title="Remove custom equipment"
-                      onClick={(e) => {
+                      onClick={async (e) => {
                         e.stopPropagation();
-                        if (confirm(`Remove custom equipment "${c.model}" from the catalog?`)) {
-                          removeRackDef(c.id);
-                        }
+                        const ok = await confirmDialog(
+                          `Remove custom equipment "${c.model}" from the catalog?`,
+                          { danger: true, confirmLabel: "Remove" },
+                        );
+                        if (ok) removeRackDef(c.id);
                       }}
                     >
                       <I.Cross size={11} />

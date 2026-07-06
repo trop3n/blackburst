@@ -3,6 +3,7 @@ import { I } from "@/components/Icon";
 import { FAULT_PANELS, PANEL_LIBRARY } from "@/lib/data";
 import { useApp } from "@/store/useApp";
 import { useCatalog } from "@/store/useCatalog";
+import { confirmDialog, promptDialog } from "@/store/useDialog";
 import { computeWallCalc, PROC_PIXEL_CAPACITY } from "./calculations";
 import { useLedWall } from "./store";
 import { validateWall } from "./validation";
@@ -40,19 +41,23 @@ export function LedWallModule() {
   const addPanelDef = useCatalog((s) => s.addPanelDef);
   const removePanelDef = useCatalog((s) => s.removePanelDef);
 
-  const addPanel = () => {
-    const model = prompt("Panel model?")?.trim();
+  const addPanel = async () => {
+    const model = (await promptDialog("Panel model?"))?.trim();
     if (!model) return;
-    const pitch = Number(prompt("Pixel pitch (mm)?", "2.6")) || 2.6;
-    const w = Math.max(1, Math.round(Number(prompt("Panel width (mm)?", "500")) || 500));
-    const h = Math.max(1, Math.round(Number(prompt("Panel height (mm)?", "500")) || 500));
-    const weight = Math.max(0, Number(prompt("Weight (kg)?", "0")) || 0);
-    const watts = Math.max(0, Math.round(Number(prompt("Max power (W)?", "0")) || 0));
+    const pitch = Number(await promptDialog("Pixel pitch (mm)?", "2.6")) || 2.6;
+    const w = Math.max(1, Math.round(Number(await promptDialog("Panel width (mm)?", "500")) || 500));
+    const h = Math.max(1, Math.round(Number(await promptDialog("Panel height (mm)?", "500")) || 500));
+    const weight = Math.max(0, Number(await promptDialog("Weight (kg)?", "0")) || 0);
+    const watts = Math.max(0, Math.round(Number(await promptDialog("Max power (W)?", "0")) || 0));
     addPanelDef({ id: `panel-custom-${Date.now().toString(36)}`, model, pitch, w, h, weight, watts });
   };
 
-  const removePanel = (id: string, model: string) => {
-    if (!confirm(`Remove custom panel "${model}" from the library?`)) return;
+  const removePanel = async (id: string, model: string) => {
+    const ok = await confirmDialog(`Remove custom panel "${model}" from the library?`, {
+      danger: true,
+      confirmLabel: "Remove",
+    });
+    if (!ok) return;
     // Reset any wall still using it to the first built-in panel before removal.
     const fallback = PANEL_LIBRARY[0].id;
     for (const w of walls) if (w.panel === id) updateWall(w.id, { panel: fallback });
@@ -141,9 +146,10 @@ export function LedWallModule() {
                 <button
                   className="icon-btn"
                   aria-label={`Delete ${l.name}`}
-                  onClick={(e) => {
+                  onClick={async (e) => {
                     e.stopPropagation();
-                    if (confirm(`Delete wall "${l.name}"?`)) removeWall(l.id);
+                    if (await confirmDialog(`Delete wall "${l.name}"?`, { danger: true, confirmLabel: "Delete" }))
+                      removeWall(l.id);
                   }}
                   style={{ marginLeft: 4 }}
                 >

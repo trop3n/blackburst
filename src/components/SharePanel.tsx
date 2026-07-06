@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { I } from "@/components/Icon";
 import { useApp } from "@/store/useApp";
 import { useAuth } from "@/store/useAuth";
+import { confirmDialog } from "@/store/useDialog";
 import { useShare } from "@/store/useShare";
 import type { MemberRole } from "@/types";
 
@@ -170,8 +171,12 @@ export function SharePanel() {
             <button
               className="tb-btn danger"
               type="button"
-              onClick={() => {
-                if (window.confirm(`Leave “${project.name}”? You'll lose access until re-invited.`)) {
+              onClick={async () => {
+                const ok = await confirmDialog(`Leave “${project.name}”? You'll lose access until re-invited.`, {
+                  danger: true,
+                  confirmLabel: "Leave",
+                });
+                if (ok) {
                   close();
                   void leaveProject();
                 }

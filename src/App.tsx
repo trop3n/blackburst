@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { AuthScreen } from "@/components/AuthScreen";
 import { CommandPalette } from "@/components/CommandPalette";
+import { DialogHost } from "@/components/DialogHost";
 import { SettingsPanel } from "@/components/SettingsPanel";
 import { SharePanel } from "@/components/SharePanel";
 import { Rail } from "@/components/shell/Rail";
@@ -60,34 +61,40 @@ export default function App() {
 
   // Auth gate. When Supabase isn't configured the app runs locally as before;
   // once configured, sign-in is required and project state loads from the server.
-  if (authConfigured) {
-    if (authStatus === "loading") {
-      return <div className="boot-splash">Blackburst</div>;
-    }
-    if (authStatus === "signed-out") {
-      return <AuthScreen />;
-    }
-    if (!ready) {
-      return <div className="boot-splash">Loading workspace…</div>;
-    }
+  // DialogHost stays mounted across every branch so in-app dialogs work even
+  // during bootstrap (e.g. the first-login local→cloud import prompt).
+  let content;
+  if (authConfigured && authStatus === "loading") {
+    content = <div className="boot-splash">Blackburst</div>;
+  } else if (authConfigured && authStatus === "signed-out") {
+    content = <AuthScreen />;
+  } else if (authConfigured && !ready) {
+    content = <div className="boot-splash">Loading workspace…</div>;
+  } else {
+    content = (
+      <div className="app">
+        <Rail />
+        <Topbar />
+        {tweaks.shell === "tabs" && <Tabs />}
+        <main className="main">
+          {module === "wall" && <LedWallModule />}
+          {module === "system" && <SystemDesignerModule />}
+          {module === "rack" && <RackBuilderModule />}
+          {module === "inv" && <InventoryModule />}
+          {module === "docs" && <DocsModule />}
+        </main>
+        <StatusBar />
+        <CommandPalette />
+        <SettingsPanel />
+        <SharePanel />
+      </div>
+    );
   }
 
   return (
-    <div className="app">
-      <Rail />
-      <Topbar />
-      {tweaks.shell === "tabs" && <Tabs />}
-      <main className="main">
-        {module === "wall" && <LedWallModule />}
-        {module === "system" && <SystemDesignerModule />}
-        {module === "rack" && <RackBuilderModule />}
-        {module === "inv" && <InventoryModule />}
-        {module === "docs" && <DocsModule />}
-      </main>
-      <StatusBar />
-      <CommandPalette />
-      <SettingsPanel />
-      <SharePanel />
-    </div>
+    <>
+      {content}
+      <DialogHost />
+    </>
   );
 }

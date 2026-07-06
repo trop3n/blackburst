@@ -12,8 +12,8 @@ interface DocsState {
   bodies: Record<string, string>;
   comments: Record<string, DocComment[]>;
   versions: Record<string, DocVersion[]>;
-  leaveGuard: (() => boolean) | null;
-  setLeaveGuard: (fn: (() => boolean) | null) => void;
+  leaveGuard: (() => boolean | Promise<boolean>) | null;
+  setLeaveGuard: (fn: (() => boolean | Promise<boolean>) | null) => void;
   setActive: (id: string) => void;
   toggle: (id: string) => void;
   addDoc: (targetId: string | null, name: string) => string | null;
@@ -184,14 +184,30 @@ export const useDocs = create<DocsState>()((set, get) => ({
           set({ activeId });
           return;
         }
-        if (state.leaveGuard && !state.leaveGuard()) return;
-        const node = findNode(state.tree, activeId);
-        if (!node || node.kind !== "doc") {
-          set({ activeId });
-          return;
+        // The leave guard may confirm via an async dialog; navigate once it
+        // resolves (callers don't use setActive's return value).
+        const commit = () => {
+          const s = get();
+          const node = findNode(s.tree, activeId);
+          if (!node || node.kind !== "doc") {
+            set({ activeId });
+            return;
+          }
+          const next = [activeId, ...s.recentIds.filter((id) => id !== activeId)].slice(0, MAX_RECENT_DOCS);
+          set({ activeId, recentIds: next });
+        };
+        const guard = state.leaveGuard;
+        if (guard) {
+          const res = guard();
+          if (res instanceof Promise) {
+            void res.then((ok) => {
+              if (ok) commit();
+            });
+            return;
+          }
+          if (!res) return;
         }
-        const next = [activeId, ...state.recentIds.filter((id) => id !== activeId)].slice(0, MAX_RECENT_DOCS);
-        set({ activeId, recentIds: next });
+        commit();
       },
       toggle: (id) => {
         const cur = get().expanded;

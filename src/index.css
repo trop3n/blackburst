@@ -2017,3 +2017,51 @@ button.avatar { border: 0; padding: 0; cursor: pointer; }
   font-size: var(--text-sm);
   color: var(--color-fg-faint);
 }
+
+/* ─────────────────────────────────────────────────────────────
+   In-app dialogs (prompt / confirm / alert — see DialogHost)
+   ───────────────────────────────────────────────────────────── */
+.dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background: oklch(0.10 0 0 / 0.55);
+  backdrop-filter: blur(2px);
+  z-index: 2000;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 22vh;
+}
+.dialog-panel {
+  width: min(440px, 92vw);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background: var(--color-bg-1);
+  border: 1px solid var(--color-line-strong);
+  border-radius: 6px;
+  box-shadow: 0 18px 60px oklch(0 0 0 / 0.55);
+  padding: 18px;
+}
+.dialog-message {
+  font-size: var(--text-sm);
+  line-height: 1.45;
+  color: var(--color-fg);
+  white-space: pre-wrap;
+}
+.dialog-input {
+  background: var(--color-bg-0);
+  border: 1px solid var(--color-line-strong);
+  border-radius: 4px;
+  padding: 7px 9px;
+  color: var(--color-fg);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  outline: none;
+}
+.dialog-input:focus { border-color: var(--accent); }
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}

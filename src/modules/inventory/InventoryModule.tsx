@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { I } from "@/components/Icon";
 import { ASSET_CATEGORIES, INV_MODELS } from "@/lib/inventory-data";
 import { useCatalog } from "@/store/useCatalog";
+import { alertDialog, confirmDialog, promptDialog } from "@/store/useDialog";
 import type { AssetStatus, ShowSchedule } from "@/types";
 import { useInventory } from "./store";
 import { issuesByAsset, summarizeAssetIssues, validateAssets } from "./validation";
@@ -92,18 +93,18 @@ export function InventoryModule() {
     if (asset.status === "in") return;
     checkIn(asset.id);
   };
-  const handleCheckOut = () => {
+  const handleCheckOut = async () => {
     if (!asset) return;
     if (asset.status === "out") return;
-    const show = prompt(`Check out ${asset.id} — show / job name?`, asset.show !== "—" ? asset.show : "")?.trim();
+    const show = (await promptDialog(`Check out ${asset.id} — show / job name?`, asset.show !== "—" ? asset.show : ""))?.trim();
     if (!show) return;
-    const due = prompt(`Due back date (e.g. "Apr 28")?`, asset.due !== "—" ? asset.due : "")?.trim();
+    const due = (await promptDialog(`Due back date (e.g. "Apr 28")?`, asset.due !== "—" ? asset.due : ""))?.trim();
     if (!due) return;
     checkOut(asset.id, show, due);
   };
   // Create a unit of a known model: category is already resolved, so only the
   // serial/asset ID is prompted (with a suggested default derived from the model).
-  const createUnit = (model: string, catName: string) => {
+  const createUnit = async (model: string, catName: string) => {
     const base =
       model
         .split(/\s+/)
@@ -112,10 +113,10 @@ export function InventoryModule() {
         .join("-")
         .toUpperCase() || "ASSET";
     const n = assets.filter((a) => a.model === model).length + 1;
-    const id = prompt("Asset ID / serial?", `${base}-${String(n).padStart(3, "0")}`)?.trim();
+    const id = (await promptDialog("Asset ID / serial?", `${base}-${String(n).padStart(3, "0")}`))?.trim();
     if (!id) return;
     if (assets.some((a) => a.id === id)) {
-      alert(`Asset ID "${id}" already exists.`);
+      await alertDialog(`Asset ID "${id}" already exists.`);
       return;
     }
     const today = new Date().toISOString().slice(0, 10);
@@ -123,74 +124,83 @@ export function InventoryModule() {
     setSelected(id);
   };
 
-  const handleNewAsset = () => {
-    const model = prompt("Model? (a known model auto-fills its category)")?.trim();
+  const handleNewAsset = async () => {
+    const model = (await promptDialog("Model? (a known model auto-fills its category)"))?.trim();
     if (!model) return;
     const known = INV_MODELS.find((m) => m.model.toLowerCase() === model.toLowerCase());
     let catName: string;
     if (known) {
       catName = known.cat;
     } else {
-      const entered = prompt("Category?", CAT_OPTIONS[0])?.trim();
+      const entered = (await promptDialog("Category?", CAT_OPTIONS[0]))?.trim();
       if (!entered) return;
       catName = entered;
       // Remember the new model in the shared catalog for next time.
       addInvModel({ id: `im-custom-${Date.now().toString(36)}`, model, cat: catName });
     }
-    createUnit(model, catName);
+    await createUnit(model, catName);
   };
 
-  const handleAddModel = () => {
-    const model = prompt("Model name?")?.trim();
+  const handleAddModel = async () => {
+    const model = (await promptDialog("Model name?"))?.trim();
     if (!model) return;
     if (INV_MODELS.some((m) => m.model.toLowerCase() === model.toLowerCase())) {
-      alert(`Model "${model}" is already in the catalog.`);
+      await alertDialog(`Model "${model}" is already in the catalog.`);
       return;
     }
-    const catName = prompt("Category?", CAT_OPTIONS[0])?.trim();
+    const catName = (await promptDialog("Category?", CAT_OPTIONS[0]))?.trim();
     if (!catName) return;
     addInvModel({ id: `im-custom-${Date.now().toString(36)}`, model, cat: catName });
   };
 
-  const handleRemoveModel = (id: string, model: string) => {
-    if (!confirm(`Remove model "${model}" from the catalog? Existing assets are unaffected.`)) return;
+  const handleRemoveModel = async (id: string, model: string) => {
+    const ok = await confirmDialog(`Remove model "${model}" from the catalog? Existing assets are unaffected.`, {
+      danger: true,
+      confirmLabel: "Remove",
+    });
+    if (!ok) return;
     removeInvModel(id);
   };
-  const handleDecommission = () => {
+  const handleDecommission = async () => {
     if (!asset) return;
-    if (!confirm(`Decommission ${asset.id} (${asset.model})? This removes it from the fleet.`)) return;
+    const ok = await confirmDialog(`Decommission ${asset.id} (${asset.model})? This removes it from the fleet.`, {
+      danger: true,
+      confirmLabel: "Decommission",
+    });
+    if (!ok) return;
     const idx = filtered.findIndex((a) => a.id === asset.id);
     const fallback = filtered[idx + 1]?.id ?? filtered[idx - 1]?.id ?? assets.find((a) => a.id !== asset.id)?.id ?? "";
     removeAsset(asset.id);
     setSelected(fallback);
   };
-  const handleNewShow = () => {
-    const name = prompt("Show / job name?")?.trim();
+  const handleNewShow = async () => {
+    const name = (await promptDialog("Show / job name?"))?.trim();
     if (!name) return;
-    const startRaw = prompt("Start day (1–14)?", "1");
+    const startRaw = await promptDialog("Start day (1–14)?", "1");
     if (startRaw === null) return;
-    const endRaw = prompt("End day (1–14)?", "6");
+    const endRaw = await promptDialog("End day (1–14)?", "6");
     if (endRaw === null) return;
     const start = clampDay(startRaw, 1);
     const end = Math.max(start + 1, clampDay(endRaw, start + 1));
     addShow({ id: nextShowId(shows), name, start, end, pct: 0 });
   };
-  const handleEditShow = (show: ShowSchedule) => {
-    const name = prompt("Show / job name?", show.name)?.trim();
+  const handleEditShow = async (show: ShowSchedule) => {
+    const name = (await promptDialog("Show / job name?", show.name))?.trim();
     if (!name) return;
-    const startRaw = prompt("Start day (1–14)?", String(show.start));
+    const startRaw = await promptDialog("Start day (1–14)?", String(show.start));
     if (startRaw === null) return;
-    const endRaw = prompt("End day (1–14)?", String(show.end));
+    const endRaw = await promptDialog("End day (1–14)?", String(show.end));
     if (endRaw === null) return;
-    const pctRaw = prompt("Utilization %?", String(show.pct));
+    const pctRaw = await promptDialog("Utilization %?", String(show.pct));
     if (pctRaw === null) return;
     const start = clampDay(startRaw, show.start);
     const end = Math.max(start + 1, clampDay(endRaw, show.end));
     const pct = Math.max(0, Math.min(100, Math.round(Number(pctRaw)) || 0));
     updateShow(show.id, { name, start, end, pct });
   };
-  const handleRemoveShow = (show: ShowSchedule) => {
-    if (!confirm(`Remove show "${show.name}"?`)) return;
+  const handleRemoveShow = async (show: ShowSchedule) => {
+    const ok = await confirmDialog(`Remove show "${show.name}"?`, { danger: true, confirmLabel: "Remove" });
+    if (!ok) return;
     removeShow(show.id);
   };
 

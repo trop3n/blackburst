@@ -5,6 +5,7 @@ import {
   DOC_BODIES,
   DOC_LINKED_BY_ID,
 } from "@/lib/docs-data";
+import { alertDialog, confirmDialog, promptDialog } from "@/store/useDialog";
 import type { DocNode } from "@/types";
 import { MarkdownBody } from "./MarkdownBody";
 import { useDocs, type DropPos } from "./store";
@@ -281,9 +282,12 @@ export function DocsModule() {
     setEditing(true);
   }
 
-  function confirmDiscard() {
+  function confirmDiscard(): boolean | Promise<boolean> {
     if (!editing || bodyDraft === bodyDraftInitial) return true;
-    return window.confirm("Discard unsaved edits to this document?");
+    return confirmDialog("Discard unsaved edits to this document?", {
+      danger: true,
+      confirmLabel: "Discard",
+    });
   }
 
   const confirmDiscardRef = useRef(confirmDiscard);
@@ -304,8 +308,12 @@ export function DocsModule() {
     setEditing(false);
   }
 
-  function onRevert() {
-    if (!window.confirm("Revert to the default content? Your custom version will be removed.")) return;
+  async function onRevert() {
+    const ok = await confirmDialog(
+      "Revert to the default content? Your custom version will be removed.",
+      { danger: true, confirmLabel: "Revert" },
+    );
+    if (!ok) return;
     clearBody(activeId);
   }
 
@@ -319,49 +327,56 @@ export function DocsModule() {
     }
   }
 
-  function onAdd() {
-    if (!confirmDiscard()) return;
-    const name = window.prompt("New document name:");
+  async function onAdd() {
+    if (!(await confirmDiscard())) return;
+    const name = await promptDialog("New document name:");
     if (name && name.trim()) addDoc(activeId, name);
   }
 
-  function onAddFolder() {
-    const name = window.prompt("New folder name:");
+  async function onAddFolder() {
+    const name = await promptDialog("New folder name:");
     if (name && name.trim()) addFolder(null, name);
   }
 
-  function onAddInside(folder: DocNode) {
-    if (!confirmDiscard()) return;
-    const name = window.prompt(`New document in "${folder.name}":`);
+  async function onAddInside(folder: DocNode) {
+    if (!(await confirmDiscard())) return;
+    const name = await promptDialog(`New document in "${folder.name}":`);
     if (name && name.trim()) addDoc(folder.id, name);
   }
 
-  function onRenameNode(node: DocNode) {
-    const next = window.prompt(`Rename "${node.name}" to:`, node.name);
+  async function onRenameNode(node: DocNode) {
+    const next = await promptDialog(`Rename "${node.name}" to:`, node.name);
     if (next === null) return;
     const trimmed = next.trim();
     if (!trimmed || trimmed === node.name) return;
     renameDoc(node.id, trimmed);
   }
 
-  function onDeleteNode(node: DocNode) {
+  async function onDeleteNode(node: DocNode) {
     if (node.kind === "folder" && (node.children?.length ?? 0) > 0) {
-      window.alert("Empty this folder before deleting it.");
+      await alertDialog("Empty this folder before deleting it.");
       return;
     }
     const label = node.kind === "folder" ? "folder" : "document";
-    if (!window.confirm(`Delete ${label} "${node.name}"? This cannot be undone.`)) return;
+    const ok = await confirmDialog(`Delete ${label} "${node.name}"? This cannot be undone.`, {
+      danger: true,
+      confirmLabel: "Delete",
+    });
+    if (!ok) return;
     if (node.id === activeId && editing) setEditing(false);
     deleteDoc(node.id);
   }
 
-  function onAddVersion() {
-    const note = window.prompt("Version note (what changed?):");
+  async function onAddVersion() {
+    const note = await promptDialog("Version note (what changed?):");
     if (note && note.trim()) addVersion(activeId, note);
   }
 
-  function onRestoreVersion(v: string) {
-    if (!window.confirm(`Restore ${v}? This replaces the current document body.`)) return;
+  async function onRestoreVersion(v: string) {
+    const ok = await confirmDialog(`Restore ${v}? This replaces the current document body.`, {
+      confirmLabel: "Restore",
+    });
+    if (!ok) return;
     restoreVersion(activeId, v);
   }
 
@@ -371,15 +386,16 @@ export function DocsModule() {
     setDraft("");
   }
 
-  function onEditComment(index: number, current: string) {
-    const next = window.prompt("Edit comment:", current);
+  async function onEditComment(index: number, current: string) {
+    const next = await promptDialog("Edit comment:", current);
     if (next === null) return;
     if (!next.trim() || next.trim() === current) return;
     editComment(activeId, index, next);
   }
 
-  function onDeleteComment(index: number) {
-    if (!window.confirm("Delete this comment?")) return;
+  async function onDeleteComment(index: number) {
+    const ok = await confirmDialog("Delete this comment?", { danger: true, confirmLabel: "Delete" });
+    if (!ok) return;
     deleteComment(activeId, index);
   }
 

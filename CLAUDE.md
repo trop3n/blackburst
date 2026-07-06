@@ -61,7 +61,7 @@ State spans three layers; how they interact is the one thing you can't infer fro
 
 **Icons** — `src/components/Icon.tsx` exports an `I` map: Bolt, Check, Chev, Cross, Docs, Edit, Export, Eye, File, Folder, Grid, Inventory, Layers, Lock, Move, Pin, Plus, Rack, Search, Settings, System, Undo, Wall. There is **no Trash icon — use `Cross` for delete/remove**.
 
-**Interactions** — no modal system; use `prompt()` / `confirm()` / `alert()` for quick input and destructive-action confirmation.
+**Interactions** — use the in-app dialogs, never native `window.prompt` / `confirm` / `alert`. Import `promptDialog` / `confirmDialog` / `alertDialog` from `@/store/useDialog` (promise-based, styled like the shell; a single always-mounted `<DialogHost/>` in `App.tsx` renders them). They mirror native semantics — `promptDialog` resolves the string or `null`, `confirmDialog` resolves a boolean — but are **async**, so the calling handler must be `async`/`await` (chained prompts become sequential `await`s). Pass `{ danger: true, confirmLabel: "Delete" }` for destructive confirmations. The docs unsaved-edits `leaveGuard` may return `boolean | Promise<boolean>`; `useDocs.setActive` awaits it.
 
 **Regex** — tokenize with `String.matchAll(...)`, not `RegExp.prototype.exec` (the codebase avoids `exec`; a security hook has flagged it). See `MarkdownBody.tsx`.
 
