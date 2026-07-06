@@ -4,7 +4,7 @@ import { exportProject, importProject } from "@/lib/project-io";
 import { useApp } from "@/store/useApp";
 import { displayNameOf, initialsOf, useAuth } from "@/store/useAuth";
 import { useCmdk } from "@/store/useCmdk";
-import { alertDialog, promptDialog } from "@/store/useDialog";
+import { alertDialog, confirmDialog, promptDialog } from "@/store/useDialog";
 import { useSettings } from "@/store/useSettings";
 import { useShare } from "@/store/useShare";
 import type { ModuleId } from "@/types";
@@ -24,6 +24,7 @@ export function Topbar() {
   const currentProjectId = useApp((s) => s.currentProjectId);
   const setCurrentProjectId = useApp((s) => s.setCurrentProjectId);
   const addProject = useApp((s) => s.addProject);
+  const deleteProject = useApp((s) => s.deleteCurrentProject);
   const saveRev = useApp((s) => s.saveRev);
   const openCmdk = useCmdk((s) => s.setOpen);
   const openSettings = useSettings((s) => s.setOpen);
@@ -34,6 +35,9 @@ export function Topbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const canEdit = !authConfigured || project.role !== "viewer";
+  // Deleting a project is destructive and cascades to all members, so it's
+  // owner-only in accounts mode (non-owners use "Leave project" in Share).
+  const canDelete = !authConfigured || project.role === "owner";
 
   const handleSaveRev = async () => {
     const note = await promptDialog("Revision note", "");
@@ -46,6 +50,16 @@ export function Topbar() {
     if (!name) return;
     const client = (await promptDialog("Client name?"))?.trim() || "—";
     addProject(name, client);
+  };
+
+  const handleDeleteProject = async () => {
+    const ok = await confirmDialog(
+      `Delete "${project.name}"? This permanently removes the project and all its contents${
+        authConfigured ? " for everyone it's shared with" : ""
+      }. This can't be undone.`,
+      { danger: true, confirmLabel: "Delete" },
+    );
+    if (ok) await deleteProject();
   };
 
   const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -85,6 +99,17 @@ export function Topbar() {
         >
           <I.Plus size={13} />
         </button>
+        {canDelete && (
+          <button
+            className="icon-btn"
+            type="button"
+            onClick={handleDeleteProject}
+            title="Delete project"
+            aria-label="Delete project"
+          >
+            <I.Cross size={13} />
+          </button>
+        )}
         <span style={{ color: "var(--color-fg)" }}>{project.name}</span>
         <span className="chip">{project.client}</span>
         {authConfigured && project.role === "viewer" && (

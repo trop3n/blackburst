@@ -252,6 +252,20 @@ export function writeBucket(projectId: string, buckets: ProjectStateBuckets) {
   saveAll(all);
 }
 
+// Local-mode project delete: drop the removed project's bucket and load `nextId`
+// into the live stores (mirrors switchProject's load, minus the save-away).
+export function deleteProjectLocal(deletedId: string, nextId: string) {
+  if (saveTimer != null) {
+    clearTimeout(saveTimer);
+    saveTimer = null;
+  }
+  const all = loadAll();
+  delete all[deletedId];
+  applyState(all[nextId] ?? defaultBucket());
+  activeProjectId = nextId;
+  saveAll(all);
+}
+
 function persistActiveBucket() {
   if (activeProjectId == null) return;
   if (isSupabaseConfigured) {

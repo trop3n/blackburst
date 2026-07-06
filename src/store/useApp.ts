@@ -4,6 +4,7 @@ import { migrateLocalProjects } from "@/lib/migrate-local";
 import {
   claimInvites,
   createProjectRemote,
+  deleteProjectRemote,
   fetchMyProjects,
   fetchRevisions,
   insertRevision,
@@ -12,6 +13,7 @@ import {
 } from "@/lib/project-remote";
 import {
   clearActiveProject,
+  deleteProjectLocal,
   initProjectStateFromServer,
   scaffoldBucket,
   switchProject,
@@ -97,6 +99,7 @@ interface AppState {
   setRevisionsForCurrent: (list: Revision[]) => void;
   addProject: (name: string, client: string) => Promise<void>;
   leaveCurrentProject: () => Promise<void>;
+  deleteCurrentProject: () => Promise<void>;
   ready: boolean;
   bootstrap: () => Promise<void>;
   resetSession: () => void;
@@ -208,6 +211,52 @@ export const useApp = create<AppState>()(
           project: nextProj,
           revisions,
           revisionsByProject: { [nextProj.id]: revisions },
+        });
+      },
+      deleteCurrentProject: async () => {
+        const id = get().currentProjectId;
+        if (isSupabaseConfigured) {
+          await deleteProjectRemote(id);
+          let remaining = get().projects.filter((p) => p.id !== id);
+          // Never leave the workspace empty — seed a fresh project if it was the last.
+          if (remaining.length === 0) {
+            const created = await createProjectRemote({
+              name: "Untitled Project",
+              client: "—",
+              code: nextCode([]),
+              bucket: scaffoldBucket(),
+            });
+            remaining = [created];
+          }
+          const nextProj = remaining[0];
+          await initProjectStateFromServer(nextProj.id);
+          const revisions = await fetchRevisions(nextProj.id);
+          set({
+            projects: remaining,
+            currentProjectId: nextProj.id,
+            project: nextProj,
+            revisions,
+            revisionsByProject: { [nextProj.id]: revisions },
+          });
+          return;
+        }
+        let remaining = get().projects.filter((p) => p.id !== id);
+        if (remaining.length === 0) {
+          const code = nextCode([]);
+          const fresh: Project = { id: code, code, name: "Untitled Project", client: "—", status: "in-design" };
+          writeBucket(code, scaffoldBucket());
+          remaining = [fresh];
+        }
+        const nextProj = remaining[0];
+        deleteProjectLocal(id, nextProj.id);
+        const remainingRevs = { ...get().revisionsByProject };
+        delete remainingRevs[id];
+        set({
+          projects: remaining,
+          currentProjectId: nextProj.id,
+          project: nextProj,
+          revisions: remainingRevs[nextProj.id] ?? [],
+          revisionsByProject: remainingRevs,
         });
       },
       bootstrap: async () => {
