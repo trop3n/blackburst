@@ -28,7 +28,7 @@ export const useInventory = create<InventoryState>()((set) => ({
       assets: ASSETS,
       shows: SHOWS,
       cat: "All gear",
-      selected: "BMD-S40-001",
+      selected: "",
       view: "list",
       setCat: (cat) => set({ cat }),
       setSelected: (selected) => set({ selected }),

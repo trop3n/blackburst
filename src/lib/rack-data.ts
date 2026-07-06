@@ -89,24 +89,7 @@ export function isCustomRackDef(id: string): boolean {
   return customRackDefs.some((d) => d.id === id);
 }
 
-export const DEFAULT_RACK: RackItem[] = [
-  { iid: 1, id: "blank1", pos: 41 },
-  { iid: 2, id: "kvm", pos: 39 },
-  { iid: 3, id: "vmix", pos: 37 },
-  { iid: 4, id: "atem", pos: 33 },
-  { iid: 5, id: "sx40", pos: 31 },
-  { iid: 6, id: "sx40", pos: 30 },
-  { iid: 7, id: "tess", pos: 28 },
-  { iid: 8, id: "smtl", pos: 26 },
-  { iid: 9, id: "net10g", pos: 24 },
-  { iid: 10, id: "net48", pos: 22 },
-  { iid: 11, id: "fw", pos: 21 },
-  { iid: 12, id: "srv2u", pos: 18 },
-  { iid: 13, id: "media", pos: 13 },
-  { iid: 14, id: "sd12", pos: 7 },
-  { iid: 15, id: "ups", pos: 4 },
-  { iid: 16, id: "pdu", pos: 1 },
-];
+export const DEFAULT_RACK: RackItem[] = [];
 
 export const RACK_COLOR_MAP: Record<RackColor, { bg: string; bd: string; fg: string }> = {
   accent: { bg: "oklch(0.86 0.19 145 / 0.10)", bd: "oklch(0.86 0.19 145 / 0.45)", fg: "var(--accent)" },

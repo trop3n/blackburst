@@ -63,17 +63,13 @@ export interface Revision {
   at: string;
 }
 
+// Clean local-mode starting point: one empty project. In accounts mode this is
+// replaced by the user's server projects during bootstrap().
 const PROJECTS: Project[] = [
-  { id: "PRJ-2451", code: "PRJ-2451", name: "Atrium Lobby Wall", client: "Northwind HQ", status: "in-design" },
-  { id: "PRJ-2447", code: "PRJ-2447", name: "Auditorium Refresh", client: "Helios Tech", status: "fabrication" },
-  { id: "PRJ-2440", code: "PRJ-2440", name: "Broadcast Studio B", client: "KCR Media", status: "delivered" },
+  { id: "PRJ-0001", code: "PRJ-0001", name: "Untitled Project", client: "—", status: "in-design" },
 ];
 
-const INITIAL_REVISIONS: Record<string, Revision[]> = {
-  "PRJ-2451": [{ n: 42, note: "Initial baseline", at: "2026-04-28T14:22:08" }],
-  "PRJ-2447": [],
-  "PRJ-2440": [],
-};
+const INITIAL_REVISIONS: Record<string, Revision[]> = {};
 
 function nextCode(projects: Project[]): string {
   const nums = projects
@@ -120,7 +116,7 @@ export const useApp = create<AppState>()(
       setTweak: (key, value) =>
         set((s) => ({ tweaks: { ...s.tweaks, [key]: value } })),
       projects: PROJECTS,
-      currentProjectId: "PRJ-2451",
+      currentProjectId: "PRJ-0001",
       project: PROJECTS[0],
       ready: !isSupabaseConfigured,
       setCurrentProjectId: async (id) => {
@@ -157,7 +153,7 @@ export const useApp = create<AppState>()(
         }
       },
       revisionsByProject: INITIAL_REVISIONS,
-      revisions: INITIAL_REVISIONS["PRJ-2451"] ?? [],
+      revisions: [],
       saveRev: (note) => {
         const id = get().currentProjectId;
         const list = get().revisionsByProject[id] ?? [];

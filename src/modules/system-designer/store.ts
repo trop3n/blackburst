@@ -30,7 +30,7 @@ export const useSystem = create<SystemState>()((set) => ({
       nodes: SYSTEM_NODES,
       edges: SYSTEM_EDGES,
       lanes: { video: true, audio: true, network: true, power: true },
-      selectedNodeId: "n4",
+      selectedNodeId: "",
       view: "graph",
       toggleLane: (lane) =>
         set((s) => ({ lanes: { ...s.lanes, [lane]: !s.lanes[lane] } })),

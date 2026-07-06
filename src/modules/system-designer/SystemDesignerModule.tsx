@@ -45,6 +45,7 @@ function pathFor(e: SystemEdge, nodes: SystemNode[]): string {
 
 export function SystemDesignerModule() {
   const canvasStyle = useApp((s) => s.tweaks.canvasStyle);
+  const projectName = useApp((s) => s.project.name);
   const nodes = useSystem((s) => s.nodes);
   const edges = useSystem((s) => s.edges);
   const lanes = useSystem((s) => s.lanes);
@@ -356,7 +357,7 @@ export function SystemDesignerModule() {
             <div className="canvas-overlay tl">
               <div className="row">
                 <span className="k">SYSTEM</span>
-                <span className="v">Helios Auditorium · v0042</span>
+                <span className="v">{projectName}</span>
               </div>
               <div className="row">
                 <span className="k">NODES</span>

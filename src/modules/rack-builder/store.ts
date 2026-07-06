@@ -65,7 +65,7 @@ function nextIid(items: RackItem[]): number {
 
 export const useRack = create<RackState>()((set, get) => ({
       items: DEFAULT_RACK,
-      selectedIid: 13,
+      selectedIid: null,
       rackSize: 42,
       filter: "All",
       search: "",

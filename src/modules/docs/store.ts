@@ -170,8 +170,8 @@ function firstDocId(nodes: DocNode[]): string | null {
 
 export const useDocs = create<DocsState>()((set, get) => ({
       tree: DOC_TREE,
-      activeId: "d-prj-ros",
-      expanded: ["d-prj", "d-spec", "d-sop"],
+      activeId: "d-overview",
+      expanded: ["d-root"],
       recentIds: [],
       bodies: {},
       comments: INITIAL_COMMENTS,
