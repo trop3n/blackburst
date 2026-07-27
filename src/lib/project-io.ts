@@ -9,7 +9,9 @@ import { isSupabaseConfigured } from "@/lib/supabase";
 import { useApp, type Revision } from "@/store/useApp";
 import type { Project } from "@/types";
 
-export const SUPPORTED_SNAPSHOT_VERSIONS = [2, 3] as const;
+// v4 moved the rack module from a single `items` array to a `racks` list.
+// Older files still import — applyState migrates the shape on load.
+export const SUPPORTED_SNAPSHOT_VERSIONS = [2, 3, 4] as const;
 export type SnapshotVersion = (typeof SUPPORTED_SNAPSHOT_VERSIONS)[number];
 
 export interface ProjectSnapshot {
@@ -30,7 +32,7 @@ function buildSnapshot(): ProjectSnapshot {
   const app = useApp.getState();
   return {
     format: "blackburst-project",
-    version: 3,
+    version: 4,
     exportedAt: new Date().toISOString(),
     project: app.project,
     revisions: app.revisions,
@@ -71,10 +73,13 @@ export async function importProject(file: File): Promise<void> {
   const app = useApp.getState();
   const currentId = app.currentProjectId;
   applyState(data.state);
+  // Persist what the stores actually hold, not the raw file: applyState upgrades
+  // older bucket shapes, and this keeps the stored copy in the current format.
+  const migrated = snapshotCurrent();
   if (isSupabaseConfigured) {
-    await upsertBucket(currentId, data.state);
+    await upsertBucket(currentId, migrated);
   } else {
-    writeBucket(currentId, data.state);
+    writeBucket(currentId, migrated);
   }
   const importedProject = data.project;
   if (importedProject) {

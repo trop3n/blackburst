@@ -16,8 +16,10 @@ import {
   unsubscribeBucket,
   upsertBucket,
 } from "@/lib/project-remote";
-import { DEFAULT_RACK } from "@/lib/rack-data";
+import { DEFAULT_RACKS } from "@/lib/rack-data";
 import { isSupabaseConfigured } from "@/lib/supabase";
+import { useDevices } from "@/store/useDevices";
+import { useSaveStatus } from "@/store/useSaveStatus";
 
 export const BUCKETS_KEY = "blackburst:projects:v1";
 
@@ -69,11 +71,11 @@ const SPECS = {
     store: useSystem as unknown as StoreSpec["store"],
   },
   rack: {
-    fields: ["items", "selectedIid", "rackSize", "filter"],
+    fields: ["racks", "rackId", "selectedIid", "filter"],
     defaults: {
-      items: DEFAULT_RACK,
+      racks: DEFAULT_RACKS,
+      rackId: DEFAULT_RACKS[0].id,
       selectedIid: null,
-      rackSize: 42,
       filter: "All",
     },
     store: useRack as unknown as StoreSpec["store"],
@@ -101,6 +103,13 @@ const SPECS = {
       versions: INITIAL_VERSIONS,
     },
     store: useDocs as unknown as StoreSpec["store"],
+  },
+  devices: {
+    fields: ["devices"],
+    defaults: {
+      devices: [],
+    },
+    store: useDevices as unknown as StoreSpec["store"],
   },
   cmdkRecents: {
     fields: ["recents"],
@@ -172,9 +181,9 @@ export function scaffoldBucket(): ProjectStateBuckets {
       view: "graph",
     },
     rack: {
-      items: [],
+      racks: [{ id: "R-001", name: "Rack 1", location: "", size: 42, items: [] }],
+      rackId: "R-001",
       selectedIid: null,
-      rackSize: 42,
       filter: "All",
     },
     inv: {
@@ -183,6 +192,9 @@ export function scaffoldBucket(): ProjectStateBuckets {
       cat: "All gear",
       selected: "",
       view: "list",
+    },
+    devices: {
+      devices: [],
     },
     docs: {
       tree: [
@@ -206,11 +218,31 @@ export function scaffoldBucket(): ProjectStateBuckets {
   };
 }
 
+// Upgrade older persisted shapes before they merge with defaults. Every load
+// path funnels through applyState, so this is the one place a migration lives.
+function migrateBucket(buckets: ProjectStateBuckets): ProjectStateBuckets {
+  const rack = buckets.rack;
+  if (!rack || Array.isArray(rack.racks)) return buckets;
+  // Pre-multi-rack projects stored a single `items` array plus `rackSize`.
+  const items = Array.isArray(rack.items) ? rack.items : [];
+  const size = typeof rack.rackSize === "number" ? rack.rackSize : 42;
+  return {
+    ...buckets,
+    rack: {
+      racks: [{ id: "R-001", name: "Rack 1", location: "", size, items }],
+      rackId: "R-001",
+      selectedIid: rack.selectedIid ?? null,
+      filter: rack.filter ?? "All",
+    },
+  };
+}
+
 export function applyState(buckets: ProjectStateBuckets) {
   applying = true;
   try {
+    const migrated = migrateBucket(buckets);
     for (const [key, spec] of Object.entries(SPECS)) {
-      const slice = { ...spec.defaults, ...(buckets[key] ?? {}) };
+      const slice = { ...spec.defaults, ...(migrated[key] ?? {}) };
       spec.store.setState(slice);
     }
   } finally {
@@ -268,13 +300,27 @@ export function deleteProjectLocal(deletedId: string, nextId: string) {
   saveAll(all);
 }
 
+function messageOf(err: unknown): string {
+  return err instanceof Error ? err.message : String(err);
+}
+
 function persistActiveBucket() {
   if (activeProjectId == null) return;
+  const status = useSaveStatus.getState();
   if (isSupabaseConfigured) {
-    // Swallow rejects (e.g. a viewer's RLS-denied write) so autosave stays quiet.
-    void upsertBucket(activeProjectId, snapshotCurrent()).catch(() => {});
+    // Still fire-and-forget so a viewer's RLS-denied write never blocks the UI,
+    // but the outcome is now reported instead of swallowed.
+    status.markSaving();
+    void upsertBucket(activeProjectId, snapshotCurrent())
+      .then(() => useSaveStatus.getState().markSaved())
+      .catch((err: unknown) => useSaveStatus.getState().markError(messageOf(err)));
   } else {
-    saveCurrentBucket(activeProjectId);
+    try {
+      saveCurrentBucket(activeProjectId);
+      status.markSaved();
+    } catch (err) {
+      status.markError(messageOf(err));
+    }
   }
 }
 
@@ -286,13 +332,20 @@ function flushSave() {
   if (activeProjectId == null) return;
   if (isSupabaseConfigured) {
     beaconUpsertBucket(activeProjectId, snapshotCurrent());
+    useSaveStatus.getState().markSaved();
   } else {
-    saveCurrentBucket(activeProjectId);
+    try {
+      saveCurrentBucket(activeProjectId);
+      useSaveStatus.getState().markSaved();
+    } catch (err) {
+      useSaveStatus.getState().markError(messageOf(err));
+    }
   }
 }
 
 function scheduleSave() {
   if (applying || activeProjectId == null) return;
+  useSaveStatus.getState().markPending();
   if (saveTimer != null) clearTimeout(saveTimer);
   // Null the handle when it fires so applyRemote (which skips while a save is
   // pending) resumes applying collaborator updates once editing settles.

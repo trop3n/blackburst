@@ -31,10 +31,16 @@ export function goto(target: RefTarget) {
       setModule("docs");
       useDocs.getState().setActive(target.id);
       break;
+    // Item ids are unique per rack, so a rack-item ref is "<rackId>:<iid>".
+    // A bare number is still accepted and resolves against the active rack.
     case "rack-item": {
       setModule("rack");
-      const iid = Number(target.id);
-      if (Number.isFinite(iid)) useRack.getState().setSelectedIid(iid);
+      const rack = useRack.getState();
+      const [a, b] = target.id.split(":");
+      const iid = Number(b ?? a);
+      if (!Number.isFinite(iid)) break;
+      if (b != null && rack.racks.some((r) => r.id === a)) rack.setRackId(a);
+      rack.setSelectedIid(iid);
       break;
     }
   }

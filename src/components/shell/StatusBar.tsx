@@ -6,6 +6,7 @@ import { summarize, validateWall } from "@/modules/led-wall/validation";
 import { useInventory } from "@/modules/inventory/store";
 import { summarizeAssetIssues, validateAssets } from "@/modules/inventory/validation";
 import { useApp } from "@/store/useApp";
+import { useSaveStatus } from "@/store/useSaveStatus";
 
 export function StatusBar() {
   const project = useApp((s) => s.project);
@@ -15,6 +16,9 @@ export function StatusBar() {
   const inventoryAssets = useInventory((s) => s.assets);
   const inventoryShows = useInventory((s) => s.shows);
   const latest = revisions[0];
+  const saveState = useSaveStatus((s) => s.state);
+  const savedAt = useSaveStatus((s) => s.lastSavedAt);
+  const saveError = useSaveStatus((s) => s.error);
   const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
@@ -37,6 +41,17 @@ export function StatusBar() {
   const level: "ok" | "warn" | "error" =
     errors > 0 ? "error" : warnings > 0 ? "warn" : "ok";
 
+  const saveLabel =
+    saveState === "error"
+      ? "SAVE FAILED"
+      : saveState === "saving"
+        ? "SAVING…"
+        : saveState === "pending"
+          ? "UNSAVED"
+          : savedAt
+            ? `SAVED ${new Date(savedAt).toTimeString().slice(0, 8)}`
+            : "SAVED —";
+
   const statusLabel =
     level === "error"
       ? `${errors} ERROR${errors === 1 ? "" : "S"}${warnings > 0 ? ` · ${warnings} WARN` : ""}`
@@ -50,7 +65,10 @@ export function StatusBar() {
         <span className="dot" /> READY
       </div>
       <div className="seg">REV {String(latest?.n ?? 0).padStart(4, "0")}</div>
-      <div className="seg">SAVED {latest ? new Date(latest.at).toTimeString().slice(0, 8) : "—"}</div>
+      <div className="seg" title={saveError ?? undefined}>
+        <span className={`dot ${saveState === "error" ? "error" : saveState === "saved" ? "ok" : ""}`} />{" "}
+        {saveLabel}
+      </div>
       <div className="seg">
         <span className={`dot ${level}`} /> {statusLabel}
       </div>

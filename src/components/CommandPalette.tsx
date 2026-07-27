@@ -129,7 +129,7 @@ export function CommandPalette() {
   const walls = useLedWall((s) => s.walls);
   const nodes = useSystem((s) => s.nodes);
   const docTree = useDocs((s) => s.tree);
-  const rackItems = useRack((s) => s.items);
+  const racks = useRack((s) => s.racks);
   const setModule = useApp((s) => s.setModule);
   const recents = useCmdkRecents((s) => s.recents);
   const pushRecent = useCmdkRecents((s) => s.push);
@@ -172,19 +172,21 @@ export function CommandPalette() {
       sub: n.type,
       haystack: `${n.id} ${n.name} ${n.type}`.toLowerCase(),
     }));
-    const rackRows = rackItems.map<RefRow>((it) => {
-      const def = RACK_CATALOG.find((d) => d.id === it.id);
-      return {
-        group: "Rack",
-        kind: "rack-item",
-        id: String(it.iid),
-        label: def?.model ?? it.id,
-        sub: `U${it.pos} · ${def?.cat ?? ""}`,
-        haystack: `${def?.model ?? ""} ${def?.cat ?? ""} u${it.pos}`.toLowerCase(),
-      };
-    });
+    const rackRows = racks.flatMap((r) =>
+      r.items.map<RefRow>((it) => {
+        const def = RACK_CATALOG.find((d) => d.id === it.id);
+        return {
+          group: "Rack",
+          kind: "rack-item",
+          id: `${r.id}:${it.iid}`,
+          label: def?.model ?? it.id,
+          sub: `${r.name} · U${it.pos}`,
+          haystack: `${def?.model ?? ""} ${def?.cat ?? ""} ${r.name} u${it.pos}`.toLowerCase(),
+        };
+      }),
+    );
     return [...MODULE_ROWS, ...docs, ...assetRows, ...wallRows, ...nodeRows, ...rackRows];
-  }, [assets, walls, nodes, docTree, rackItems]);
+  }, [assets, walls, nodes, docTree, racks]);
 
   const { mode, rest } = useMemo(() => parseQuery(query), [query]);
   const q = rest.trim().toLowerCase();

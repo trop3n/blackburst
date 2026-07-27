@@ -1,4 +1,5 @@
 import { Fragment, useRef, useState } from "react";
+import { DeviceLink } from "@/components/DeviceLink";
 import { I } from "@/components/Icon";
 import { SYSTEM_DEVICES } from "@/lib/system-data";
 import { useApp } from "@/store/useApp";
@@ -649,6 +650,14 @@ export function SystemDesignerModule() {
                 </Fragment>
               ))}
             </div>
+            <DeviceLink
+              deviceId={node.deviceId}
+              onChange={(id) => updateNode(node.id, { deviceId: id })}
+              defaultLabel={node.name}
+              model={node.name}
+              omit={{ kind: "node", id: node.id }}
+            />
+
             <div className="section-h">
               <span>CONNECTIONS</span>
               <span className="line" />

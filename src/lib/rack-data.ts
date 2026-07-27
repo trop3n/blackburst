@@ -1,4 +1,4 @@
-import type { RackColor, RackItem, RackItemDef } from "@/types";
+import type { Rack, RackColor, RackItem, RackItemDef } from "@/types";
 
 // Built-in seed catalog. User-added equipment is layered on top at runtime via
 // setCustomRackDefs (see @/store/useCatalog); RACK_CATALOG is the merged list
@@ -90,6 +90,10 @@ export function isCustomRackDef(id: string): boolean {
 }
 
 export const DEFAULT_RACK: RackItem[] = [];
+
+export const DEFAULT_RACKS: Rack[] = [
+  { id: "R-001", name: "Rack 1", location: "", size: 42, items: DEFAULT_RACK },
+];
 
 export const RACK_COLOR_MAP: Record<RackColor, { bg: string; bd: string; fg: string }> = {
   accent: { bg: "oklch(0.86 0.19 145 / 0.10)", bd: "oklch(0.86 0.19 145 / 0.45)", fg: "var(--accent)" },

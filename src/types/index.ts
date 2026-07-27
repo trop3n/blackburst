@@ -66,6 +66,7 @@ export interface SystemNode {
   in?: Lane[];
   out?: Lane[];
   details: Record<string, string>;
+  deviceId?: string;
 }
 
 export interface SystemEdge {
@@ -99,10 +100,31 @@ export interface RackItemDef {
   color: RackColor;
 }
 
+// One piece of real-world equipment, shared across modules. A rack slot, a
+// graph node and an inventory asset can all point at the same device, which is
+// how "the ATEM in rack 2" stays one thing rather than three unrelated records.
+export interface ProjectDevice {
+  id: string;
+  // Model name rather than a catalog id: rack items carry a def id but graph
+  // nodes and inventory assets don't, and the model reads better anyway.
+  model: string;
+  label: string;
+  serial: string;
+}
+
 export interface RackItem {
   iid: number;
   id: string;
   pos: number;
+  deviceId?: string;
+}
+
+export interface Rack {
+  id: string;
+  name: string;
+  location: string;
+  size: RackSize;
+  items: RackItem[];
 }
 
 export type AssetStatus = "in" | "out" | "maint";
@@ -116,6 +138,7 @@ export interface Asset {
   due: string;
   utilization: number;
   last: string;
+  deviceId?: string;
 }
 
 export interface AssetCategory {

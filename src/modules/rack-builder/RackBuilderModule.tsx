@@ -1,11 +1,12 @@
 import { Fragment, useEffect } from "react";
+import { DeviceLink } from "@/components/DeviceLink";
 import { I } from "@/components/Icon";
 import { RACK_CATALOG, RACK_COLOR_MAP } from "@/lib/rack-data";
 import { useApp } from "@/store/useApp";
 import { useCatalog } from "@/store/useCatalog";
 import { confirmDialog, promptDialog } from "@/store/useDialog";
 import type { RackColor, RackSize } from "@/types";
-import { fits, useRack } from "./store";
+import { activeRackOf, fits, useRack } from "./store";
 
 const U_HEIGHT = 14;
 const RACK_W = 360;
@@ -28,9 +29,16 @@ const CAT_COLOR: Record<string, RackColor> = {
 
 export function RackBuilderModule() {
   const canvasStyle = useApp((s) => s.tweaks.canvasStyle);
-  const items = useRack((s) => s.items);
+  const racks = useRack((s) => s.racks);
+  const rackId = useRack((s) => s.rackId);
+  const setRackId = useRack((s) => s.setRackId);
+  const addRack = useRack((s) => s.addRack);
+  const removeRack = useRack((s) => s.removeRack);
+  const updateRack = useRack((s) => s.updateRack);
+  const rack = racks.find((r) => r.id === rackId) ?? racks[0];
+  const items = rack.items;
+  const rackSize = rack.size;
   const selectedIid = useRack((s) => s.selectedIid);
-  const rackSize = useRack((s) => s.rackSize);
   const filter = useRack((s) => s.filter);
   const search = useRack((s) => s.search);
   const hoverPos = useRack((s) => s.hoverPos);
@@ -47,9 +55,17 @@ export function RackBuilderModule() {
   const placeItem = useRack((s) => s.placeItem);
   const removeItem = useRack((s) => s.removeItem);
   const movePos = useRack((s) => s.movePos);
+  const setItemDevice = useRack((s) => s.setItemDevice);
   const customRack = useCatalog((s) => s.rack);
   const addRackDef = useCatalog((s) => s.addRackDef);
   const removeRackDef = useCatalog((s) => s.removeRackDef);
+
+  const renameRack = async () => {
+    const name = (await promptDialog("Rack name?", rack.name))?.trim();
+    if (!name) return;
+    const location = (await promptDialog("Location? (e.g. Stage Left, FOH)", rack.location))?.trim() ?? "";
+    updateRack(rack.id, { name, location });
+  };
 
   const addEquipment = async () => {
     const model = (await promptDialog("Model name?"))?.trim();
@@ -84,7 +100,7 @@ export function RackBuilderModule() {
       const state = useRack.getState();
       const iid = state.selectedIid;
       if (iid == null) return;
-      const item = state.items.find((i) => i.iid === iid);
+      const item = activeRackOf(state).items.find((i) => i.iid === iid);
       if (!item) return;
       if (e.key === "Delete" || e.key === "Backspace") {
         e.preventDefault();
@@ -159,8 +175,51 @@ export function RackBuilderModule() {
 
   return (
     <>
-      {/* LEFT — Equipment catalog */}
+      {/* LEFT — Racks + equipment catalog */}
       <div className="left-pane">
+        <div className="pane-hd">
+          <span>RACKS</span>
+          <span className="spacer" />
+          <button className="icon-btn" aria-label="New rack" onClick={() => addRack()}>
+            <I.Plus size={12} />
+          </button>
+        </div>
+        <div style={{ flex: "0 0 auto" }}>
+          {racks.map((r) => (
+            <div
+              key={r.id}
+              className="list-row"
+              data-active={r.id === rackId ? "1" : "0"}
+              onClick={() => setRackId(r.id)}
+            >
+              <I.Rack size={13} />
+              <span className="lbl">{r.name}</span>
+              <span className="meta">
+                {r.items.length} · {r.size}U
+              </span>
+              {racks.length > 1 && (
+                <button
+                  className="icon-btn"
+                  aria-label={`Delete ${r.name}`}
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    if (
+                      await confirmDialog(`Delete rack "${r.name}" and everything in it?`, {
+                        danger: true,
+                        confirmLabel: "Delete",
+                      })
+                    )
+                      removeRack(r.id);
+                  }}
+                  style={{ marginLeft: 4 }}
+                >
+                  <I.Cross size={11} />
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+
         <div className="pane-hd">
           <span>EQUIPMENT CATALOG</span>
           <span className="spacer" />
@@ -321,8 +380,11 @@ export function RackBuilderModule() {
           </div>
           <div className="divider-v" />
           <span className="mono" style={{ fontSize: 10, color: "var(--color-fg-faint)" }}>
-            RACK · R-001
+            RACK · {rack.id}
           </span>
+          <button className="tb-btn" onClick={renameRack}>
+            <I.Edit size={13} /> Rename
+          </button>
           <span style={{ flex: 1 }} />
           <span className="mono" style={{ fontSize: 10, color: "var(--color-fg-faint)" }}>
             DRAG FROM CATALOG · ↕ TO REORDER
@@ -337,7 +399,10 @@ export function RackBuilderModule() {
           <div className="canvas-overlay tl">
             <div className="row">
               <span className="k">RACK</span>
-              <span className="v">R-001</span>
+              <span className="v">
+                {rack.name}
+                {rack.location ? ` · ${rack.location}` : ""}
+              </span>
             </div>
             <div className="row">
               <span className="k">SIZE</span>
@@ -869,7 +934,7 @@ export function RackBuilderModule() {
         <div className="pane-hd">
           <span>RACK INSPECTOR</span>
           <span className="spacer" />
-          <span className="chip accent">R-001</span>
+          <span className="chip accent">{rack.id}</span>
         </div>
 
         {selected && selectedDef ? (
@@ -914,6 +979,14 @@ export function RackBuilderModule() {
               <span className="k">Power</span>
               <span className="v">{selectedDef.watts} W</span>
             </div>
+
+            <DeviceLink
+              deviceId={selected.deviceId}
+              onChange={(id) => setItemDevice(selected.iid, id)}
+              defaultLabel={selectedDef.model}
+              model={selectedDef.model}
+              omit={{ kind: "rack-item", id: `${rack.id}:${selected.iid}` }}
+            />
 
             <div className="section-h">
               <span>POSITION</span>

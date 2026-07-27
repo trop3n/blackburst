@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { DeviceLink } from "@/components/DeviceLink";
 import { I } from "@/components/Icon";
 import { ASSET_CATEGORIES, INV_MODELS } from "@/lib/inventory-data";
 import { useCatalog } from "@/store/useCatalog";
@@ -648,6 +649,14 @@ export function InventoryModule() {
                 />
               </div>
             </div>
+            <DeviceLink
+              deviceId={asset.deviceId}
+              onChange={(id) => updateAsset(asset.id, { deviceId: id })}
+              defaultLabel={asset.model}
+              model={asset.model}
+              omit={{ kind: "asset", id: asset.id }}
+            />
+
             <div className="section-h"><span>ACTIONS</span><span className="line" /></div>
             <div style={{ padding: "0 12px 12px" }}>
               <button
