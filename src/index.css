@@ -1791,6 +1791,132 @@ button { font-family: inherit; color: inherit; }
   .docs-page a { text-decoration: underline; }
   .docs-page code { border: 1px solid #bbb !important; }
   .docs-page pre { border: 1px solid #888 !important; }
+
+  body { background: white !important; }
+
+  /* Module print sheets — rack elevations, wall elevations, patch schedules. */
+  .print-sheet,
+  .print-sheet * {
+    visibility: visible !important;
+    background: white !important;
+    color: black !important;
+    box-shadow: none !important;
+  }
+  .print-sheet {
+    display: block !important;
+    /* Deliberately no `bottom`: leaving the height auto lets long elevations
+       and schedules paginate instead of being clipped to one page. */
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    font-family: var(--font-sans);
+    font-size: 10pt;
+    line-height: 1.4;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Print sheets — hidden on screen, revealed by the print rules
+   ───────────────────────────────────────────────────────────── */
+.print-sheet { display: none; }
+
+.print-hd {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+  border-bottom: 1.5pt solid black;
+  padding-bottom: 8pt;
+  margin-bottom: 14pt;
+}
+.print-hd h1 { font-size: 16pt; font-weight: 700; margin: 0; letter-spacing: -0.01em; }
+.print-sub { margin: 2pt 0 0; font-size: 10pt; }
+.print-meta {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 1pt 10pt;
+  margin: 0;
+  font-size: 8.5pt;
+  text-align: right;
+}
+.print-meta dt { font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+.print-meta dd { margin: 0; }
+
+.print-sheet h2 {
+  font-size: 11pt;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  border-bottom: 0.5pt solid black;
+  padding-bottom: 3pt;
+  margin: 16pt 0 8pt;
+}
+
+.print-tbl { width: 100%; border-collapse: collapse; font-size: 9pt; }
+.print-tbl th,
+.print-tbl td {
+  border: 0.5pt solid #666;
+  padding: 3pt 5pt;
+  text-align: left;
+  vertical-align: middle;
+}
+.print-tbl th {
+  font-size: 8pt;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 700;
+  background: #eee !important;
+}
+.print-tbl td.num { text-align: right; font-variant-numeric: tabular-nums; }
+.print-tbl tr { break-inside: avoid; }
+
+.print-summary {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8pt;
+  margin-top: 10pt;
+}
+.print-summary div { border: 0.5pt solid #666; padding: 5pt 7pt; }
+.print-summary dt {
+  font-size: 7.5pt;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 700;
+}
+.print-summary dd { margin: 1pt 0 0; font-size: 12pt; font-variant-numeric: tabular-nums; }
+
+/* Rack elevation: one row per U, devices span their height. */
+.elev { width: 260pt; border-collapse: collapse; font-size: 8.5pt; }
+.elev td { border: 0.5pt solid #666; padding: 2pt 5pt; height: 13pt; }
+.elev td.u {
+  width: 26pt;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-size: 7.5pt;
+  border-right: 1pt solid black;
+}
+.elev td.dev { font-weight: 600; }
+.elev td.free { color: #999 !important; }
+
+/* Wall elevation: panel grid. */
+.wall-grid { border-collapse: collapse; }
+.wall-grid td {
+  border: 0.5pt solid #666;
+  width: 26pt;
+  height: 20pt;
+  text-align: center;
+  font-size: 6.5pt;
+  color: #777 !important;
+}
+
+.print-ft {
+  margin-top: 16pt;
+  padding-top: 5pt;
+  border-top: 0.5pt solid #999;
+  font-size: 7.5pt;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
 }
 
 /* ─────────────────────────────────────────────────────────────

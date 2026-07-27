@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { I } from "@/components/Icon";
+import { PrintSheet } from "@/components/PrintSheet";
 import { FAULT_PANELS, PANEL_LIBRARY } from "@/lib/data";
 import { LED_PROCESSORS } from "@/lib/led-processor-data";
 import { useApp } from "@/store/useApp";
@@ -141,6 +142,91 @@ export function LedWallModule() {
 
   return (
     <>
+      <PrintSheet
+        title="Wall Elevation"
+        subtitle={`${layout.name} · ${panel.model} · ${layout.cols}×${layout.rows} panels`}
+      >
+        <h2>Elevation</h2>
+        <table className="wall-grid">
+          <tbody>
+            {Array.from({ length: layout.rows }).map((_, r) => (
+              <tr key={r}>
+                {Array.from({ length: layout.cols }).map((_, c) => (
+                  <td key={c}>
+                    {c + 1},{r + 1}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        <h2>Specification</h2>
+        <table className="print-tbl">
+          <tbody>
+            <tr>
+              <th>Panel</th>
+              <td>
+                {panel.model} · {panel.pitch}mm · {panel.pxW}×{panel.pxH}px
+              </td>
+              <th>Panels</th>
+              <td className="num">{calc.totalPanels}</td>
+            </tr>
+            <tr>
+              <th>Physical size</th>
+              <td>
+                {calc.wallWmm} × {calc.wallHmm} mm ({calc.wallWft.toFixed(1)} × {calc.wallHft.toFixed(1)} ft)
+              </td>
+              <th>Resolution</th>
+              <td className="num">
+                {calc.resW}×{calc.resH}
+              </td>
+            </tr>
+            <tr>
+              <th>Processor</th>
+              <td>
+                {calc.procName} · {calc.procsNeeded} unit{calc.procsNeeded === 1 ? "" : "s"}
+              </td>
+              <th>Capacity</th>
+              <td className="num">{(calc.procCapacity / 1e6).toFixed(1)} MP each</td>
+            </tr>
+            <tr>
+              <th>Weight</th>
+              <td className="num">{calc.totalWeight.toFixed(1)} kg</td>
+              <th>+ 15% headers</th>
+              <td className="num">{(calc.totalWeight * 1.15).toFixed(1)} kg</td>
+            </tr>
+            <tr>
+              <th>Power</th>
+              <td className="num">{(calc.totalWatts / 1000).toFixed(2)} kW</td>
+              <th>Circuits</th>
+              <td className="num">{calc.circuitsNeeded} × 20A</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div className="print-summary">
+          <div>
+            <dt>Resolution</dt>
+            <dd>
+              {calc.resW}×{calc.resH}
+            </dd>
+          </div>
+          <div>
+            <dt>Total pixels</dt>
+            <dd>{(calc.totalPixels / 1e6).toFixed(2)} MP</dd>
+          </div>
+          <div>
+            <dt>Weight</dt>
+            <dd>{calc.totalWeight.toFixed(0)} kg</dd>
+          </div>
+          <div>
+            <dt>Power</dt>
+            <dd>{(calc.totalWatts / 1000).toFixed(1)} kW</dd>
+          </div>
+        </div>
+      </PrintSheet>
+
       {/* LEFT — Walls + Panel library + Rigging */}
       <div className="left-pane">
         <div className="pane-hd">
@@ -269,6 +355,10 @@ export function LedWallModule() {
               MEASURE
             </button>
           </div>
+          <div className="divider-v" />
+          <button className="tb-btn" onClick={() => window.print()}>
+            <I.Docs size={13} /> Print
+          </button>
           <div className="divider-v" />
           <label className="checkbox">
             <input

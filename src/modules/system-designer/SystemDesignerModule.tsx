@@ -1,6 +1,8 @@
 import { Fragment, useRef, useState } from "react";
 import { DeviceLink } from "@/components/DeviceLink";
 import { I } from "@/components/Icon";
+import { PrintSheet } from "@/components/PrintSheet";
+import { downloadCsv, stamp } from "@/lib/export-csv";
 import { SYSTEM_DEVICES } from "@/lib/system-data";
 import { useApp } from "@/store/useApp";
 import { useCatalog } from "@/store/useCatalog";
@@ -87,6 +89,7 @@ function pathFor(e: SystemEdge, nodes: SystemNode[]): string {
 export function SystemDesignerModule() {
   const canvasStyle = useApp((s) => s.tweaks.canvasStyle);
   const projectName = useApp((s) => s.project.name);
+  const projectCode = useApp((s) => s.project.code);
   const nodes = useSystem((s) => s.nodes);
   const edges = useSystem((s) => s.edges);
   const lanes = useSystem((s) => s.lanes);
@@ -130,6 +133,14 @@ export function SystemDesignerModule() {
   const node = nodes.find((n) => n.id === selectedId);
   const visibleEdges = edges.filter((e) => lanes[e.lane]);
   const patchRows = buildPatchRows(nodes, edges);
+
+  const exportPatchCsv = () => {
+    downloadCsv(
+      `Blackburst-${projectCode}-patch-${stamp()}.csv`,
+      ["ID", "Lane", "Source", "Src port", "Destination", "Dest port", "Cable"],
+      patchRows.map((p) => [p.id, p.lane.toUpperCase(), p.src, p.srcPort, p.dest, p.destPort, p.cable]),
+    );
+  };
 
   const dragRef = useRef<{
     id: string;
@@ -283,6 +294,44 @@ export function SystemDesignerModule() {
 
   return (
     <>
+      <PrintSheet title="Patch Schedule" subtitle={`${nodes.length} devices · ${patchRows.length} connections`}>
+        <h2>Connections</h2>
+        <table className="print-tbl">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Lane</th>
+              <th>Source</th>
+              <th>Src port</th>
+              <th>Destination</th>
+              <th>Dest port</th>
+              <th>Cable</th>
+            </tr>
+          </thead>
+          <tbody>
+            {patchRows.map((p) => (
+              <tr key={p.id}>
+                <td>{p.id}</td>
+                <td>{p.lane.toUpperCase()}</td>
+                <td>{p.src}</td>
+                <td>{p.srcPort}</td>
+                <td>{p.dest}</td>
+                <td>{p.destPort}</td>
+                <td>{p.cable}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <div className="print-summary">
+          {PATCH_LANES.map((l) => (
+            <div key={l}>
+              <dt>{l.toUpperCase()}</dt>
+              <dd>{patchRows.filter((p) => p.lane === l).length}</dd>
+            </div>
+          ))}
+        </div>
+      </PrintSheet>
+
       {/* LEFT — palette */}
       <div className="left-pane">
         <div className="pane-hd">
@@ -381,6 +430,20 @@ export function SystemDesignerModule() {
             ))}
           </div>
           <span style={{ flex: 1 }} />
+          {view === "patch" && (
+            <>
+              <button className="tb-btn" disabled={patchRows.length === 0} onClick={exportPatchCsv}>
+                <I.Export size={13} /> CSV
+              </button>
+              <button
+                className="tb-btn"
+                disabled={patchRows.length === 0}
+                onClick={() => window.print()}
+              >
+                <I.Docs size={13} /> Print
+              </button>
+            </>
+          )}
         </div>
 
         {view === "graph" && (

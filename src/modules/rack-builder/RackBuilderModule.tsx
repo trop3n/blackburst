@@ -1,6 +1,8 @@
 import { Fragment, useEffect } from "react";
 import { DeviceLink } from "@/components/DeviceLink";
 import { I } from "@/components/Icon";
+import { PrintSheet } from "@/components/PrintSheet";
+import { downloadCsv, stamp } from "@/lib/export-csv";
 import { RACK_CATALOG, RACK_COLOR_MAP } from "@/lib/rack-data";
 import { useApp } from "@/store/useApp";
 import { useCatalog } from "@/store/useCatalog";
@@ -29,6 +31,7 @@ const CAT_COLOR: Record<string, RackColor> = {
 
 export function RackBuilderModule() {
   const canvasStyle = useApp((s) => s.tweaks.canvasStyle);
+  const projectCode = useApp((s) => s.project.code);
   const racks = useRack((s) => s.racks);
   const rackId = useRack((s) => s.rackId);
   const setRackId = useRack((s) => s.setRackId);
@@ -59,6 +62,56 @@ export function RackBuilderModule() {
   const customRack = useCatalog((s) => s.rack);
   const addRackDef = useCatalog((s) => s.addRackDef);
   const removeRackDef = useCatalog((s) => s.removeRackDef);
+
+  // Elevation rows run top-of-rack down, the way a rack is read on site. A
+  // device renders once at its topmost U and spans its height.
+  const elevationRows = () => {
+    const out: {
+      u: number;
+      def: (typeof RACK_CATALOG)[number] | null;
+      span: number;
+      covered: boolean;
+    }[] = [];
+    for (let u = rackSize; u >= 1; u--) {
+      const item = items.find((i) => {
+        const d = RACK_CATALOG.find((x) => x.id === i.id);
+        return d ? u >= i.pos && u < i.pos + d.u : false;
+      });
+      const def = item ? RACK_CATALOG.find((d) => d.id === item.id) ?? null : null;
+      if (item && def) {
+        // Every U gets a row so the ruler stays continuous; the device cell is
+        // emitted once at its topmost U and spans downward from there.
+        const isTop = u === item.pos + def.u - 1;
+        out.push({ u, def: isTop ? def : null, span: def.u, covered: !isTop });
+      } else {
+        out.push({ u, def: null, span: 1, covered: false });
+      }
+    }
+    return out;
+  };
+
+  const rackRowsSorted = [...items]
+    .map((i) => ({ item: i, def: RACK_CATALOG.find((d) => d.id === i.id) }))
+    .filter((r): r is { item: typeof r.item; def: NonNullable<typeof r.def> } => r.def != null)
+    .sort((a, b) => b.item.pos - a.item.pos);
+
+  const exportRackCsv = () => {
+    downloadCsv(
+      `Blackburst-${projectCode}-${rack.id}-${stamp()}.csv`,
+      ["Rack", "Location", "U", "Model", "Category", "U height", "Weight kg", "Power W", "Depth mm"],
+      rackRowsSorted.map(({ item, def }) => [
+        rack.name,
+        rack.location,
+        item.pos,
+        def.model,
+        def.cat,
+        def.u,
+        def.w,
+        def.watts,
+        def.depth,
+      ]),
+    );
+  };
 
   const renameRack = async () => {
     const name = (await promptDialog("Rack name?", rack.name))?.trim();
@@ -175,6 +228,79 @@ export function RackBuilderModule() {
 
   return (
     <>
+      <PrintSheet
+        title="Rack Elevation"
+        subtitle={`${rack.name}${rack.location ? ` · ${rack.location}` : ""} · ${rackSize}U`}
+      >
+        <h2>Elevation</h2>
+        <table className="elev">
+          <tbody>
+            {elevationRows().map((r) => (
+              <tr key={r.u}>
+                <td className="u">{r.u}</td>
+                {r.covered ? null : r.def ? (
+                  <td className="dev" rowSpan={r.span}>
+                    {r.def.model}
+                    {r.span > 1 ? ` · ${r.span}U` : ""}
+                  </td>
+                ) : (
+                  <td className="free">—</td>
+                )}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        <h2>Equipment</h2>
+        <table className="print-tbl">
+          <thead>
+            <tr>
+              <th>U</th>
+              <th>Model</th>
+              <th>Category</th>
+              <th>Height</th>
+              <th>Weight</th>
+              <th>Power</th>
+              <th>Depth</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rackRowsSorted.map(({ item, def }) => (
+              <tr key={item.iid}>
+                <td className="num">{item.pos}</td>
+                <td>{def.model}</td>
+                <td>{def.cat}</td>
+                <td className="num">{def.u}U</td>
+                <td className="num">{def.w} kg</td>
+                <td className="num">{def.watts} W</td>
+                <td className="num">{def.depth} mm</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        <div className="print-summary">
+          <div>
+            <dt>Used</dt>
+            <dd>
+              {totalU}/{rackSize}U
+            </dd>
+          </div>
+          <div>
+            <dt>Weight</dt>
+            <dd>{totalW.toFixed(1)} kg</dd>
+          </div>
+          <div>
+            <dt>Power</dt>
+            <dd>{(totalWatts / 1000).toFixed(2)} kW</dd>
+          </div>
+          <div>
+            <dt>Max depth</dt>
+            <dd>{maxDepth} mm</dd>
+          </div>
+        </div>
+      </PrintSheet>
+
       {/* LEFT — Racks + equipment catalog */}
       <div className="left-pane">
         <div className="pane-hd">
@@ -389,6 +515,13 @@ export function RackBuilderModule() {
           <span className="mono" style={{ fontSize: 10, color: "var(--color-fg-faint)" }}>
             DRAG FROM CATALOG · ↕ TO REORDER
           </span>
+          <div className="divider-v" />
+          <button className="tb-btn" disabled={items.length === 0} onClick={exportRackCsv}>
+            <I.Export size={13} /> CSV
+          </button>
+          <button className="tb-btn" disabled={items.length === 0} onClick={() => window.print()}>
+            <I.Docs size={13} /> Print
+          </button>
         </div>
 
         <div
