@@ -1,10 +1,11 @@
 import { useEffect } from "react";
 import { I } from "@/components/Icon";
 import { FAULT_PANELS, PANEL_LIBRARY } from "@/lib/data";
+import { LED_PROCESSORS } from "@/lib/led-processor-data";
 import { useApp } from "@/store/useApp";
 import { useCatalog } from "@/store/useCatalog";
 import { confirmDialog, promptDialog } from "@/store/useDialog";
-import { computeWallCalc, PROC_PIXEL_CAPACITY } from "./calculations";
+import { computeWallCalc } from "./calculations";
 import { useLedWall } from "./store";
 import { validateWall } from "./validation";
 
@@ -47,9 +48,33 @@ export function LedWallModule() {
     const pitch = Number(await promptDialog("Pixel pitch (mm)?", "2.6")) || 2.6;
     const w = Math.max(1, Math.round(Number(await promptDialog("Panel width (mm)?", "500")) || 500));
     const h = Math.max(1, Math.round(Number(await promptDialog("Panel height (mm)?", "500")) || 500));
+    const pxW = Math.max(
+      1,
+      Math.round(
+        Number(await promptDialog("Pixels across?", String(Math.round(w / pitch)))) ||
+          Math.round(w / pitch),
+      ),
+    );
+    const pxH = Math.max(
+      1,
+      Math.round(
+        Number(await promptDialog("Pixels down?", String(Math.round(h / pitch)))) ||
+          Math.round(h / pitch),
+      ),
+    );
     const weight = Math.max(0, Number(await promptDialog("Weight (kg)?", "0")) || 0);
     const watts = Math.max(0, Math.round(Number(await promptDialog("Max power (W)?", "0")) || 0));
-    addPanelDef({ id: `panel-custom-${Date.now().toString(36)}`, model, pitch, w, h, weight, watts });
+    addPanelDef({
+      id: `panel-custom-${Date.now().toString(36)}`,
+      model,
+      pitch,
+      w,
+      h,
+      pxW,
+      pxH,
+      weight,
+      watts,
+    });
   };
 
   const removePanel = async (id: string, model: string) => {
@@ -475,7 +500,7 @@ export function LedWallModule() {
               <div className="bar-fill" style={{ width: `${Math.min(100, calc.proc1Pct)}%` }} />
             </div>
             <div className="mono" style={{ fontSize: 10, color: "var(--color-fg-faint)" }}>
-              {Math.min(calc.totalPixels, PROC_PIXEL_CAPACITY).toLocaleString()} px
+              {Math.min(calc.totalPixels, calc.procCapacity).toLocaleString()} px
             </div>
           </div>
           <div className="meter-block">
@@ -488,7 +513,7 @@ export function LedWallModule() {
               <div className="bar-fill" style={{ width: `${Math.min(100, calc.proc2Pct)}%` }} />
             </div>
             <div className="mono" style={{ fontSize: 10, color: "var(--color-fg-faint)" }}>
-              {Math.max(0, calc.totalPixels - PROC_PIXEL_CAPACITY).toLocaleString()} px
+              {Math.max(0, calc.totalPixels - calc.procCapacity).toLocaleString()} px
             </div>
           </div>
           <div className="meter-block">
@@ -616,6 +641,19 @@ export function LedWallModule() {
               </select>
             </div>
             <div className="fld">
+              <span className="k">Processor</span>
+              <select
+                value={layout.processor}
+                onChange={(e) => updateWall(layout.id, { processor: e.target.value })}
+              >
+                {LED_PROCESSORS.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="fld">
               <span className="k">Dimensions</span>
               <div className="row-pair">
                 <span className="unit-input" data-unit="mm">
@@ -651,8 +689,12 @@ export function LedWallModule() {
               <span className="line" />
             </div>
             <div className="kv">
-              <span className="k">Processors</span>
+              <span className="k">Processor</span>
+              <span className="v">{calc.procName}</span>
+              <span className="k">Units needed</span>
               <span className="v">{calc.procsNeeded}</span>
+              <span className="k">Capacity</span>
+              <span className="v">{(calc.procCapacity / 1e6).toFixed(1)} MP each</span>
             </div>
           </div>
         )}

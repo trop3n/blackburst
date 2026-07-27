@@ -1,11 +1,10 @@
 import { Fragment, useRef, useState } from "react";
 import { I } from "@/components/Icon";
-import { PATCH_SHEET } from "@/lib/data";
 import { SYSTEM_DEVICES } from "@/lib/system-data";
 import { useApp } from "@/store/useApp";
 import { useCatalog } from "@/store/useCatalog";
 import { confirmDialog, promptDialog } from "@/store/useDialog";
-import type { Lane, PatchLane, SystemEdge, SystemNode } from "@/types";
+import type { Lane, PatchEntry, PatchLane, SystemEdge, SystemNode } from "@/types";
 import { useSystem } from "./store";
 
 const DRAG_THRESHOLD_PX = 3;
@@ -23,6 +22,46 @@ const PATCH_LANE_TO_LANE: Record<PatchLane, Lane> = {
   net: "network",
   pwr: "power",
 };
+
+const LANE_TO_PATCH_LANE: Record<Lane, PatchLane> = {
+  video: "video",
+  audio: "audio",
+  network: "net",
+  power: "pwr",
+};
+
+// Default cable per signal type. The graph models lanes, not connector types, so
+// this is the starting assumption a designer overrides on the real patch sheet.
+const LANE_CABLE: Record<Lane, string> = {
+  video: "SDI",
+  audio: "XLR",
+  network: "CAT6A",
+  power: "AC",
+};
+
+// The patch sheet is a projection of the graph: one row per edge, with ports
+// numbered per node per lane in the order the connections were made.
+function buildPatchRows(nodes: SystemNode[], edges: SystemEdge[]): PatchEntry[] {
+  const outSeen = new Map<string, number>();
+  const inSeen = new Map<string, number>();
+  return edges.map((e, i) => {
+    const outKey = `${e.from}|${e.lane}`;
+    const inKey = `${e.to}|${e.lane}`;
+    const outN = (outSeen.get(outKey) ?? 0) + 1;
+    const inN = (inSeen.get(inKey) ?? 0) + 1;
+    outSeen.set(outKey, outN);
+    inSeen.set(inKey, inN);
+    return {
+      id: `P${String(i + 1).padStart(3, "0")}`,
+      src: nodes.find((n) => n.id === e.from)?.name ?? e.from,
+      srcPort: `OUT ${outN}`,
+      dest: nodes.find((n) => n.id === e.to)?.name ?? e.to,
+      destPort: `IN ${inN}`,
+      lane: LANE_TO_PATCH_LANE[e.lane],
+      cable: LANE_CABLE[e.lane],
+    };
+  });
+}
 
 const NODE_W = 150;
 const NODE_H_BASE = 56;
@@ -89,6 +128,7 @@ export function SystemDesignerModule() {
 
   const node = nodes.find((n) => n.id === selectedId);
   const visibleEdges = edges.filter((e) => lanes[e.lane]);
+  const patchRows = buildPatchRows(nodes, edges);
 
   const dragRef = useRef<{
     id: string;
@@ -510,7 +550,31 @@ export function SystemDesignerModule() {
           </div>
         )}
 
-        {view === "patch" && (
+        {view === "patch" && patchRows.length === 0 && (
+          <div style={{ flex: 1, background: "var(--color-bg-2)" }}>
+            <div className="empty" style={{ padding: 40 }}>
+              <I.System size={28} />
+              <span className="mono" style={{ fontSize: 11, color: "var(--color-fg-faint)" }}>
+                NO CONNECTIONS YET
+              </span>
+              <span
+                className="mono"
+                style={{
+                  fontSize: 10,
+                  color: "var(--color-fg-faint)",
+                  textAlign: "center",
+                  maxWidth: 260,
+                  lineHeight: 1.4,
+                }}
+              >
+                Drag between node ports in the GRAPH view. Every connection you make appears here
+                as a patch row.
+              </span>
+            </div>
+          </div>
+        )}
+
+        {view === "patch" && patchRows.length > 0 && (
           <div style={{ flex: 1, overflow: "auto", background: "var(--color-bg-2)" }}>
             <table className="tbl">
               <thead>
@@ -526,7 +590,7 @@ export function SystemDesignerModule() {
                 </tr>
               </thead>
               <tbody>
-                {PATCH_SHEET.map((p) => {
+                {patchRows.map((p) => {
                   const lane = PATCH_LANE_TO_LANE[p.lane];
                   return (
                     <tr key={p.id}>
@@ -638,13 +702,11 @@ export function SystemDesignerModule() {
             <div className="readout-grid">
               <div className="readout accent">
                 <div className="lbl">Connections</div>
-                <div className="val">{PATCH_SHEET.length}</div>
+                <div className="val">{patchRows.length}</div>
               </div>
               <div className="readout">
-                <div className="lbl">Total cable</div>
-                <div className="val">
-                  486<span className="unit">ft</span>
-                </div>
+                <div className="lbl">Devices</div>
+                <div className="val">{nodes.length}</div>
               </div>
             </div>
             <div className="section-h">
@@ -652,7 +714,11 @@ export function SystemDesignerModule() {
               <span className="line" />
             </div>
             {PATCH_LANES.map((l) => {
-              const count = PATCH_SHEET.filter((p) => p.lane === l).length;
+              const count = patchRows.filter((p) => p.lane === l).length;
+              const maxCount = Math.max(
+                1,
+                ...PATCH_LANES.map((x) => patchRows.filter((p) => p.lane === x).length),
+              );
               const lane = PATCH_LANE_TO_LANE[l];
               return (
                 <div
@@ -664,7 +730,7 @@ export function SystemDesignerModule() {
                   <div className="bar">
                     <div
                       className="bar-fill"
-                      style={{ width: `${count * 8}%`, background: LANE_COLOR[lane] }}
+                      style={{ width: `${(count / maxCount) * 100}%`, background: LANE_COLOR[lane] }}
                     />
                   </div>
                   <span className="mono num" style={{ textAlign: "right" }}>

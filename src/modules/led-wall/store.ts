@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { WALL_LAYOUTS } from "@/lib/data";
+import { DEFAULT_PROCESSOR_ID } from "@/lib/led-processor-data";
 import type { WallLayout } from "@/types";
 
 export type LedTool = "select" | "draw" | "erase" | "measure";
@@ -93,6 +94,7 @@ export const useLedWall = create<LedWallState>()((set) => ({
             id,
             name: `New Wall ${s.walls.length + 1}`,
             panel: "ROE-RB2.6",
+            processor: DEFAULT_PROCESSOR_ID,
             cols: 4,
             rows: 3,
             curve: 0,

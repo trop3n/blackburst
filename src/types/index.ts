@@ -23,14 +23,26 @@ export interface Panel {
   pitch: number;
   w: number;
   h: number;
+  // Real pixel count of one cabinet. Wall resolution multiplies this by the
+  // panel count — dividing the whole wall by pitch compounds a rounding error.
+  pxW: number;
+  pxH: number;
   weight: number;
   watts: number;
+}
+
+export interface LedProcessor {
+  id: string;
+  name: string;
+  pixelCapacity: number;
+  ports: string;
 }
 
 export interface WallLayout {
   id: string;
   name: string;
   panel: string;
+  processor: string;
   cols: number;
   rows: number;
   curve: number;
