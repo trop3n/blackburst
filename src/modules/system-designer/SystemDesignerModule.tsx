@@ -340,12 +340,6 @@ export function SystemDesignerModule() {
             ))}
           </div>
           <span style={{ flex: 1 }} />
-          <button className="tb-btn">
-            <I.Bolt size={13} /> Auto-Route
-          </button>
-          <button className="tb-btn">
-            <I.Export size={13} /> PDF / CAD
-          </button>
         </div>
 
         {view === "graph" && (
@@ -619,22 +613,6 @@ export function SystemDesignerModule() {
                   </div>
                 );
               })}
-            <div className="section-h">
-              <span>HEALTH</span>
-              <span className="line" />
-            </div>
-            <div className="kv">
-              <span className="k">Status</span>
-              <span className="v" style={{ color: "var(--accent)" }}>
-                ● ONLINE
-              </span>
-              <span className="k">Last sync</span>
-              <span className="v">14:21:08</span>
-              <span className="k">Firmware</span>
-              <span className="v">3.4.12</span>
-              <span className="k">Errors (24h)</span>
-              <span className="v">0</span>
-            </div>
             <div className="section-h">
               <span>ACTIONS</span>
               <span className="line" />

@@ -8,10 +8,10 @@ import { computeWallCalc, PROC_PIXEL_CAPACITY } from "./calculations";
 import { useLedWall } from "./store";
 import { validateWall } from "./validation";
 
-const DISTRO_CAPACITY_W = 144_000; // 144kVA distro capacity for the power meter
 
 export function LedWallModule() {
   const canvasStyle = useApp((s) => s.tweaks.canvasStyle);
+  const latestRev = useApp((s) => s.revisions[0]);
   const walls = useLedWall((s) => s.walls);
   const layoutId = useLedWall((s) => s.layoutId);
   const selected = useLedWall((s) => s.selected);
@@ -223,14 +223,6 @@ export function LedWallModule() {
           <div className="kv">
             <span className="k">Total weight</span>
             <span className="v">{calc.totalWeight.toFixed(1)} kg</span>
-            <span className="k">Per truss point</span>
-            <span className="v">{(calc.totalWeight / 6).toFixed(1)} kg</span>
-            <span className="k">Truss SWL</span>
-            <span className="v">600 kg/pt</span>
-            <span className="k">Safety margin</span>
-            <span className="v" style={{ color: "var(--accent)" }}>
-              {(600 / (calc.totalWeight / 6)).toFixed(1)}×
-            </span>
           </div>
         </div>
       </div>
@@ -252,16 +244,6 @@ export function LedWallModule() {
               MEASURE
             </button>
           </div>
-          <div className="divider-v" />
-          <button className="tb-btn">
-            <I.Grid size={13} /> Snap 1px
-          </button>
-          <button className="tb-btn">
-            Curve{" "}
-            <span className="mono" style={{ marginLeft: 4, color: "var(--accent)" }}>
-              {layout.curve}°
-            </span>
-          </button>
           <div className="divider-v" />
           <label className="checkbox">
             <input
@@ -316,7 +298,7 @@ export function LedWallModule() {
           <div className="canvas-overlay tr">
             <div className="row" style={{ justifyContent: "flex-end" }}>
               <span className="k">REV</span>
-              <span className="v">0042</span>
+              <span className="v">{String(latestRev?.n ?? 0).padStart(4, "0")}</span>
             </div>
             <div className="row" style={{ justifyContent: "flex-end" }}>
               <span className="k">SCALE</span>
@@ -449,30 +431,6 @@ export function LedWallModule() {
                     pointerEvents: "none",
                   }}
                 />
-                <div
-                  style={{
-                    position: "absolute",
-                    top: -10,
-                    left: frameW / 4 - 12,
-                    fontFamily: "var(--font-mono)",
-                    fontSize: 9,
-                    color: "var(--accent)",
-                  }}
-                >
-                  SX40 #1
-                </div>
-                <div
-                  style={{
-                    position: "absolute",
-                    top: -10,
-                    left: (3 * frameW) / 4 - 12,
-                    fontFamily: "var(--font-mono)",
-                    fontSize: 9,
-                    color: "var(--accent)",
-                  }}
-                >
-                  SX40 #2
-                </div>
               </div>
             </div>
           </div>
@@ -508,9 +466,7 @@ export function LedWallModule() {
         {/* Bottom meter row */}
         <div className="canvas-meter">
           <div className="meter-block">
-            <div className="h">
-              PROC #1 · SX40 <span className="chip accent">10GbE A</span>
-            </div>
+            <div className="h">PROC #1</div>
             <div className="v accent">
               {Math.min(100, calc.proc1Pct)}
               <span style={{ fontSize: 10, color: "var(--color-fg-faint)", marginLeft: 4 }}>%</span>
@@ -523,9 +479,7 @@ export function LedWallModule() {
             </div>
           </div>
           <div className="meter-block">
-            <div className="h">
-              PROC #2 · SX40 <span className="chip accent">10GbE B</span>
-            </div>
+            <div className="h">PROC #2</div>
             <div className="v accent">
               {Math.min(100, calc.proc2Pct)}
               <span style={{ fontSize: 10, color: "var(--color-fg-faint)", marginLeft: 4 }}>%</span>
@@ -538,29 +492,13 @@ export function LedWallModule() {
             </div>
           </div>
           <div className="meter-block">
-            <div className="h">POWER · 200A 3ϕ DISTRO</div>
+            <div className="h">POWER</div>
             <div className="v warn">
               {(calc.totalWatts / 1000).toFixed(1)}
               <span style={{ fontSize: 10, color: "var(--color-fg-faint)", marginLeft: 4 }}>kW</span>
             </div>
-            <div className="bar-stack">
-              <div
-                className="bar-seg"
-                style={{
-                  width: `${(calc.totalWatts / DISTRO_CAPACITY_W) * 100}%`,
-                  background: "var(--accent)",
-                }}
-              />
-              <div
-                className="bar-seg"
-                style={{
-                  width: `${100 - (calc.totalWatts / DISTRO_CAPACITY_W) * 100}%`,
-                  background: "var(--color-bg-3)",
-                }}
-              />
-            </div>
             <div className="mono" style={{ fontSize: 10, color: "var(--color-fg-faint)" }}>
-              {calc.circuitsNeeded} × 20A circuits · 144kVA cap
+              {calc.circuitsNeeded} × 20A circuits
             </div>
           </div>
           <div className="meter-block">
@@ -571,11 +509,8 @@ export function LedWallModule() {
                 Gbps
               </span>
             </div>
-            <div className="bar">
-              <div className="bar-fill" style={{ width: "66%" }} />
-            </div>
             <div className="mono" style={{ fontSize: 10, color: "var(--color-fg-faint)" }}>
-              10GbE × 2 · headroom 38%
+              60p · 10-bit · 4:4:4
             </div>
           </div>
         </div>
@@ -717,13 +652,7 @@ export function LedWallModule() {
             </div>
             <div className="kv">
               <span className="k">Processors</span>
-              <span className="v">{calc.procsNeeded} × SX40</span>
-              <span className="k">Cabling</span>
-              <span className="v">CAT6A · {calc.procsNeeded * 4} runs</span>
-              <span className="k">Refresh</span>
-              <span className="v">3840 Hz</span>
-              <span className="k">Bit depth</span>
-              <span className="v">12-bit</span>
+              <span className="v">{calc.procsNeeded}</span>
             </div>
           </div>
         )}
@@ -741,24 +670,6 @@ export function LedWallModule() {
               <span className="v">
                 {selected.c * panel.w} × {selected.r * panel.h}mm
               </span>
-              <span className="k">Serial</span>
-              <span className="v">RB-{selected.r * layout.cols + selected.c + 100001}</span>
-              <span className="k">Cabinet</span>
-              <span className="v">
-                A{Math.floor((selected.r * layout.cols + selected.c) / 12) + 1}
-              </span>
-              <span className="k">Proc port</span>
-              <span className="v">SX40 #{selected.c < layout.cols / 2 ? 1 : 2} · ETH 1</span>
-              <span className="k">Status</span>
-              <span className="v" style={{ color: "var(--accent)" }}>
-                ● ONLINE
-              </span>
-              <span className="k">Brightness</span>
-              <span className="v">88%</span>
-              <span className="k">Temp</span>
-              <span className="v">42°C</span>
-              <span className="k">Hours</span>
-              <span className="v">2,184</span>
             </div>
           </div>
         )}
@@ -841,10 +752,6 @@ export function LedWallModule() {
               <span className="v" style={{ color: "var(--accent)" }}>
                 {(calc.totalWeight * 1.15).toFixed(1)} kg
               </span>
-              <span className="k">Pickup pts</span>
-              <span className="v">6</span>
-              <span className="k">Per pt</span>
-              <span className="v">{((calc.totalWeight * 1.15) / 6).toFixed(1)} kg</span>
             </div>
           </div>
         )}

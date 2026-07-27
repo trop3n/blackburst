@@ -10,6 +10,9 @@ import { fits, useRack } from "./store";
 const U_HEIGHT = 14;
 const RACK_W = 360;
 const RACK_SIZES: RackSize[] = [24, 42, 48];
+// Static load rating assumed for the shelf/rack until racks carry their own spec.
+const RACK_SWL_KG = 800;
+const RACK_SWL_WARN_KG = RACK_SWL_KG * 0.8;
 
 // Colour a user-added device by its category, matching the built-in palette.
 const CAT_COLOR: Record<string, RackColor> = {
@@ -320,15 +323,10 @@ export function RackBuilderModule() {
           <span className="mono" style={{ fontSize: 10, color: "var(--color-fg-faint)" }}>
             RACK · R-001
           </span>
-          <span className="chip">SHOW: HELIOS</span>
           <span style={{ flex: 1 }} />
           <span className="mono" style={{ fontSize: 10, color: "var(--color-fg-faint)" }}>
             DRAG FROM CATALOG · ↕ TO REORDER
           </span>
-          <div className="divider-v" />
-          <button className="tb-btn" onClick={() => window.print()}>
-            <I.Export size={13} /> Spec PDF
-          </button>
         </div>
 
         <div
@@ -339,7 +337,7 @@ export function RackBuilderModule() {
           <div className="canvas-overlay tl">
             <div className="row">
               <span className="k">RACK</span>
-              <span className="v">R-001 · Stage Left</span>
+              <span className="v">R-001</span>
             </div>
             <div className="row">
               <span className="k">SIZE</span>
@@ -347,7 +345,7 @@ export function RackBuilderModule() {
             </div>
             <div className="row">
               <span className="k">SWL</span>
-              <span className="v">800 kg static</span>
+              <span className="v">{RACK_SWL_KG} kg static</span>
             </div>
           </div>
           <div className="canvas-overlay tr">
@@ -797,7 +795,7 @@ export function RackBuilderModule() {
             <div className="h">WEIGHT</div>
             <div
               className="v"
-              style={{ color: totalW > 200 ? "var(--color-warn)" : "var(--color-fg)" }}
+              style={{ color: totalW > RACK_SWL_WARN_KG ? "var(--color-warn)" : "var(--color-fg)" }}
             >
               {totalW.toFixed(1)}
               <span style={{ fontSize: 10, color: "var(--color-fg-faint)", marginLeft: 4 }}>
@@ -808,13 +806,13 @@ export function RackBuilderModule() {
               <div
                 className="bar-fill"
                 style={{
-                  width: `${(totalW / 250) * 100}%`,
-                  background: totalW > 200 ? "var(--color-warn)" : "var(--accent)",
+                  width: `${Math.min(100, (totalW / RACK_SWL_KG) * 100)}%`,
+                  background: totalW > RACK_SWL_WARN_KG ? "var(--color-warn)" : "var(--accent)",
                 }}
               />
             </div>
             <div className="mono" style={{ fontSize: 10, color: "var(--color-fg-faint)" }}>
-              SWL 250kg · {Math.round((totalW / 250) * 100)}% loaded
+              SWL {RACK_SWL_KG}kg · {Math.round((totalW / RACK_SWL_KG) * 100)}% loaded
             </div>
           </div>
           <div className="meter-block">
@@ -915,14 +913,6 @@ export function RackBuilderModule() {
               <span className="v">{selectedDef.w} kg</span>
               <span className="k">Power</span>
               <span className="v">{selectedDef.watts} W</span>
-              <span className="k">Mount</span>
-              <span className="v">EIA-310 · 4-post</span>
-              <span className="k">Cable mgmt</span>
-              <span className="v">Rear · L-bar</span>
-              <span className="k">Asset ref</span>
-              <span className="v" style={{ color: "var(--accent)" }}>
-                BMD-{selected.iid.toString().padStart(3, "0")}
-              </span>
             </div>
 
             <div className="section-h">
