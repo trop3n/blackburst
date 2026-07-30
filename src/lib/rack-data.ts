@@ -85,10 +85,6 @@ export function setCustomRackDefs(defs: RackItemDef[]) {
   RACK_CATALOG = [...RACK_BUILTIN, ...customRackDefs];
 }
 
-export function isCustomRackDef(id: string): boolean {
-  return customRackDefs.some((d) => d.id === id);
-}
-
 export const DEFAULT_RACK: RackItem[] = [];
 
 export const DEFAULT_RACKS: Rack[] = [

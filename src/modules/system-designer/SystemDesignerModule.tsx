@@ -42,9 +42,15 @@ const LANE_CABLE: Record<Lane, string> = {
   power: "AC",
 };
 
-// The patch sheet is a projection of the graph: one row per edge, with ports
-// numbered per node per lane in the order the connections were made.
-function buildPatchRows(nodes: SystemNode[], edges: SystemEdge[]): PatchEntry[] {
+// A patch row is an edge plus the fields it doesn't carry itself. Ports are
+// numbered per node per lane in the order connections were made; any of the
+// three editable fields falls back to that derivation when not overridden.
+interface PatchRow extends PatchEntry {
+  edge: SystemEdge;
+  custom: { srcPort: boolean; destPort: boolean; cable: boolean };
+}
+
+function buildPatchRows(nodes: SystemNode[], edges: SystemEdge[]): PatchRow[] {
   const outSeen = new Map<string, number>();
   const inSeen = new Map<string, number>();
   return edges.map((e, i) => {
@@ -57,13 +63,57 @@ function buildPatchRows(nodes: SystemNode[], edges: SystemEdge[]): PatchEntry[] 
     return {
       id: `P${String(i + 1).padStart(3, "0")}`,
       src: nodes.find((n) => n.id === e.from)?.name ?? e.from,
-      srcPort: `OUT ${outN}`,
+      srcPort: e.srcPort ?? `OUT ${outN}`,
       dest: nodes.find((n) => n.id === e.to)?.name ?? e.to,
-      destPort: `IN ${inN}`,
+      destPort: e.destPort ?? `IN ${inN}`,
       lane: LANE_TO_PATCH_LANE[e.lane],
-      cable: LANE_CABLE[e.lane],
+      cable: e.cable ?? LANE_CABLE[e.lane],
+      edge: e,
+      custom: {
+        srcPort: e.srcPort != null,
+        destPort: e.destPort != null,
+        cable: e.cable != null,
+      },
     };
   });
+}
+
+type PatchField = "srcPort" | "destPort" | "cable";
+
+// An editable patch cell. Derived values render muted; once overridden the value
+// reads as normal text, so a designer can see at a glance which parts of the
+// schedule are the app's assumption and which they've confirmed. Clearing the
+// field drops the override rather than storing an empty string.
+function PatchCell({
+  row,
+  field,
+  onCommit,
+}: {
+  row: PatchRow;
+  field: PatchField;
+  onCommit: (row: PatchRow, field: PatchField, value: string) => void;
+}) {
+  const [draft, setDraft] = useState<string | null>(null);
+  const value = draft ?? row[field];
+  return (
+    <input
+      className="tbl-input"
+      data-custom={row.custom[field] ? "1" : "0"}
+      value={value}
+      onChange={(e) => setDraft(e.target.value)}
+      onBlur={() => {
+        if (draft != null) onCommit(row, field, draft);
+        setDraft(null);
+      }}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") e.currentTarget.blur();
+        if (e.key === "Escape") {
+          setDraft(null);
+          e.currentTarget.blur();
+        }
+      }}
+    />
+  );
 }
 
 const NODE_W = 150;
@@ -103,6 +153,7 @@ export function SystemDesignerModule() {
   const removeNode = useSystem((s) => s.removeNode);
   const addEdge = useSystem((s) => s.addEdge);
   const removeEdge = useSystem((s) => s.removeEdge);
+  const updateEdge = useSystem((s) => s.updateEdge);
   const devices = useCatalog((s) => s.system);
   const addSystemDef = useCatalog((s) => s.addSystemDef);
   const removeSystemDef = useCatalog((s) => s.removeSystemDef);
@@ -133,6 +184,20 @@ export function SystemDesignerModule() {
   const node = nodes.find((n) => n.id === selectedId);
   const visibleEdges = edges.filter((e) => lanes[e.lane]);
   const patchRows = buildPatchRows(nodes, edges);
+
+  const isRowCustom = (p: PatchRow) => p.custom.srcPort || p.custom.destPort || p.custom.cable;
+
+  const commitPatchField = (p: PatchRow, field: PatchField, raw: string) => {
+    const next = raw.trim();
+    const { from, to, lane } = p.edge;
+    // An empty field means "go back to the derived value", not "blank it out".
+    updateEdge(from, to, lane, { [field]: next === "" ? undefined : next });
+  };
+
+  const resetPatchRow = (p: PatchRow) => {
+    const { from, to, lane } = p.edge;
+    updateEdge(from, to, lane, { srcPort: undefined, destPort: undefined, cable: undefined });
+  };
 
   const exportPatchCsv = () => {
     downloadCsv(
@@ -671,11 +736,27 @@ export function SystemDesignerModule() {
                         </span>
                       </td>
                       <td>{p.src}</td>
-                      <td className="muted">{p.srcPort}</td>
+                      <td>
+                        <PatchCell row={p} field="srcPort" onCommit={commitPatchField} />
+                      </td>
                       <td>{p.dest}</td>
-                      <td className="muted">{p.destPort}</td>
-                      <td className="muted">{p.cable}</td>
-                      <td className="muted">●</td>
+                      <td>
+                        <PatchCell row={p} field="destPort" onCommit={commitPatchField} />
+                      </td>
+                      <td>
+                        <PatchCell row={p} field="cable" onCommit={commitPatchField} />
+                      </td>
+                      <td>
+                        {isRowCustom(p) && (
+                          <button
+                            className="icon-btn"
+                            title="Reset this row to derived values"
+                            onClick={() => resetPatchRow(p)}
+                          >
+                            <I.Undo size={11} />
+                          </button>
+                        )}
+                      </td>
                     </tr>
                   );
                 })}

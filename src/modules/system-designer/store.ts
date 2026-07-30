@@ -18,6 +18,7 @@ interface SystemState {
   removeNode: (id: string) => void;
   addEdge: (edge: SystemEdge) => void;
   removeEdge: (from: string, to: string, lane: Lane) => void;
+  updateEdge: (from: string, to: string, lane: Lane, patch: Partial<SystemEdge>) => void;
 }
 
 function nextNodeId(existing: SystemNode[]): string {
@@ -71,6 +72,13 @@ export const useSystem = create<SystemState>()((set) => ({
         set((s) => ({
           edges: s.edges.filter(
             (e) => !(e.from === from && e.to === to && e.lane === lane),
+          ),
+        })),
+      // addEdge dedupes on from/to/lane, so that triple identifies one edge.
+      updateEdge: (from, to, lane, patch) =>
+        set((s) => ({
+          edges: s.edges.map((e) =>
+            e.from === from && e.to === to && e.lane === lane ? { ...e, ...patch } : e,
           ),
         })),
     }),

@@ -74,6 +74,12 @@ export interface SystemEdge {
   to: string;
   lane: Lane;
   label: string;
+  // Patch-sheet overrides. Unset means "use the derived value" — the graph knows
+  // signal lanes, not connector types or real port numbers, so a designer can
+  // correct any of these per connection without the default disappearing.
+  srcPort?: string;
+  destPort?: string;
+  cable?: string;
 }
 
 export interface SystemDeviceDef {

@@ -46,10 +46,6 @@ export function setCustomPanelDefs(defs: Panel[]) {
   PANEL_LIBRARY = [...PANEL_BUILTIN, ...customPanelDefs];
 }
 
-export function isCustomPanelDef(id: string): boolean {
-  return customPanelDefs.some((d) => d.id === id);
-}
-
 // One empty wall so the LED builder always has an active layout to draw on
 // (matches scaffoldBucket). All other demo content starts empty.
 export const WALL_LAYOUTS: WallLayout[] = [

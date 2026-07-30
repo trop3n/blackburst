@@ -69,7 +69,3 @@ export function setCustomInvModels(defs: InventoryModelDef[]) {
   customInvModels = defs;
   INV_MODELS = [...INV_MODEL_BUILTIN, ...customInvModels];
 }
-
-export function isCustomInvModel(id: string): boolean {
-  return customInvModels.some((d) => d.id === id);
-}

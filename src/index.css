@@ -1816,6 +1816,30 @@ button { font-family: inherit; color: inherit; }
   }
 }
 
+/* Editable table cell — reads as text until focused. Derived values stay muted
+   so an overridden field is distinguishable at a glance. */
+.tbl-input {
+  width: 100%;
+  /* Wide enough for real connector names ("CAT6A SFTP", "12G-SDI BNC") without
+     the column collapsing to the derived defaults' short width. */
+  min-width: 92px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  padding: 1px 4px;
+  font: inherit;
+  font-family: var(--font-mono);
+  color: var(--color-fg-faint);
+}
+.tbl-input[data-custom="1"] { color: var(--color-fg); }
+.tbl-input:hover { border-color: var(--color-line); }
+.tbl-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: var(--color-bg-3);
+  color: var(--color-fg);
+}
+
 /* ─────────────────────────────────────────────────────────────
    Print sheets — hidden on screen, revealed by the print rules
    ───────────────────────────────────────────────────────────── */
