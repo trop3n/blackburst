@@ -106,10 +106,12 @@ export interface RackItemDef {
   color: RackColor;
 }
 
-// One piece of real-world equipment, shared across modules. A rack slot, a
-// graph node and an inventory asset can all point at the same device, which is
-// how "the ATEM in rack 2" stays one thing rather than three unrelated records.
-export interface ProjectDevice {
+// One piece of real-world equipment, shared across modules and across projects.
+// A rack slot, a graph node and an inventory asset can all point at the same
+// device, which is how "the ATEM in rack 2" stays one thing rather than three
+// unrelated records. The registry is global (`useDevices`) — a physical box
+// outlives the project that specified it, so it is not part of a project bucket.
+export interface Device {
   id: string;
   // Model name rather than a catalog id: rack items carry a def id but graph
   // nodes and inventory assets don't, and the model reads better anyway.

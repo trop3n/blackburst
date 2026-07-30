@@ -18,7 +18,6 @@ import {
 } from "@/lib/project-remote";
 import { DEFAULT_RACKS } from "@/lib/rack-data";
 import { isSupabaseConfigured } from "@/lib/supabase";
-import { useDevices } from "@/store/useDevices";
 import { useSaveStatus } from "@/store/useSaveStatus";
 
 export const BUCKETS_KEY = "blackburst:projects:v1";
@@ -104,13 +103,6 @@ const SPECS = {
     },
     store: useDocs as unknown as StoreSpec["store"],
   },
-  devices: {
-    fields: ["devices"],
-    defaults: {
-      devices: [],
-    },
-    store: useDevices as unknown as StoreSpec["store"],
-  },
   cmdkRecents: {
     fields: ["recents"],
     defaults: {
@@ -192,9 +184,6 @@ export function scaffoldBucket(): ProjectStateBuckets {
       cat: "All gear",
       selected: "",
       view: "list",
-    },
-    devices: {
-      devices: [],
     },
     docs: {
       tree: [

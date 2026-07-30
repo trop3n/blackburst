@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { hoistLegacyDevicesRemote } from "@/lib/migrate-devices";
 import { migrateLocalProjects } from "@/lib/migrate-local";
 import {
   claimInvites,
@@ -22,6 +23,7 @@ import {
 import { isSupabaseConfigured } from "@/lib/supabase";
 import { useAuth } from "@/store/useAuth";
 import { useCatalog } from "@/store/useCatalog";
+import { useDevices } from "@/store/useDevices";
 import type { AccentName, CanvasStyle, Density, ModuleId, Project, Shell } from "@/types";
 
 export interface Tweaks {
@@ -295,6 +297,13 @@ export const useApp = create<AppState>()(
           } catch {
             // best-effort: the shared catalog falls back to built-ins if the
             // catalog_items table isn't reachable (e.g. migration not yet run)
+          }
+          try {
+            await hoistLegacyDevicesRemote(projects.map((p) => p.id));
+            await useDevices.getState().hydrateFromServer();
+          } catch {
+            // best-effort: the device registry stays empty if the devices table
+            // isn't reachable (e.g. migration not yet run)
           }
           set({
             projects,

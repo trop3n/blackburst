@@ -34,9 +34,9 @@ Path alias: `@/` → `src/` (set in both `vite.config.ts` and `tsconfig.app.json
 
 ## State architecture (read before touching any store)
 
-Per-project state spans three layers; how they interact is the one thing you can't infer from a single file. (The hardware catalog is a *fourth*, deliberately project-independent layer — see the next section.)
+Per-project state spans three layers; how they interact is the one thing you can't infer from a single file. Two further layers are deliberately project-*independent* and must never be added to `SPECS` — the hardware catalog and the device registry, each with its own section below.
 
-1. **Per-module Zustand stores** — `useLedWall`, `useSystem`, `useRack`, `useInventory`, `useDocs` (each `src/modules/<name>/store.ts`), plus two project-scoped global stores, `useDevices` and `useCmdkRecents`. Those seven are exactly the keys in `SPECS` (below). They hold all project data and **have no persistence of their own** — the `persist` middleware was removed; do not re-add it. Everything else is ephemeral UI state and is deliberately *not* in `SPECS`: `useCmdk` / `useSettings` (panel open flags), `useDialog`, `useSaveStatus`, `useAuth`, `useShare`.
+1. **Per-module Zustand stores** — `useLedWall`, `useSystem`, `useRack`, `useInventory`, `useDocs` (each `src/modules/<name>/store.ts`), plus `useCmdkRecents`. Those six are exactly the keys in `SPECS` (below). They hold all project data and **have no persistence of their own** — the `persist` middleware was removed; do not re-add it. Everything else is either a global layer (`useCatalog`, `useDevices` — see below) or ephemeral UI state that is deliberately *not* in `SPECS`: `useCmdk` / `useSettings` (panel open flags), `useDialog`, `useSaveStatus`, `useAuth`, `useShare`.
 
 2. **`useApp`** (`src/store/useApp.ts`) — shell/global state: current `module`, `tweaks` (density/accent/shell/canvasStyle), the `projects` list, current project, and per-project `revisions`. It persists itself under key `blackburst:app:v1` (the only module-agnostic store that uses `persist`; `useCatalog` persists too, but by hand — see below). Invariant: **the workspace is never left empty** — `deleteCurrentProject` / `leaveCurrentProject` seed a fresh scaffolded project when the last one goes away.
 
@@ -70,12 +70,14 @@ Each module draws its palette/pickers from a built-in seed catalog that users ca
 - Adding a fifth library means touching all of it: a `CustomCatalog` key, a built-in + live binding + setter in the data file, store slice + add/remove/hydrate in `useCatalog`, and the `hydrateFromServer` branch.
 - Keep built-in ids stable — `WALL_LAYOUTS`, `DEFAULT_RACKS`, and `scaffoldBucket()` reference them.
 
-## Cross-module device identity
+## Device registry (global, not per-project)
 
-Distinct from the catalog: a catalog entry is a *model* ("ATEM 4 M/E"), a `ProjectDevice` is *one physical unit* ("the ATEM in rack 2, serial 12345"). The registry (`useDevices`, `SPECS.devices`) is per-project and flat — rack items, graph nodes, and inventory assets each carry an optional `deviceId` pointing into it, so the same box appears in three modules as one record instead of three unrelated ones.
+Distinct from the catalog: a catalog entry is a *model* ("ATEM 4 M/E"), a `Device` is *one physical unit* ("the ATEM in rack 2, serial 12345"). Rack items, graph nodes, and inventory assets each carry an optional `deviceId` pointing into the registry, so the same box appears in three modules as one record instead of three unrelated ones.
 
+- **`useDevices` is global and project-independent**, for the same reason `useCatalog` is: a physical box outlives the project that specified it, and its service history has to survive a project switch. It was a `SPECS` key until the registry was promoted out — **never put it back**, or every project switch wipes it. Local mode persists to `blackburst:devices:v1` (`lib/device-storage.ts`); accounts mode writes one row per device to `public.devices` (`lib/device-remote.ts`, `supabase/migrations/0003_devices.sql`), hydrated in `bootstrap()`.
+- **Legacy per-project devices are hoisted once** by `lib/migrate-devices.ts` (local: from the `useDevices` module initializer; accounts: from `bootstrap()`, one fetch per project, flag-guarded). It dedupes **by id only, never by serial** — an id is referenced by rack items, nodes and assets inside its own project, so collapsing two records for the same physical box would orphan whichever reference lost. Cross-project duplicates are left for the user to merge.
 - **The registry never reaches back into the modules.** Ownership is one-directional: modules reference devices by id; `useDevices` knows nothing about racks, nodes or assets. Keep it that way — it's why the store has no module imports.
-- `DeviceLink` (`src/components/DeviceLink.tsx`) is the single UI for link / create / unlink, dropped into each module's inspector. It discovers a device's other appearances by scanning the three stores for matching `deviceId`, and renders them as `RefChip`s; pass `omit` so the panel doesn't link back to itself.
+- `DeviceLink` (`src/components/DeviceLink.tsx`) is the single UI for link / create / unlink, dropped into each module's inspector. It discovers a device's other appearances by scanning the three stores for matching `deviceId`, and renders them as `RefChip`s; pass `omit` so the panel doesn't link back to itself. Note that scan only covers the **loaded** project — a device used in another project shows no "also appears in" rows, because that project's stores aren't in memory.
 - `RefChip` + `goto()` are the cross-module jump: `RefKind` is `"asset" | "wall" | "node" | "doc" | "rack-item"`, and a rack-item ref is `"<rackId>:<iid>"` because item ids are only unique within a rack.
 
 ## Conventions
