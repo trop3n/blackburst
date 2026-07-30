@@ -250,14 +250,11 @@ export const SYSTEM_BUILTIN: SystemDeviceDef[] = [
   { id: "nova-ku20", cat: "CONTROL PANELS", type: "CTRL", name: "Novastar KU20", in: ["network"], out: ["network"], details: { panel: "COEX console", conn: "Ethernet" } },
 ];
 
-let customSystemDefs: SystemDeviceDef[] = [];
-
 // Live merged palette (built-in + user additions). Reassigned by
 // setCustomSystemDefs; ES module live bindings propagate the new array to every
 // importer, so the palette and drop handler always see current devices.
 export let SYSTEM_DEVICES: SystemDeviceDef[] = SYSTEM_BUILTIN;
 
 export function setCustomSystemDefs(defs: SystemDeviceDef[]) {
-  customSystemDefs = defs;
-  SYSTEM_DEVICES = [...SYSTEM_BUILTIN, ...customSystemDefs];
+  SYSTEM_DEVICES = [...SYSTEM_BUILTIN, ...defs];
 }

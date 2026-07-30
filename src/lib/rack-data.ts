@@ -73,16 +73,13 @@ export const RACK_BUILTIN: RackItemDef[] = [
   { id: "vent", model: "Vented Panel · 2U", cat: "Misc", u: 2, w: 0.6, watts: 0, depth: 0, color: "muted" },
 ];
 
-let customRackDefs: RackItemDef[] = [];
-
 // Live merged catalog (built-in + user additions). Reassigned by
 // setCustomRackDefs; ES module live bindings propagate the new array to every
 // importer, so slot math and the catalog pane always see current equipment.
 export let RACK_CATALOG: RackItemDef[] = RACK_BUILTIN;
 
 export function setCustomRackDefs(defs: RackItemDef[]) {
-  customRackDefs = defs;
-  RACK_CATALOG = [...RACK_BUILTIN, ...customRackDefs];
+  RACK_CATALOG = [...RACK_BUILTIN, ...defs];
 }
 
 export const DEFAULT_RACK: RackItem[] = [];

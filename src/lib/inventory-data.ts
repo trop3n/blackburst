@@ -58,14 +58,11 @@ export const INV_MODEL_BUILTIN: InventoryModelDef[] = [
   { id: "im-fiber", model: "SMPTE Fiber · 300ft", cat: "Cabling" },
 ];
 
-let customInvModels: InventoryModelDef[] = [];
-
 // Live merged model catalog (built-in + user additions). Reassigned by
 // setCustomInvModels; ES module live bindings propagate the new array to the
 // inventory module.
 export let INV_MODELS: InventoryModelDef[] = INV_MODEL_BUILTIN;
 
 export function setCustomInvModels(defs: InventoryModelDef[]) {
-  customInvModels = defs;
-  INV_MODELS = [...INV_MODEL_BUILTIN, ...customInvModels];
+  INV_MODELS = [...INV_MODEL_BUILTIN, ...defs];
 }

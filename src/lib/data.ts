@@ -27,8 +27,6 @@ export const PANEL_BUILTIN: Panel[] = [
   { id: "CHR-C1.9", model: "Christie Core II 1.9", pitch: 1.9, w: 600, h: 337, pxW: 316, pxH: 177, weight: 6.4, watts: 175 },
 ];
 
-let customPanelDefs: Panel[] = [];
-
 // Live merged catalog (built-in + user additions). Reassigned by
 // setCustomPanelDefs; ES module live bindings propagate the new array to every
 // importer, so the wall builder and status bar always see current panels.
@@ -42,8 +40,7 @@ function withPixelCount(p: Panel): Panel {
 }
 
 export function setCustomPanelDefs(defs: Panel[]) {
-  customPanelDefs = defs.map(withPixelCount);
-  PANEL_LIBRARY = [...PANEL_BUILTIN, ...customPanelDefs];
+  PANEL_LIBRARY = [...PANEL_BUILTIN, ...defs.map(withPixelCount)];
 }
 
 // One empty wall so the LED builder always has an active layout to draw on
