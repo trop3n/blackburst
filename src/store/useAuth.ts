@@ -13,6 +13,7 @@ interface AuthState {
   callbackError: string | null;
   clearCallbackError: () => void;
   init: () => void;
+  signInWithPassword: (email: string, password: string) => Promise<string | null>;
   signInWithMagicLink: (email: string) => Promise<string | null>;
   verifyOtp: (email: string, token: string) => Promise<string | null>;
   signOut: () => Promise<void>;
@@ -74,6 +75,14 @@ export const useAuth = create<AuthState>((set) => ({
         sentTo: session ? null : s.sentTo,
       }));
     });
+  },
+  // Primary path for this deployment: a small known team, with accounts created
+  // in the Supabase dashboard. Sends no email, so it is unaffected by the email
+  // rate limit that makes magic links impractical without custom SMTP.
+  signInWithPassword: async (email, password) => {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) return error.message;
+    return null;
   },
   signInWithMagicLink: async (email) => {
     const { error } = await supabase.auth.signInWithOtp({
