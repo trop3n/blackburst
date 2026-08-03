@@ -1,4 +1,6 @@
 import { Fragment, type ReactNode } from "react";
+import { RefChip } from "@/components/RefChip";
+import { parseRefTarget } from "@/lib/doc-refs";
 
 interface MarkdownBodyProps {
   text: string;
@@ -99,6 +101,18 @@ function renderInline(s: string): ReactNode {
       const close = tok.indexOf("](");
       const text = tok.slice(1, close);
       const url = tok.slice(close + 2, -1);
+      // An in-app reference wins over the href check: [label](maint-entry:id)
+      // renders as a chip that navigates, not as a dead external link.
+      const ref = parseRefTarget(url);
+      if (ref) {
+        parts.push(
+          <RefChip key={k} kind={ref.kind} id={ref.id}>
+            {text}
+          </RefChip>,
+        );
+        last = idx + tok.length;
+        return;
+      }
       const href = safeHref(url);
       if (href) {
         const external = /^https?:/i.test(href);

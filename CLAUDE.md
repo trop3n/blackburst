@@ -81,7 +81,7 @@ Distinct from the catalog: a catalog entry is a *model* ("ATEM 4 M/E"), a `Devic
 - **The registry never reaches back into the modules.** Ownership is one-directional: modules reference devices by id; `useDevices` knows nothing about racks, nodes or assets. Keep it that way — it's why the store has no module imports.
 - `Device.venueId` is the optional home venue for installed gear; unset means fleet / touring stock. It's set from the Maintenance Log, not from the design modules.
 - `DeviceLink` (`src/components/DeviceLink.tsx`) is the single UI for link / create / unlink, dropped into each module's inspector. It discovers a device's other appearances by scanning the three stores for matching `deviceId`, and renders them as `RefChip`s; pass `omit` so the panel doesn't link back to itself. Note that scan only covers the **loaded** project — a device used in another project shows no "also appears in" rows, because that project's stores aren't in memory.
-- `RefChip` + `goto()` are the cross-module jump: `RefKind` is `"asset" | "wall" | "node" | "doc" | "rack-item"`, and a rack-item ref is `"<rackId>:<iid>"` because item ids are only unique within a rack.
+- `RefChip` + `goto()` are the cross-module jump: `RefKind` is `"asset" | "wall" | "node" | "doc" | "rack-item" | "maint-entry"`. A rack-item ref is `"<rackId>:<iid>"` because item ids are only unique within a rack; a `maint-entry` ref is just the entry id, since those are globally unique and the venue is looked up from the entry.
 
 ## Venues & maintenance log (global, not per-project)
 
@@ -96,7 +96,9 @@ The `maint` module's data is the third project-independent layer, for the same r
 
 **No fabricated readouts.** Three audit sweeps (`2a4876d`, `882a92e`, `9516fff`) stripped every invented number, dead button, and contradictory total out of the UI, and it must stay that way. Every figure on screen has to trace to project state or a sourced constant: wall resolution multiplies `Panel.pxW/pxH` by the panel count (dividing wall-mm by pitch compounds a rounding error), processor headroom uses the selected processor's `pixelCapacity` from `led-processor-data.ts`, patch rows derive from the graph. If a value can't be derived, don't render it — and don't ship a control that does nothing.
 
-**Cross-module navigation** — use `goto(target)` from `src/lib/nav.ts` to switch module *and* select a target id (`asset`/`wall`/`node`/`doc`/`rack-item`) in one call; this is how linked references work. Use `useApp.getState().setModule(...)` only for a plain module switch with no target.
+**Cross-module navigation** — use `goto(target)` from `src/lib/nav.ts` to switch module *and* select a target id (`asset`/`wall`/`node`/`doc`/`rack-item`/`maint-entry`) in one call; this is how linked references work. Use `useApp.getState().setModule(...)` only for a plain module switch with no target. A `goto` case must leave the target *visible*, not merely selected — the `maint-entry` case clears the log's kind/open/search filters for exactly this reason, and `RecentEntry.kind` in `useCmdkRecents` is typed as `RefKind | "module"` so a new kind doesn't need a parallel edit.
+
+**Doc bodies link into the app with a kind scheme** — `[Booth 2 PSU swap](maint-entry:mnt-abc123)` in a doc body renders as a clickable `RefChip` instead of a dead link. `lib/doc-refs.ts` owns the parsing (`parseRefTarget` for one URL, `extractRefs` for a whole body); `MarkdownBody` checks it *before* `safeHref`, so unknown schemes like `javascript:` still fall through to the existing rejection. The docs **LINKED REFERENCES** pane is derived by running `extractRefs` over the active body, so it cannot drift from what the document actually says.
 
 **Pure compute/validation modules are store-free** — `led-wall/validation.ts` and `inventory/validation.ts` are pure functions consumed by both the module surface and the global `StatusBar`; `led-wall/calculations.ts` (panel / power / resolution / processor math) imports only `@/types` plus the `led-processor-data` table. Don't import stores into any of them.
 
@@ -104,7 +106,7 @@ The `maint` module's data is the third project-independent layer, for the same r
 
 **Exports — CSV and print.** Tabular exports go through `lib/export-csv.ts`: `downloadCsv` does RFC 4180 quoting and prepends a UTF-8 BOM (model names carry commas and `×`, which Excel otherwise mangles); `stamp()` supplies the `YYYY-MM-DD` filename suffix. Printable documents wrap content in `<PrintSheet title subtitle>` — hidden on screen, revealed by the `@media print` block in `index.css` on a white page with a project / client / revision header — triggered by a plain `window.print()` button. Only the active module is mounted, so exactly one `PrintSheet` exists at a time.
 
-**Pure-data vs. JSX-data (docs)** — `docs-tree.ts`, `docs-comments.ts`, `docs-versions.ts` are pure data with no React/store imports (so stores can import them without cycles); `docs-data.tsx` re-exports them and adds the JSX stock-body components. Import the pure-data files from stores, never `docs-data.tsx`.
+**Pure-data vs. JSX-data (docs)** — `docs-tree.ts`, `docs-comments.ts`, `docs-versions.ts` are pure data with no React/store imports (so stores can import them without cycles); `docs-data.tsx` holds the JSX stock-body map. Import the pure-data files from stores, never `docs-data.tsx`. `doc-refs.ts` is pure too — its `RefKind` import is `import type`, which is erased, so it never drags `nav.ts` (and through it every module store) into a consumer at runtime.
 
 **Store reads inside listeners/handlers** — use `useStore.getState()` (not a hook subscription) to avoid stale closures, especially in window-level `keydown`/`mousemove` handlers.
 

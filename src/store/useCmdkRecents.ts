@@ -1,7 +1,11 @@
 import { create } from "zustand";
+import type { RefKind } from "@/lib/nav";
 
 export interface RecentEntry {
-  kind: "module" | "doc" | "asset" | "wall" | "node" | "rack-item";
+  // Derived from RefKind rather than restated, so a new ref kind doesn't need a
+  // matching edit here. Type-only import: nav.ts pulls in the module stores, and
+  // this store is itself registered in SPECS.
+  kind: RefKind | "module";
   id: string;
   label: string;
   sub: string;

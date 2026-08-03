@@ -55,9 +55,12 @@ export function MaintenanceModule() {
   const setKindFilter = useMaintenance((s) => s.setKindFilter);
   const openOnly = useMaintenance((s) => s.openOnly);
   const setOpenOnly = useMaintenance((s) => s.setOpenOnly);
+  // In the store rather than local state so goto() can clear it when a linked
+  // reference jumps here — otherwise the target row could land filtered out.
+  const search = useMaintenance((s) => s.search);
+  const setSearch = useMaintenance((s) => s.setSearch);
 
   const [assigning, setAssigning] = useState(false);
-  const [search, setSearch] = useState("");
 
   const venue = venues.find((v) => v.id === selectedVenueId) ?? venues[0];
   const venueDevices = venue ? devices.filter((d) => d.venueId === venue.id) : [];

@@ -21,11 +21,13 @@ interface MaintenanceState {
   selectedDeviceId: string;
   kindFilter: KindFilter;
   openOnly: boolean;
+  search: string;
   setSelectedVenueId: (id: string) => void;
   setSelectedEntryId: (id: string) => void;
   setSelectedDeviceId: (id: string) => void;
   setKindFilter: (k: KindFilter) => void;
   setOpenOnly: (v: boolean) => void;
+  setSearch: (v: string) => void;
   addEntry: (entry: MaintenanceEntry) => void;
   updateEntry: (id: string, patch: Partial<Omit<MaintenanceEntry, "id">>) => void;
   removeEntry: (id: string) => void;
@@ -39,6 +41,7 @@ export const useMaintenance = create<MaintenanceState>()((set, get) => ({
   selectedDeviceId: "",
   kindFilter: "all",
   openOnly: false,
+  search: "",
 
   setSelectedVenueId: (selectedVenueId) =>
     set({ selectedVenueId, selectedEntryId: "", selectedDeviceId: "" }),
@@ -46,6 +49,7 @@ export const useMaintenance = create<MaintenanceState>()((set, get) => ({
   setSelectedDeviceId: (selectedDeviceId) => set({ selectedDeviceId }),
   setKindFilter: (kindFilter) => set({ kindFilter }),
   setOpenOnly: (openOnly) => set({ openOnly }),
+  setSearch: (search) => set({ search }),
 
   addEntry: (entry) => {
     const entries = [...get().entries, entry];

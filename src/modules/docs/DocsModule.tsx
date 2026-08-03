@@ -1,10 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { I } from "@/components/Icon";
+import { extractRefs, REF_KIND_LABEL } from "@/lib/doc-refs";
 import { goto } from "@/lib/nav";
-import {
-  DOC_BODIES,
-  DOC_LINKED_BY_ID,
-} from "@/lib/docs-data";
+import { DOC_BODIES } from "@/lib/docs-data";
 import { alertDialog, confirmDialog, promptDialog } from "@/store/useDialog";
 import type { DocNode } from "@/types";
 import { MarkdownBody } from "./MarkdownBody";
@@ -263,9 +261,10 @@ export function DocsModule() {
   );
 
   const versions = versionsMap[activeId] ?? [];
-  const linked = DOC_LINKED_BY_ID[activeId] ?? [];
   const comments = commentsMap[activeId] ?? [];
   const customBody = bodiesMap[activeId];
+  // Derived from the document itself, so the pane can't drift from the body.
+  const linked = useMemo(() => extractRefs(customBody ?? ""), [customBody]);
   const stockBody = DOC_BODIES[activeId];
   const currentVersion = versions[0]?.v;
   const trimmedDraft = draft.trim();
@@ -625,20 +624,19 @@ export function DocsModule() {
               No linked references.
             </div>
           ) : (
-            linked.map((r, i) => {
-              const kindMap = { ASSET: "asset", WALL: "wall", NODE: "node", DOC: "doc" } as const;
-              return (
-                <div
-                  key={i}
-                  className="list-row"
-                  onClick={() => goto({ kind: kindMap[r.k], id: r.id })}
-                  style={{ cursor: "pointer" }}
-                >
-                  <span className="chip accent" style={{ minWidth: 44, justifyContent: "center" }}>{r.k}</span>
-                  <span className="lbl">{r.n}</span>
-                </div>
-              );
-            })
+            linked.map((r) => (
+              <div
+                key={`${r.kind}:${r.id}`}
+                className="list-row"
+                onClick={() => goto({ kind: r.kind, id: r.id })}
+                style={{ cursor: "pointer" }}
+              >
+                <span className="chip accent" style={{ minWidth: 44, justifyContent: "center" }}>
+                  {REF_KIND_LABEL[r.kind]}
+                </span>
+                <span className="lbl">{r.label}</span>
+              </div>
+            ))
           )}
         </div>
         <div className="pane-hd">

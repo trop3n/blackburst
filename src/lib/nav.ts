@@ -4,8 +4,9 @@ import { useLedWall } from "@/modules/led-wall/store";
 import { useRack } from "@/modules/rack-builder/store";
 import { useSystem } from "@/modules/system-designer/store";
 import { useApp } from "@/store/useApp";
+import { useMaintenance } from "@/store/useMaintenance";
 
-export type RefKind = "asset" | "wall" | "node" | "doc" | "rack-item";
+export type RefKind = "asset" | "wall" | "node" | "doc" | "rack-item" | "maint-entry";
 
 export interface RefTarget {
   kind: RefKind;
@@ -41,6 +42,23 @@ export function goto(target: RefTarget) {
       if (!Number.isFinite(iid)) break;
       if (b != null && rack.racks.some((r) => r.id === a)) rack.setRackId(a);
       rack.setSelectedIid(iid);
+      break;
+    }
+    // Entry ids are globally unique, so the venue is looked up rather than
+    // encoded in the ref the way a rack item's is.
+    case "maint-entry": {
+      setModule("maint");
+      const maint = useMaintenance.getState();
+      const entry = maint.entries.find((e) => e.id === target.id);
+      if (!entry) break;
+      // setSelectedVenueId clears the entry selection, so it has to come first.
+      maint.setSelectedVenueId(entry.venueId);
+      maint.setSelectedEntryId(target.id);
+      // A followed link must land on a visible row, not one hidden behind
+      // whatever filter the log was last left in.
+      maint.setKindFilter("all");
+      maint.setOpenOnly(false);
+      maint.setSearch("");
       break;
     }
   }
