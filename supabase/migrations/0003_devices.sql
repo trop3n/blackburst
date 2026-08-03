@@ -45,3 +45,21 @@ create policy "devices delete own"
   on public.devices for delete
   to authenticated
   using (created_by = auth.uid());
+
+-- created_by is the key the delete policy tests, and the update policy is
+-- deliberately open so anyone can correct a record. Without pinning the column,
+-- a user could reassign a row to themselves and then delete it, which would make
+-- "delete own" advisory rather than enforced. Shared by the venue tables in 0004.
+create function public.freeze_created_by()
+returns trigger
+language plpgsql
+as $$
+begin
+  new.created_by := old.created_by;
+  return new;
+end;
+$$;
+
+create trigger devices_freeze_created_by
+  before update on public.devices
+  for each row execute function public.freeze_created_by();

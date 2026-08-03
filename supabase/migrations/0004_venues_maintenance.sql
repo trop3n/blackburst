@@ -62,3 +62,13 @@ create policy "maintenance update by authenticated"
 
 create policy "maintenance delete own"
   on public.maintenance_entries for delete to authenticated using (created_by = auth.uid());
+
+-- Same reasoning as devices in 0003: pin created_by so the open update policy
+-- can't be used to take ownership of a row and then delete it.
+create trigger venues_freeze_created_by
+  before update on public.venues
+  for each row execute function public.freeze_created_by();
+
+create trigger maintenance_entries_freeze_created_by
+  before update on public.maintenance_entries
+  for each row execute function public.freeze_created_by();

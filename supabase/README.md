@@ -9,12 +9,20 @@ Create a free project at [supabase.com](https://supabase.com). Note the **Projec
 URL** and **anon / publishable key** under **Project Settings → API**.
 
 ## 2. Run the schema
-Open **SQL Editor**, paste the contents of
-[`migrations/0001_auth_sharing.sql`](./migrations/0001_auth_sharing.sql), and run
-it. (Or, with the Supabase CLI: `supabase db push`.) This creates the tables,
-the `private.is_member()` RLS helper, the signup/owner triggers, the
-`claim_invites()` RPC, all row-level-security policies, and adds `project_state`
-to the realtime publication.
+Open **SQL Editor** and run **every** migration in `migrations/`, in numerical
+order. (Or, with the Supabase CLI: `supabase db push`.)
+
+| migration | adds |
+| --- | --- |
+| [`0001_auth_sharing.sql`](./migrations/0001_auth_sharing.sql) | projects, membership, invites, `project_state`, revisions, the `private.is_member()` RLS helper, signup/owner triggers, the `claim_invites()` RPC, all policies, and `project_state` on the realtime publication |
+| [`0002_shared_catalog.sql`](./migrations/0002_shared_catalog.sql) | `catalog_items` — the org-wide user-extendable hardware catalog |
+| [`0003_devices.sql`](./migrations/0003_devices.sql) | `devices` — the global device registry (a physical box outlives the project that specified it) |
+| [`0004_venues_maintenance.sql`](./migrations/0004_venues_maintenance.sql) | `venues` + `maintenance_entries` — the Maintenance Log; requires 0003 |
+
+**Applying only 0001 leaves the app half-working.** Server writes are
+fire-and-forget (`.catch(() => {})`) so a missing table fails *silently* — the
+catalog, device registry and maintenance log will simply never persist, with no
+error surfaced. If server-backed data seems to vanish, check this first.
 
 ## 3. Configure auth URLs
 **Authentication → URL Configuration**:
