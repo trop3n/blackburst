@@ -5,6 +5,7 @@ import {
   insertDevice,
   updateDeviceRemote,
 } from "@/lib/device-remote";
+import { createDebouncedFlush } from "@/lib/debounced-write";
 import { loadDevices, saveDevices } from "@/lib/device-storage";
 import { hoistLegacyDevices } from "@/lib/migrate-devices";
 import { isSupabaseConfigured } from "@/lib/supabase";
@@ -28,6 +29,21 @@ function initialDevices(): Device[] {
   return loadDevices();
 }
 
+// Matches the other global stores: local state is immediate, the persist is
+// coalesced. Device edits aren't per-keystroke today, but sharing one path keeps
+// the three registries behaving identically.
+const pendingWrites = createDebouncedFlush((ids) => {
+  const devices = useDevices.getState().devices;
+  if (isSupabaseConfigured) {
+    for (const id of ids) {
+      const d = devices.find((x) => x.id === id);
+      if (d) void updateDeviceRemote(d).catch(() => {});
+    }
+  } else {
+    saveDevices(devices);
+  }
+});
+
 // Global registry of real equipment, project-independent: a physical box
 // outlives the project that specified it, so this must never become a SPECS key.
 // Modules reference entries by id; the registry never reaches back into them, so
@@ -44,14 +60,12 @@ export const useDevices = create<DevicesState>()((set, get) => ({
 
   updateDevice: (id, patch) => {
     const devices = get().devices.map((d) => (d.id === id ? { ...d, ...patch } : d));
-    if (isSupabaseConfigured) {
-      const updated = devices.find((d) => d.id === id);
-      if (updated) void updateDeviceRemote(updated).catch(() => {});
-    } else saveDevices(devices);
     set({ devices });
+    pendingWrites.schedule(id);
   },
 
   removeDevice: (id) => {
+    pendingWrites.cancel(id);
     const devices = get().devices.filter((d) => d.id !== id);
     if (isSupabaseConfigured) void deleteDeviceRemote(id).catch(() => {});
     else saveDevices(devices);

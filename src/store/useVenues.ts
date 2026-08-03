@@ -5,6 +5,7 @@ import {
   insertVenue,
   updateVenueRemote,
 } from "@/lib/maintenance-remote";
+import { createDebouncedFlush } from "@/lib/debounced-write";
 import { loadVenues, saveVenues } from "@/lib/maintenance-storage";
 import { isSupabaseConfigured } from "@/lib/supabase";
 import type { Venue } from "@/types";
@@ -16,6 +17,20 @@ interface VenuesState {
   removeVenue: (id: string) => void;
   hydrateFromServer: () => Promise<void>;
 }
+
+// Venue name/address/notes are bound to text inputs, so updateVenue fires per
+// keystroke; only the persist is deferred, never the local state.
+const pendingWrites = createDebouncedFlush((ids) => {
+  const venues = useVenues.getState().venues;
+  if (isSupabaseConfigured) {
+    for (const id of ids) {
+      const v = venues.find((x) => x.id === id);
+      if (v) void updateVenueRemote(v).catch(() => {});
+    }
+  } else {
+    saveVenues(venues);
+  }
+});
 
 // Global and project-independent, like the device registry: a venue outlives
 // every project that touches it, so this must never become a SPECS key.
@@ -31,14 +46,12 @@ export const useVenues = create<VenuesState>()((set, get) => ({
 
   updateVenue: (id, patch) => {
     const venues = get().venues.map((v) => (v.id === id ? { ...v, ...patch } : v));
-    if (isSupabaseConfigured) {
-      const updated = venues.find((v) => v.id === id);
-      if (updated) void updateVenueRemote(updated).catch(() => {});
-    } else saveVenues(venues);
     set({ venues });
+    pendingWrites.schedule(id);
   },
 
   removeVenue: (id) => {
+    pendingWrites.cancel(id);
     const venues = get().venues.filter((v) => v.id !== id);
     if (isSupabaseConfigured) void deleteVenueRemote(id).catch(() => {});
     else saveVenues(venues);

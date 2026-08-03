@@ -5,6 +5,7 @@ import {
   insertMaintenanceEntry,
   updateMaintenanceEntryRemote,
 } from "@/lib/maintenance-remote";
+import { createDebouncedFlush } from "@/lib/debounced-write";
 import { loadEntries, saveEntries } from "@/lib/maintenance-storage";
 import { isSupabaseConfigured } from "@/lib/supabase";
 import type { MaintenanceEntry, MaintenanceKind } from "@/types";
@@ -34,6 +35,20 @@ interface MaintenanceState {
   hydrateFromServer: () => Promise<void>;
 }
 
+// Summary, technician and the markdown detail body are text inputs, so
+// updateEntry fires per keystroke; only the persist is deferred.
+const pendingWrites = createDebouncedFlush((ids) => {
+  const entries = useMaintenance.getState().entries;
+  if (isSupabaseConfigured) {
+    for (const id of ids) {
+      const e = entries.find((x) => x.id === id);
+      if (e) void updateMaintenanceEntryRemote(e).catch(() => {});
+    }
+  } else {
+    saveEntries(entries);
+  }
+});
+
 export const useMaintenance = create<MaintenanceState>()((set, get) => ({
   entries: isSupabaseConfigured ? [] : loadEntries(),
   selectedVenueId: "",
@@ -60,14 +75,12 @@ export const useMaintenance = create<MaintenanceState>()((set, get) => ({
 
   updateEntry: (id, patch) => {
     const entries = get().entries.map((e) => (e.id === id ? { ...e, ...patch } : e));
-    if (isSupabaseConfigured) {
-      const updated = entries.find((e) => e.id === id);
-      if (updated) void updateMaintenanceEntryRemote(updated).catch(() => {});
-    } else saveEntries(entries);
     set({ entries });
+    pendingWrites.schedule(id);
   },
 
   removeEntry: (id) => {
+    pendingWrites.cancel(id);
     const entries = get().entries.filter((e) => e.id !== id);
     if (isSupabaseConfigured) void deleteMaintenanceEntryRemote(id).catch(() => {});
     else saveEntries(entries);
