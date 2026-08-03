@@ -10,6 +10,8 @@ interface AuthState {
   session: Session | null;
   configured: boolean;
   sentTo: string | null;
+  callbackError: string | null;
+  clearCallbackError: () => void;
   init: () => void;
   signInWithMagicLink: (email: string) => Promise<string | null>;
   verifyOtp: (email: string, token: string) => Promise<string | null>;
@@ -19,12 +21,36 @@ interface AuthState {
 
 let started = false;
 
+// Implicit flow (the client default) reports a failed email link as URL fragment
+// params — #error=access_denied&error_description=… — which supabase-js neither
+// surfaces nor logs. Without this the app just re-renders the sign-in form and
+// the failure is invisible.
+//
+// Read at module scope, before the client's async session detection runs, and
+// consume the fragment ONLY when it is an error: a successful callback carries
+// access_token in that same fragment and must be left intact for supabase-js.
+function readCallbackError(): string | null {
+  if (typeof window === "undefined") return null;
+  for (const raw of [window.location.hash, window.location.search]) {
+    if (!raw) continue;
+    const p = new URLSearchParams(raw.replace(/^[#?]/, ""));
+    if (p.get("access_token")) return null;
+    const code = p.get("error") ?? p.get("error_code");
+    if (!code) continue;
+    window.history.replaceState(null, "", window.location.pathname);
+    return p.get("error_description") ?? code;
+  }
+  return null;
+}
+
 export const useAuth = create<AuthState>((set) => ({
   status: "loading",
   user: null,
   session: null,
   configured: isSupabaseConfigured,
   sentTo: null,
+  callbackError: readCallbackError(),
+  clearCallbackError: () => set({ callbackError: null }),
   init: () => {
     if (started) return;
     started = true;

@@ -6,6 +6,8 @@ export function AuthScreen() {
   const signIn = useAuth((s) => s.signInWithMagicLink);
   const verifyOtp = useAuth((s) => s.verifyOtp);
   const resetSent = useAuth((s) => s.resetSent);
+  const callbackError = useAuth((s) => s.callbackError);
+  const clearCallbackError = useAuth((s) => s.clearCallbackError);
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
@@ -17,6 +19,7 @@ export function AuthScreen() {
     if (!addr) return;
     setBusy(true);
     setErr(null);
+    clearCallbackError();
     const error = await signIn(addr);
     setBusy(false);
     if (error) setErr(error);
@@ -40,6 +43,10 @@ export function AuthScreen() {
           <span className="auth-logo">BLACKBURST</span>
           <span className="auth-tag">AV / live-production design</span>
         </div>
+
+        {callbackError && (
+          <p className="auth-err">Sign-in link failed: {callbackError}</p>
+        )}
 
         {sentTo ? (
           <form className="auth-form" onSubmit={submitCode}>

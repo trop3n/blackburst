@@ -16,3 +16,9 @@ dist-ssr
 
 # TypeScript incremental build cache
 *.tsbuildinfo
+
+# Supabase database connection strings — contain the postgres password, which is
+# NOT the publishable anon key and must never be committed or shipped to a client.
+supabase-conn
+.supabase-conn
+*.pgpass
