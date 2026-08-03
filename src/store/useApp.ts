@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { subscribeGlobalTables, unsubscribeGlobalTables } from "@/lib/global-realtime";
 import { hoistLegacyDevicesRemote } from "@/lib/migrate-devices";
 import { migrateLocalProjects } from "@/lib/migrate-local";
 import {
@@ -314,6 +315,9 @@ export const useApp = create<AppState>()(
             // best-effort: the maintenance log stays empty if its tables aren't
             // reachable (e.g. migration not yet run)
           }
+          // Subscribe after the initial hydrate so the first payload can't race
+          // the load it would be refreshing.
+          subscribeGlobalTables();
           set({
             projects,
             currentProjectId: current.id,
@@ -328,6 +332,7 @@ export const useApp = create<AppState>()(
       },
       resetSession: () => {
         clearActiveProject();
+        unsubscribeGlobalTables();
         set({ ready: false, projects: [], revisions: [], revisionsByProject: {} });
       },
     }),
