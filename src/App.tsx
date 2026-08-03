@@ -11,6 +11,7 @@ import { Topbar } from "@/components/shell/Topbar";
 import { DocsModule } from "@/modules/docs/DocsModule";
 import { InventoryModule } from "@/modules/inventory/InventoryModule";
 import { LedWallModule } from "@/modules/led-wall/LedWallModule";
+import { MaintenanceModule } from "@/modules/maintenance/MaintenanceModule";
 import { RackBuilderModule } from "@/modules/rack-builder/RackBuilderModule";
 import { SystemDesignerModule } from "@/modules/system-designer/SystemDesignerModule";
 import { ACCENTS, useApp } from "@/store/useApp";
@@ -82,6 +83,7 @@ export default function App() {
           {module === "rack" && <RackBuilderModule />}
           {module === "inv" && <InventoryModule />}
           {module === "docs" && <DocsModule />}
+          {module === "maint" && <MaintenanceModule />}
         </main>
         <StatusBar />
         <CommandPalette />

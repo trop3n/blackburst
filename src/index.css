@@ -555,6 +555,24 @@ button { font-family: inherit; color: inherit; }
 }
 .fld input:focus, .fld select:focus { border-color: var(--accent); }
 .fld .row-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+
+/* Free-text field inside an inspector pane. Matches .fld input, but sized for a
+   paragraph rather than a value — .docs-edit-area is the full-height editor. */
+.insp-textarea {
+  width: 100%;
+  min-height: 100px;
+  resize: vertical;
+  background: var(--color-bg-2);
+  border: 1px solid var(--color-line-strong);
+  color: var(--color-fg);
+  padding: 6px 8px;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  border-radius: 2px;
+  outline: none;
+}
+.insp-textarea:focus { border-color: var(--accent); }
 .fld .unit-input { position: relative; }
 .fld .unit-input::after {
   content: attr(data-unit);

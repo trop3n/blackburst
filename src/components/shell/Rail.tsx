@@ -26,6 +26,7 @@ const ITEMS: { id: ModuleId; label: string; icon: ReactNode }[] = [
   { id: "rack", label: "RACK", icon: <I.Rack size={18} /> },
   { id: "inv", label: "INV", icon: <I.Inventory size={18} /> },
   { id: "docs", label: "DOCS", icon: <I.Docs size={18} /> },
+  { id: "maint", label: "MAINT", icon: <I.Wrench size={18} /> },
 ];
 
 export function Rail() {

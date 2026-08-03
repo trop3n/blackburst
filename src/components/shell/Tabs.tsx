@@ -7,6 +7,7 @@ const ITEMS: { id: ModuleId; label: string; num: string }[] = [
   { id: "rack", label: "Rack Builder", num: "03" },
   { id: "inv", label: "Inventory", num: "04" },
   { id: "docs", label: "Documentation", num: "05" },
+  { id: "maint", label: "Maintenance Log", num: "06" },
 ];
 
 export function Tabs() {

@@ -44,6 +44,7 @@ const MODULE_ROWS: ModuleRow[] = [
   { group: "Jump", kind: "module", mod: "rack", label: "Rack Builder", sub: "Module", haystack: "rack builder module" },
   { group: "Jump", kind: "module", mod: "inv", label: "Asset & Inventory", sub: "Module", haystack: "asset inventory module" },
   { group: "Jump", kind: "module", mod: "docs", label: "Documentation Hub", sub: "Module", haystack: "documentation docs hub module" },
+  { group: "Jump", kind: "module", mod: "maint", label: "Maintenance Log", sub: "Module", haystack: "maintenance log venue service module" },
 ];
 
 const GROUP_ORDER: RowGroup[] = ["Jump", "Docs", "Assets", "Walls", "Nodes", "Rack"];

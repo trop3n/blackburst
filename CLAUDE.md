@@ -4,7 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-Blackburst is an AV / live-production design tool: a single-page React app where a shell (rail / topbar / optional tabs / status bar / ⌘K command palette) surfaces five self-contained modules — LED Wall Builder (`wall`), System Designer (`system`), Rack Builder (`rack`), Asset & Inventory (`inv`), Documentation Hub (`docs`). `App.tsx` renders exactly one module based on `useApp((s) => s.module)`.
+Blackburst is an AV / live-production design tool: a single-page React app where a shell (rail / topbar / optional tabs / status bar / ⌘K command palette) surfaces six self-contained modules — LED Wall Builder (`wall`), System Designer (`system`), Rack Builder (`rack`), Asset & Inventory (`inv`), Documentation Hub (`docs`), Maintenance Log (`maint`). `App.tsx` renders exactly one module based on `useApp((s) => s.module)`.
+
+The first five are **design-time** tools scoped to a project. `maint` is the one **operational** surface: venues, their installed devices, and the service history of each — global data that outlives any project. Adding a module means touching `ModuleId`, the `App.tsx` branch, `Rail.tsx`, `Tabs.tsx`, `MODULE_LABELS` in `Topbar.tsx` (a `Record<ModuleId, string>`, so `tsc` catches a miss), and `MODULE_ROWS` in `CommandPalette.tsx`.
 
 Stack: React 18 + TypeScript (strict) + Vite + Zustand + Tailwind v4, plus **Supabase (optional)** for auth, cloud persistence, and sharing. With no Supabase env set the app runs local-only (all state in the browser via `localStorage`); once configured it gates behind email auth and persists per-user on the server. See the auth note below.
 
@@ -34,7 +36,7 @@ Path alias: `@/` → `src/` (set in both `vite.config.ts` and `tsconfig.app.json
 
 ## State architecture (read before touching any store)
 
-Per-project state spans three layers; how they interact is the one thing you can't infer from a single file. Two further layers are deliberately project-*independent* and must never be added to `SPECS` — the hardware catalog and the device registry, each with its own section below.
+Per-project state spans three layers; how they interact is the one thing you can't infer from a single file. Three further layers are deliberately project-*independent* and must never be added to `SPECS` — the hardware catalog, the device registry, and venues + their maintenance log, each covered below.
 
 1. **Per-module Zustand stores** — `useLedWall`, `useSystem`, `useRack`, `useInventory`, `useDocs` (each `src/modules/<name>/store.ts`), plus `useCmdkRecents`. Those six are exactly the keys in `SPECS` (below). They hold all project data and **have no persistence of their own** — the `persist` middleware was removed; do not re-add it. Everything else is either a global layer (`useCatalog`, `useDevices` — see below) or ephemeral UI state that is deliberately *not* in `SPECS`: `useCmdk` / `useSettings` (panel open flags), `useDialog`, `useSaveStatus`, `useAuth`, `useShare`.
 
@@ -77,8 +79,18 @@ Distinct from the catalog: a catalog entry is a *model* ("ATEM 4 M/E"), a `Devic
 - **`useDevices` is global and project-independent**, for the same reason `useCatalog` is: a physical box outlives the project that specified it, and its service history has to survive a project switch. It was a `SPECS` key until the registry was promoted out — **never put it back**, or every project switch wipes it. Local mode persists to `blackburst:devices:v1` (`lib/device-storage.ts`); accounts mode writes one row per device to `public.devices` (`lib/device-remote.ts`, `supabase/migrations/0003_devices.sql`), hydrated in `bootstrap()`.
 - **Legacy per-project devices are hoisted once** by `lib/migrate-devices.ts` (local: from the `useDevices` module initializer; accounts: from `bootstrap()`, one fetch per project, flag-guarded). It dedupes **by id only, never by serial** — an id is referenced by rack items, nodes and assets inside its own project, so collapsing two records for the same physical box would orphan whichever reference lost. Cross-project duplicates are left for the user to merge.
 - **The registry never reaches back into the modules.** Ownership is one-directional: modules reference devices by id; `useDevices` knows nothing about racks, nodes or assets. Keep it that way — it's why the store has no module imports.
+- `Device.venueId` is the optional home venue for installed gear; unset means fleet / touring stock. It's set from the Maintenance Log, not from the design modules.
 - `DeviceLink` (`src/components/DeviceLink.tsx`) is the single UI for link / create / unlink, dropped into each module's inspector. It discovers a device's other appearances by scanning the three stores for matching `deviceId`, and renders them as `RefChip`s; pass `omit` so the panel doesn't link back to itself. Note that scan only covers the **loaded** project — a device used in another project shows no "also appears in" rows, because that project's stores aren't in memory.
 - `RefChip` + `goto()` are the cross-module jump: `RefKind` is `"asset" | "wall" | "node" | "doc" | "rack-item"`, and a rack-item ref is `"<rackId>:<iid>"` because item ids are only unique within a rack.
+
+## Venues & maintenance log (global, not per-project)
+
+The `maint` module's data is the third project-independent layer, for the same reason as the other two: a venue is a physical place whose service history spans years and many projects, so it cannot live in a project bucket.
+
+- `useVenues` (venues) and `useMaintenance` (entries) both persist by hand — `blackburst:venues:v1` / `blackburst:maintenance:v1` locally, `public.venues` / `public.maintenance_entries` in accounts mode (`lib/maintenance-remote.ts`, `supabase/migrations/0004_venues_maintenance.sql`), hydrated in `bootstrap()`. Neither is a `SPECS` key.
+- **`useMaintenance` also holds the module's ephemeral view state** (`selectedVenueId`, `selectedEntryId`, `selectedDeviceId`, `kindFilter`, `openOnly`). It has no project bucket to travel in, and only `entries` is ever written to storage — so unlike the design modules, the split between persisted and transient here is enforced by what the store's actions save, not by `SPECS.fields`.
+- A `MaintenanceEntry` is keyed to `venueId` + `deviceId`; the device comes from the global registry, which is why step one had to land first. Deleting a venue leaves its entries in storage but unreachable — the confirm dialog says so rather than silently cascading.
+- Every readout in the module (`ENTRIES`, `OPEN`, `DEVICES`, `LAST SERVICE`) derives from the venue's real entries, and reports venue totals rather than the filtered view. There is no MTBF or uptime figure — see the no-fabricated-readouts rule below.
 
 ## Conventions
 
@@ -96,9 +108,9 @@ Distinct from the catalog: a catalog entry is a *model* ("ATEM 4 M/E"), a `Devic
 
 **Store reads inside listeners/handlers** — use `useStore.getState()` (not a hook subscription) to avoid stale closures, especially in window-level `keydown`/`mousemove` handlers.
 
-**Styling** — reuse existing class names from `src/index.css` (~2200 lines) rather than inventing classes or adding inline styles. Common: `.tb-btn` (+ `.primary` / `.danger`), `.icon-btn`, `.fld`, `.section-h`, `.kv`, `.readout-grid`, `.list-row`, `.tbl-input`, `.pane-hd` / `.pane-body`, `.search`, `.status-pill`, `.chip`. Accent color is driven by `--accent*` CSS vars set from `useApp` tweaks; density/shell via `data-density` / `data-shell` on `<html>`.
+**Styling** — reuse existing class names from `src/index.css` (~2200 lines) rather than inventing classes or adding inline styles. Common: `.tb-btn` (+ `.primary` / `.danger`), `.icon-btn`, `.fld`, `.section-h`, `.kv`, `.readout-grid`, `.list-row`, `.tbl-input`, `.insp-textarea`, `.pane-hd` / `.pane-body`, `.search`, `.status-pill`, `.chip`. Note `.dialog-input` belongs to `DialogHost` — don't borrow it for inspector fields, or selectors matching the live dialog break. Accent color is driven by `--accent*` CSS vars set from `useApp` tweaks; density/shell via `data-density` / `data-shell` on `<html>`.
 
-**Icons** — `src/components/Icon.tsx` exports an `I` map: Bolt, Check, Chev, Cross, Docs, Edit, Export, Eye, File, Folder, Grid, Inventory, Layers, Lock, Move, Pin, Plus, Rack, Search, Settings, System, Undo, Wall. There is **no Trash icon — use `Cross` for delete/remove**.
+**Icons** — `src/components/Icon.tsx` exports an `I` map: Bolt, Check, Chev, Cross, Docs, Edit, Export, Eye, File, Folder, Grid, Inventory, Layers, Lock, Move, Pin, Plus, Rack, Search, Settings, System, Undo, Wall, Wrench. There is **no Trash icon — use `Cross` for delete/remove**.
 
 **Interactions** — use the in-app dialogs, never native `window.prompt` / `confirm` / `alert`. Import `promptDialog` / `confirmDialog` / `alertDialog` from `@/store/useDialog` (promise-based, styled like the shell; a single always-mounted `<DialogHost/>` in `App.tsx` renders them). They mirror native semantics — `promptDialog` resolves the string or `null`, `confirmDialog` resolves a boolean — but are **async**, so the calling handler must be `async`/`await` (chained prompts become sequential `await`s). Pass `{ danger: true, confirmLabel: "Delete" }` for destructive confirmations. The docs unsaved-edits `leaveGuard` may return `boolean | Promise<boolean>`; `useDocs.setActive` awaits it.
 

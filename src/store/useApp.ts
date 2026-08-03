@@ -24,6 +24,8 @@ import { isSupabaseConfigured } from "@/lib/supabase";
 import { useAuth } from "@/store/useAuth";
 import { useCatalog } from "@/store/useCatalog";
 import { useDevices } from "@/store/useDevices";
+import { useMaintenance } from "@/store/useMaintenance";
+import { useVenues } from "@/store/useVenues";
 import type { AccentName, CanvasStyle, Density, ModuleId, Project, Shell } from "@/types";
 
 export interface Tweaks {
@@ -304,6 +306,13 @@ export const useApp = create<AppState>()(
           } catch {
             // best-effort: the device registry stays empty if the devices table
             // isn't reachable (e.g. migration not yet run)
+          }
+          try {
+            await useVenues.getState().hydrateFromServer();
+            await useMaintenance.getState().hydrateFromServer();
+          } catch {
+            // best-effort: the maintenance log stays empty if its tables aren't
+            // reachable (e.g. migration not yet run)
           }
           set({
             projects,

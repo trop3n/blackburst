@@ -1,4 +1,4 @@
-export type ModuleId = "wall" | "system" | "rack" | "inv" | "docs";
+export type ModuleId = "wall" | "system" | "rack" | "inv" | "docs" | "maint";
 
 export type Density = "compact" | "normal" | "cozy";
 export type Shell = "rail" | "tabs" | "palette";
@@ -118,6 +118,41 @@ export interface Device {
   model: string;
   label: string;
   serial: string;
+  // Home venue for installed gear. Unset means fleet / touring stock that isn't
+  // tied to one room.
+  venueId?: string;
+}
+
+// A physical place with a permanent install. Venues are global and outlive
+// projects — several jobs can touch the same room over years, so the
+// maintenance log is keyed to the place, not to whichever project specified it.
+export interface Venue {
+  id: string;
+  name: string;
+  address: string;
+  notes: string;
+}
+
+export type MaintenanceKind =
+  | "repair"
+  | "replace"
+  | "firmware"
+  | "config"
+  | "inspect"
+  | "calibrate";
+
+// One logged intervention against one device at one venue — a changelog entry
+// for an AV install. `resolved` separates finished work from an open fault.
+export interface MaintenanceEntry {
+  id: string;
+  venueId: string;
+  deviceId: string;
+  at: string;
+  who: string;
+  kind: MaintenanceKind;
+  summary: string;
+  body: string;
+  resolved: boolean;
 }
 
 export interface RackItem {

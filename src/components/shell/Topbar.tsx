@@ -15,6 +15,7 @@ const MODULE_LABELS: Record<ModuleId, string> = {
   rack: "Rack Builder",
   inv: "Asset & Inventory",
   docs: "Documentation Hub",
+  maint: "Maintenance Log",
 };
 
 export function Topbar() {
