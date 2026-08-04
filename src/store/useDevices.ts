@@ -34,15 +34,20 @@ function initialDevices(): Device[] {
 // the three registries behaving identically.
 const pendingWrites = createDebouncedFlush((ids) => {
   const devices = useDevices.getState().devices;
-  if (isSupabaseConfigured) {
-    for (const id of ids) {
-      const d = devices.find((x) => x.id === id);
-      if (d) void updateDeviceRemote(d).catch(() => {});
-    }
-  } else {
+  if (!isSupabaseConfigured) {
     saveDevices(devices);
+    return;
   }
+  // Returned so the flusher can count the writes as in flight until they land.
+  return Promise.all(
+    ids.map((id) => {
+      const d = devices.find((x) => x.id === id);
+      return d ? updateDeviceRemote(d).catch(() => {}) : null;
+    }),
+  );
 });
+
+export const hasPendingDeviceWrites = pendingWrites.hasPending;
 
 // Global registry of real equipment, project-independent: a physical box
 // outlives the project that specified it, so this must never become a SPECS key.

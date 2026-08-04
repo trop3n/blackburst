@@ -22,15 +22,20 @@ interface VenuesState {
 // keystroke; only the persist is deferred, never the local state.
 const pendingWrites = createDebouncedFlush((ids) => {
   const venues = useVenues.getState().venues;
-  if (isSupabaseConfigured) {
-    for (const id of ids) {
-      const v = venues.find((x) => x.id === id);
-      if (v) void updateVenueRemote(v).catch(() => {});
-    }
-  } else {
+  if (!isSupabaseConfigured) {
     saveVenues(venues);
+    return;
   }
+  // Returned so the flusher can count the writes as in flight until they land.
+  return Promise.all(
+    ids.map((id) => {
+      const v = venues.find((x) => x.id === id);
+      return v ? updateVenueRemote(v).catch(() => {}) : null;
+    }),
+  );
 });
+
+export const hasPendingVenueWrites = pendingWrites.hasPending;
 
 // Global and project-independent, like the device registry: a venue outlives
 // every project that touches it, so this must never become a SPECS key.

@@ -39,15 +39,20 @@ interface MaintenanceState {
 // updateEntry fires per keystroke; only the persist is deferred.
 const pendingWrites = createDebouncedFlush((ids) => {
   const entries = useMaintenance.getState().entries;
-  if (isSupabaseConfigured) {
-    for (const id of ids) {
-      const e = entries.find((x) => x.id === id);
-      if (e) void updateMaintenanceEntryRemote(e).catch(() => {});
-    }
-  } else {
+  if (!isSupabaseConfigured) {
     saveEntries(entries);
+    return;
   }
+  // Returned so the flusher can count the writes as in flight until they land.
+  return Promise.all(
+    ids.map((id) => {
+      const e = entries.find((x) => x.id === id);
+      return e ? updateMaintenanceEntryRemote(e).catch(() => {}) : null;
+    }),
+  );
 });
+
+export const hasPendingEntryWrites = pendingWrites.hasPending;
 
 export const useMaintenance = create<MaintenanceState>()((set, get) => ({
   entries: isSupabaseConfigured ? [] : loadEntries(),

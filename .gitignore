@@ -17,6 +17,10 @@ dist-ssr
 # TypeScript incremental build cache
 *.tsbuildinfo
 
+# Session handoff notes — a working scratchpad for the next session, not a
+# durable record. CLAUDE.md is the checked-in reference.
+handoff.md
+
 # Supabase database connection strings — contain the postgres password, which is
 # NOT the publishable anon key and must never be committed or shipped to a client.
 supabase-conn
