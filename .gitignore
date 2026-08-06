@@ -30,3 +30,8 @@ handoff.md
 supabase-conn
 .supabase-conn
 *.pgpass
+
+# Vercel CLI. `.vercel` is project/org ids written by `vercel link`; the token
+# file is an account credential — same rule as the Supabase connection strings.
+.vercel
+.vercel-token
