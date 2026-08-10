@@ -20,6 +20,7 @@ order. (Or, with the Supabase CLI: `supabase db push`.)
 | [`0004_venues_maintenance.sql`](./migrations/0004_venues_maintenance.sql) | `venues` + `maintenance_entries` — the Maintenance Log; requires 0003 |
 | [`0005_realtime_global.sql`](./migrations/0005_realtime_global.sql) | puts the four global tables on the realtime publication and adds `updated_by` so a client can ignore its own echo; requires 0002–0004 |
 | [`0006_project_state_stamp.sql`](./migrations/0006_project_state_stamp.sql) | stamps `project_state.updated_by` / `updated_at` server-side, so the echo check can't be defeated by a forged client value; **must be applied before deploying a client built after it** |
+| [`0007_ownership_hardening.sql`](./migrations/0007_ownership_hardening.sql) | orphaned global rows (`created_by null` after their contributor's account is deleted) become deletable by anyone, and a trigger stops a project's last owner being removed or demoted (cascades from project/user deletion pass through) |
 
 **Applying only 0001 leaves the app half-working.** Server writes are
 fire-and-forget (`.catch(() => {})`) so a missing table fails *silently* — the

@@ -18,6 +18,9 @@ import {
 } from "@/lib/project-remote";
 import { DEFAULT_RACKS } from "@/lib/rack-data";
 import { isSupabaseConfigured } from "@/lib/supabase";
+// Import cycle with useApp is benign: both sides only dereference the other
+// inside function bodies at runtime, never during module evaluation.
+import { useApp } from "@/store/useApp";
 import { useSaveStatus } from "@/store/useSaveStatus";
 
 export const BUCKETS_KEY = "blackburst:projects:v1";
@@ -56,6 +59,14 @@ export function cancelPendingSave() {
 function markClean() {
   savedSeq = editSeq;
   useSaveStatus.getState().reset();
+}
+
+// A viewer's server writes are RLS-denied, so attempting them meant one doomed
+// upsert per edit and a permanent error pill. Local edits stay local (exploring
+// is harmless, and incoming realtime updates overwrite them); the status bar
+// labels the situation as VIEW ONLY instead of reporting phantom saves.
+function viewerActive(): boolean {
+  return isSupabaseConfigured && useApp.getState().project.role === "viewer";
 }
 
 interface StoreSpec {
@@ -253,12 +264,32 @@ function migrateBucket(buckets: ProjectStateBuckets): ProjectStateBuckets {
   };
 }
 
+// Shallow shape guard: an imported file or server row whose field type
+// disagrees with its default (a string where an array belongs) used to crash
+// the first render that mapped over it — and since the bucket was persisted
+// before rendering, every reload crashed the same way. A null default carries
+// no shape to check against (nullable selections), so those pass through;
+// deep garbage inside a well-typed array is caught by ModuleErrorBoundary.
+function conforms(value: unknown, fallback: unknown): boolean {
+  if (fallback === null) return true;
+  if (Array.isArray(fallback)) return Array.isArray(value);
+  const t = typeof fallback;
+  if (t === "object") return typeof value === "object" && value !== null && !Array.isArray(value);
+  return typeof value === t;
+}
+
 export function applyState(buckets: ProjectStateBuckets) {
   applying = true;
   try {
     const migrated = migrateBucket(buckets);
     for (const [key, spec] of Object.entries(SPECS)) {
-      const slice = { ...spec.defaults, ...(migrated[key] ?? {}) };
+      const incoming = (migrated[key] ?? {}) as Record<string, unknown>;
+      const defaults = spec.defaults as Record<string, unknown>;
+      const slice: Record<string, unknown> = {};
+      for (const f of spec.fields) {
+        const v = incoming[f];
+        slice[f] = f in incoming && conforms(v, defaults[f]) ? v : defaults[f];
+      }
       spec.store.setState(slice);
     }
   } finally {
@@ -270,9 +301,9 @@ export async function switchProject(fromId: string, toId: string) {
   if (fromId === toId) return;
   cancelPendingSave();
   if (isSupabaseConfigured) {
-    // Best-effort save-away: a viewer's write is RLS-denied, and a transient
-    // error must never block navigating to another project.
-    await upsertBucket(fromId, snapshotCurrent()).catch(() => {});
+    // Best-effort save-away: a transient error must never block navigating to
+    // another project. Viewers skip it — the write would be RLS-denied anyway.
+    if (!viewerActive()) await upsertBucket(fromId, snapshotCurrent()).catch(() => {});
     const bucket = await fetchBucket(toId);
     applyState(bucket ?? defaultBucket());
     activeProjectId = toId;
@@ -371,7 +402,7 @@ function flushSave() {
 }
 
 function scheduleSave() {
-  if (applying || activeProjectId == null) return;
+  if (applying || activeProjectId == null || viewerActive()) return;
   editSeq++;
   useSaveStatus.getState().markPending();
   if (saveTimer != null) clearTimeout(saveTimer);

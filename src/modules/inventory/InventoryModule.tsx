@@ -2,6 +2,8 @@ import { useMemo, useState } from "react";
 import { DeviceLink } from "@/components/DeviceLink";
 import { I } from "@/components/Icon";
 import { ASSET_CATEGORIES, INV_MODELS } from "@/lib/inventory-data";
+import { canDeleteShared } from "@/lib/ownership";
+import { useAuth } from "@/store/useAuth";
 import { useCatalog } from "@/store/useCatalog";
 import { alertDialog, confirmDialog, promptDialog } from "@/store/useDialog";
 import type { AssetStatus, ShowSchedule } from "@/types";
@@ -47,6 +49,8 @@ export function InventoryModule() {
   const invModels = useCatalog((s) => s.inv);
   const addInvModel = useCatalog((s) => s.addInvModel);
   const removeInvModel = useCatalog((s) => s.removeInvModel);
+  const catalogOwners = useCatalog((s) => s.owners);
+  const myId = useAuth((s) => s.user?.id);
   const [filter, setFilter] = useState("");
   const [modelSearch, setModelSearch] = useState("");
 
@@ -268,7 +272,7 @@ export function InventoryModule() {
                 <I.Inventory size={12} />
                 <span className="lbl">{m.model}</span>
                 <span className="meta">{m.cat}</span>
-                {isCustom && (
+                {isCustom && canDeleteShared(catalogOwners[m.id], myId) && (
                   <button
                     className="icon-btn"
                     title="Remove model"

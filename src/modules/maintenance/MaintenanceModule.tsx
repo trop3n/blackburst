@@ -2,6 +2,7 @@ import { useState } from "react";
 import { I } from "@/components/Icon";
 import { PrintSheet } from "@/components/PrintSheet";
 import { downloadCsv, stamp } from "@/lib/export-csv";
+import { canDeleteShared } from "@/lib/ownership";
 import { useAuth } from "@/store/useAuth";
 import { useDevices } from "@/store/useDevices";
 import { confirmDialog, promptDialog } from "@/store/useDialog";
@@ -40,6 +41,10 @@ export function MaintenanceModule() {
 
   const devices = useDevices((s) => s.devices);
   const updateDevice = useDevices((s) => s.updateDevice);
+
+  const venueOwners = useVenues((s) => s.owners);
+  const entryOwners = useMaintenance((s) => s.owners);
+  const myId = useAuth((s) => s.user?.id);
 
   const entries = useMaintenance((s) => s.entries);
   const addEntry = useMaintenance((s) => s.addEntry);
@@ -529,18 +534,20 @@ export function MaintenanceModule() {
                 {entry.resolved ? <I.Undo size={12} /> : <I.Check size={12} />}
                 {entry.resolved ? " Reopen" : " Resolve"}
               </button>
-              <button
-                className="tb-btn danger"
-                onClick={async () => {
-                  const ok = await confirmDialog("Delete this log entry?", {
-                    danger: true,
-                    confirmLabel: "Delete",
-                  });
-                  if (ok) removeEntry(entry.id);
-                }}
-              >
-                <I.Cross size={12} /> Delete
-              </button>
+              {canDeleteShared(entryOwners[entry.id], myId) && (
+                <button
+                  className="tb-btn danger"
+                  onClick={async () => {
+                    const ok = await confirmDialog("Delete this log entry?", {
+                      danger: true,
+                      confirmLabel: "Delete",
+                    });
+                    if (ok) removeEntry(entry.id);
+                  }}
+                >
+                  <I.Cross size={12} /> Delete
+                </button>
+              )}
             </div>
           </div>
         ) : venue ? (
@@ -584,9 +591,11 @@ export function MaintenanceModule() {
               >
                 <I.Edit size={12} /> Rename
               </button>
-              <button className="tb-btn danger" onClick={handleDeleteVenue}>
-                <I.Cross size={12} /> Delete
-              </button>
+              {canDeleteShared(venueOwners[venue.id], myId) && (
+                <button className="tb-btn danger" onClick={handleDeleteVenue}>
+                  <I.Cross size={12} /> Delete
+                </button>
+              )}
             </div>
             <div
               className="mono"

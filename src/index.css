@@ -2005,6 +2005,16 @@ button { font-family: inherit; color: inherit; }
   color: var(--color-fg-faint);
   text-transform: uppercase;
 }
+/* Bootstrap error detail: an actual error message, so it must read as prose —
+   drop the splash's display-type tracking and casing. */
+.boot-splash-detail {
+  letter-spacing: normal;
+  text-transform: none;
+  font-size: var(--text-xs);
+  color: var(--color-warn);
+  max-width: 420px;
+  text-align: center;
+}
 .auth-card {
   width: min(380px, 92vw);
   background: var(--color-bg-1);

@@ -6,11 +6,16 @@ import { summarize, validateWall } from "@/modules/led-wall/validation";
 import { useInventory } from "@/modules/inventory/store";
 import { summarizeAssetIssues, validateAssets } from "@/modules/inventory/validation";
 import { useApp } from "@/store/useApp";
+import { useAuth } from "@/store/useAuth";
 import { useSaveStatus } from "@/store/useSaveStatus";
 
 export function StatusBar() {
   const project = useApp((s) => s.project);
   const revisions = useApp((s) => s.revisions);
+  const authConfigured = useAuth((s) => s.configured);
+  // Viewers' edits are never written (RLS would deny them) — showing save
+  // state would either error-spam or claim saves that don't happen.
+  const viewOnly = authConfigured && project.role === "viewer";
   const walls = useLedWall((s) => s.walls);
   const layoutId = useLedWall((s) => s.layoutId);
   const inventoryAssets = useInventory((s) => s.assets);
@@ -65,10 +70,16 @@ export function StatusBar() {
         <span className="dot" /> READY
       </div>
       <div className="seg">REV {String(latest?.n ?? 0).padStart(4, "0")}</div>
-      <div className="seg" title={saveError ?? undefined}>
-        <span className={`dot ${saveState === "error" ? "error" : saveState === "saved" ? "ok" : ""}`} />{" "}
-        {saveLabel}
-      </div>
+      {viewOnly ? (
+        <div className="seg" title="Your role on this project is viewer — edits stay in this window and are not saved">
+          <span className="dot warn" /> VIEW ONLY
+        </div>
+      ) : (
+        <div className="seg" title={saveError ?? undefined}>
+          <span className={`dot ${saveState === "error" ? "error" : saveState === "saved" ? "ok" : ""}`} />{" "}
+          {saveLabel}
+        </div>
+      )}
       <div className="seg">
         <span className={`dot ${level}`} /> {statusLabel}
       </div>

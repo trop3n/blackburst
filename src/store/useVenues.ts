@@ -8,10 +8,14 @@ import {
 import { createDebouncedFlush } from "@/lib/debounced-write";
 import { loadVenues, saveVenues } from "@/lib/maintenance-storage";
 import { isSupabaseConfigured } from "@/lib/supabase";
+import { useAuth } from "@/store/useAuth";
 import type { Venue } from "@/types";
 
 interface VenuesState {
   venues: Venue[];
+  // venue id → contributor (null = orphaned); gates the delete affordance to
+  // what the RLS delete policy will permit. Empty in local mode.
+  owners: Record<string, string | null>;
   addVenue: (venue: Venue) => void;
   updateVenue: (id: string, patch: Partial<Omit<Venue, "id">>) => void;
   removeVenue: (id: string) => void;
@@ -41,11 +45,16 @@ export const hasPendingVenueWrites = pendingWrites.hasPending;
 // every project that touches it, so this must never become a SPECS key.
 export const useVenues = create<VenuesState>()((set, get) => ({
   venues: isSupabaseConfigured ? [] : loadVenues(),
+  owners: {},
 
   addVenue: (venue) => {
     const venues = [...get().venues, venue];
-    if (isSupabaseConfigured) void insertVenue(venue).catch(() => {});
-    else saveVenues(venues);
+    if (isSupabaseConfigured) {
+      void insertVenue(venue).catch(() => {});
+      set({ venues, owners: { ...get().owners, [venue.id]: useAuth.getState().user?.id ?? null } });
+      return;
+    }
+    saveVenues(venues);
     set({ venues });
   },
 
@@ -58,13 +67,25 @@ export const useVenues = create<VenuesState>()((set, get) => ({
   removeVenue: (id) => {
     pendingWrites.cancel(id);
     const venues = get().venues.filter((v) => v.id !== id);
-    if (isSupabaseConfigured) void deleteVenueRemote(id).catch(() => {});
+    if (isSupabaseConfigured)
+      void deleteVenueRemote(id).catch(() => {
+        // Denied delete: the optimistic removal was wrong. Refetch to resurrect
+        // — unless a debounced edit is pending, where a refetch would clobber
+        // it; the next realtime event restores the row in that rare race.
+        if (!pendingWrites.hasPending()) void get().hydrateFromServer().catch(() => {});
+      });
     else saveVenues(venues);
-    set({ venues });
+    const owners = { ...get().owners };
+    delete owners[id];
+    set({ venues, owners });
   },
 
   hydrateFromServer: async () => {
-    set({ venues: await fetchVenues() });
+    const rows = await fetchVenues();
+    set({
+      venues: rows.map((r) => r.record),
+      owners: Object.fromEntries(rows.map((r) => [r.record.id, r.createdBy])),
+    });
   },
 }));
 

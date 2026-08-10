@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { AuthScreen } from "@/components/AuthScreen";
 import { CommandPalette } from "@/components/CommandPalette";
 import { DialogHost } from "@/components/DialogHost";
+import { WorkspaceErrorBoundary } from "@/components/WorkspaceErrorBoundary";
 import { SettingsPanel } from "@/components/SettingsPanel";
 import { SharePanel } from "@/components/SharePanel";
 import { Rail } from "@/components/shell/Rail";
@@ -22,6 +23,8 @@ export default function App() {
   const module = useApp((s) => s.module);
   const tweaks = useApp((s) => s.tweaks);
   const ready = useApp((s) => s.ready);
+  const bootError = useApp((s) => s.bootError);
+  const currentProjectId = useApp((s) => s.currentProjectId);
   const authConfigured = useAuth((s) => s.configured);
   const authStatus = useAuth((s) => s.status);
 
@@ -70,26 +73,46 @@ export default function App() {
   } else if (authConfigured && authStatus === "signed-out") {
     content = <AuthScreen />;
   } else if (authConfigured && !ready) {
-    content = <div className="boot-splash">Loading workspace…</div>;
+    // A failed bootstrap surfaces here with a retry — the effect above never
+    // refires on its own (its deps don't change), so without this the splash
+    // would sit forever on a transient network error.
+    content = bootError ? (
+      <div className="boot-splash">
+        <span>Workspace failed to load</span>
+        <span className="boot-splash-detail">{bootError}</span>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button className="tb-btn primary" onClick={() => void useApp.getState().bootstrap()}>
+            Retry
+          </button>
+          <button className="tb-btn" onClick={() => void useAuth.getState().signOut()}>
+            Sign out
+          </button>
+        </div>
+      </div>
+    ) : (
+      <div className="boot-splash">Loading workspace…</div>
+    );
   } else {
     content = (
-      <div className="app">
-        <Rail />
-        <Topbar />
-        {tweaks.shell === "tabs" && <Tabs />}
-        <main className="main">
-          {module === "wall" && <LedWallModule />}
-          {module === "system" && <SystemDesignerModule />}
-          {module === "rack" && <RackBuilderModule />}
-          {module === "inv" && <InventoryModule />}
-          {module === "docs" && <DocsModule />}
-          {module === "maint" && <MaintenanceModule />}
-        </main>
-        <StatusBar />
-        <CommandPalette />
-        <SettingsPanel />
-        <SharePanel />
-      </div>
+      <WorkspaceErrorBoundary key={currentProjectId}>
+        <div className="app">
+          <Rail />
+          <Topbar />
+          {tweaks.shell === "tabs" && <Tabs />}
+          <main className="main">
+            {module === "wall" && <LedWallModule />}
+            {module === "system" && <SystemDesignerModule />}
+            {module === "rack" && <RackBuilderModule />}
+            {module === "inv" && <InventoryModule />}
+            {module === "docs" && <DocsModule />}
+            {module === "maint" && <MaintenanceModule />}
+          </main>
+          <StatusBar />
+          <CommandPalette />
+          <SettingsPanel />
+          <SharePanel />
+        </div>
+      </WorkspaceErrorBoundary>
     );
   }
 

@@ -9,6 +9,10 @@ import { useSettings } from "@/store/useSettings";
 import { useShare } from "@/store/useShare";
 import type { ModuleId } from "@/types";
 
+function errorText(err: unknown): string {
+  return err instanceof Error ? err.message : String(err);
+}
+
 const MODULE_LABELS: Record<ModuleId, string> = {
   wall: "LED Wall Builder",
   system: "System Designer",
@@ -50,7 +54,11 @@ export function Topbar() {
     const name = (await promptDialog("New project name?"))?.trim();
     if (!name) return;
     const client = (await promptDialog("Client name?"))?.trim() || "—";
-    addProject(name, client);
+    try {
+      await addProject(name, client);
+    } catch (err) {
+      await alertDialog(`Couldn't create the project: ${errorText(err)}`);
+    }
   };
 
   const handleDeleteProject = async () => {
@@ -60,7 +68,12 @@ export function Topbar() {
       }. This can't be undone.`,
       { danger: true, confirmLabel: "Delete" },
     );
-    if (ok) await deleteProject();
+    if (!ok) return;
+    try {
+      await deleteProject();
+    } catch (err) {
+      await alertDialog(`Couldn't delete the project: ${errorText(err)}`);
+    }
   };
 
   const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -80,7 +93,11 @@ export function Topbar() {
         <label className="proj-pill mono proj-select">
           <select
             value={currentProjectId}
-            onChange={(e) => setCurrentProjectId(e.target.value)}
+            onChange={(e) => {
+              void setCurrentProjectId(e.target.value).catch((err: unknown) =>
+                alertDialog(`Couldn't open the project: ${errorText(err)}`),
+              );
+            }}
           >
             {projects.map((p) => (
               <option key={p.id} value={p.id}>

@@ -7,13 +7,23 @@ import type { MaintenanceEntry, Venue } from "@/types";
 // client record verbatim so its generated `id` round-trips and writes filter on
 // `data->>id`. See supabase/migrations/0004_venues_maintenance.sql.
 
-export async function fetchVenues(): Promise<Venue[]> {
+// Fetches carry created_by so the stores can gate delete affordances to what
+// the RLS delete policy (own or orphaned) will actually permit.
+export interface OwnedRow<T> {
+  record: T;
+  createdBy: string | null;
+}
+
+export async function fetchVenues(): Promise<OwnedRow<Venue>[]> {
   const { data, error } = await supabase
     .from("venues")
-    .select("data")
+    .select("data, created_by")
     .order("created_at", { ascending: true });
   if (error) throw error;
-  return ((data ?? []) as { data: Venue }[]).map((r) => r.data);
+  return ((data ?? []) as { data: Venue; created_by: string | null }[]).map((r) => ({
+    record: r.data,
+    createdBy: r.created_by,
+  }));
 }
 
 export async function insertVenue(venue: Venue): Promise<void> {
@@ -28,17 +38,26 @@ export async function updateVenueRemote(venue: Venue): Promise<void> {
 }
 
 export async function deleteVenueRemote(venueId: string): Promise<void> {
-  const { error } = await supabase.from("venues").delete().eq("data->>id", venueId);
+  const { data, error } = await supabase
+    .from("venues")
+    .delete()
+    .eq("data->>id", venueId)
+    .select("id");
   if (error) throw error;
+  // RLS filters undeletable rows rather than erroring — 0 rows means denied.
+  if (!data || data.length === 0) throw new Error("No deletable row (not the contributor)");
 }
 
-export async function fetchMaintenanceEntries(): Promise<MaintenanceEntry[]> {
+export async function fetchMaintenanceEntries(): Promise<OwnedRow<MaintenanceEntry>[]> {
   const { data, error } = await supabase
     .from("maintenance_entries")
-    .select("data")
+    .select("data, created_by")
     .order("created_at", { ascending: true });
   if (error) throw error;
-  return ((data ?? []) as { data: MaintenanceEntry }[]).map((r) => r.data);
+  return ((data ?? []) as { data: MaintenanceEntry; created_by: string | null }[]).map((r) => ({
+    record: r.data,
+    createdBy: r.created_by,
+  }));
 }
 
 export async function insertMaintenanceEntry(entry: MaintenanceEntry): Promise<void> {
@@ -58,6 +77,11 @@ export async function updateMaintenanceEntryRemote(entry: MaintenanceEntry): Pro
 }
 
 export async function deleteMaintenanceEntryRemote(entryId: string): Promise<void> {
-  const { error } = await supabase.from("maintenance_entries").delete().eq("data->>id", entryId);
+  const { data, error } = await supabase
+    .from("maintenance_entries")
+    .delete()
+    .eq("data->>id", entryId)
+    .select("id");
   if (error) throw error;
+  if (!data || data.length === 0) throw new Error("No deletable row (not the contributor)");
 }

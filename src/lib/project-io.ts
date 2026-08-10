@@ -81,15 +81,28 @@ export async function importProject(file: File): Promise<void> {
   } else {
     writeBucket(currentId, migrated);
   }
+  // Field-level trust boundary: the file is user-supplied JSON, and a non-string
+  // name/client/status (or a malformed revision row) would render as garbage or
+  // crash React. Take only what has the right shape; applyState above did the
+  // same for the module buckets.
   const importedProject = data.project;
-  if (importedProject) {
-    app.updateCurrentProject({
-      name: importedProject.name,
-      client: importedProject.client,
-      status: importedProject.status,
-    });
+  if (importedProject && typeof importedProject === "object") {
+    const patch: Partial<Project> = {};
+    if (typeof importedProject.name === "string") patch.name = importedProject.name;
+    if (typeof importedProject.client === "string") patch.client = importedProject.client;
+    if (typeof importedProject.status === "string") patch.status = importedProject.status;
+    if (Object.keys(patch).length > 0) app.updateCurrentProject(patch);
   }
   if (Array.isArray(data.revisions)) {
-    app.setRevisionsForCurrent(data.revisions);
+    app.setRevisionsForCurrent(
+      (data.revisions as unknown[]).filter(
+        (r): r is Revision =>
+          r != null &&
+          typeof r === "object" &&
+          typeof (r as Revision).n === "number" &&
+          typeof (r as Revision).note === "string" &&
+          typeof (r as Revision).at === "string",
+      ),
+    );
   }
 }

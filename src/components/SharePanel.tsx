@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { I } from "@/components/Icon";
 import { useApp } from "@/store/useApp";
 import { useAuth } from "@/store/useAuth";
-import { confirmDialog } from "@/store/useDialog";
+import { alertDialog, confirmDialog } from "@/store/useDialog";
 import { useShare } from "@/store/useShare";
 import type { MemberRole } from "@/types";
 
@@ -178,7 +178,13 @@ export function SharePanel() {
                 });
                 if (ok) {
                   close();
-                  void leaveProject();
+                  // Surfaces both transient failures and the server's
+                  // last-owner guard (0007), which rejects the removal.
+                  void leaveProject().catch((err: unknown) =>
+                    alertDialog(
+                      `Couldn't leave the project: ${err instanceof Error ? err.message : String(err)}`,
+                    ),
+                  );
                 }
               }}
             >

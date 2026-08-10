@@ -3,8 +3,10 @@ import { DeviceLink } from "@/components/DeviceLink";
 import { I } from "@/components/Icon";
 import { PrintSheet } from "@/components/PrintSheet";
 import { downloadCsv, stamp } from "@/lib/export-csv";
+import { canDeleteShared } from "@/lib/ownership";
 import { RACK_CATALOG, RACK_COLOR_MAP } from "@/lib/rack-data";
 import { useApp } from "@/store/useApp";
+import { useAuth } from "@/store/useAuth";
 import { useCatalog } from "@/store/useCatalog";
 import { confirmDialog, promptDialog } from "@/store/useDialog";
 import type { RackColor, RackSize } from "@/types";
@@ -62,6 +64,8 @@ export function RackBuilderModule() {
   const customRack = useCatalog((s) => s.rack);
   const addRackDef = useCatalog((s) => s.addRackDef);
   const removeRackDef = useCatalog((s) => s.removeRackDef);
+  const catalogOwners = useCatalog((s) => s.owners);
+  const myId = useAuth((s) => s.user?.id);
 
   // Elevation rows run top-of-rack down, the way a rack is read on site. A
   // device renders once at its topmost U and spans its height.
@@ -452,7 +456,7 @@ export function RackBuilderModule() {
                   >
                     <I.Plus size={11} />
                   </button>
-                  {isCustom && (
+                  {isCustom && canDeleteShared(catalogOwners[c.id], myId) && (
                     <button
                       className="icon-btn"
                       title="Remove custom equipment"

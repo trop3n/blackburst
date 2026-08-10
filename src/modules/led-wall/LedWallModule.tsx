@@ -3,7 +3,9 @@ import { I } from "@/components/Icon";
 import { PrintSheet } from "@/components/PrintSheet";
 import { FAULT_PANELS, PANEL_LIBRARY } from "@/lib/data";
 import { LED_PROCESSORS } from "@/lib/led-processor-data";
+import { canDeleteShared } from "@/lib/ownership";
 import { useApp } from "@/store/useApp";
+import { useAuth } from "@/store/useAuth";
 import { useCatalog } from "@/store/useCatalog";
 import { confirmDialog, promptDialog } from "@/store/useDialog";
 import { computeWallCalc } from "./calculations";
@@ -42,6 +44,8 @@ export function LedWallModule() {
   const customPanels = useCatalog((s) => s.panel);
   const addPanelDef = useCatalog((s) => s.addPanelDef);
   const removePanelDef = useCatalog((s) => s.removePanelDef);
+  const catalogOwners = useCatalog((s) => s.owners);
+  const myId = useAuth((s) => s.user?.id);
 
   const addPanel = async () => {
     const model = (await promptDialog("Panel model?"))?.trim();
@@ -311,7 +315,7 @@ export function LedWallModule() {
                   {p.model}
                 </span>
                 <span className="meta">P{p.pitch}</span>
-                {isCustom && (
+                {isCustom && canDeleteShared(catalogOwners[p.id], myId) && (
                   <button
                     className="icon-btn"
                     title="Remove custom panel"

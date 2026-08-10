@@ -107,8 +107,15 @@ interface AppState {
   leaveCurrentProject: () => Promise<void>;
   deleteCurrentProject: () => Promise<void>;
   ready: boolean;
+  // Why the last bootstrap failed; the splash renders it with a retry button.
+  // Deliberately not persisted — a stale error must not outlive the session.
+  bootError: string | null;
   bootstrap: () => Promise<void>;
   resetSession: () => void;
+}
+
+function errorText(err: unknown): string {
+  return err instanceof Error ? err.message : String(err);
 }
 
 export const useApp = create<AppState>()(
@@ -128,14 +135,18 @@ export const useApp = create<AppState>()(
       currentProjectId: "PRJ-0001",
       project: PROJECTS[0],
       ready: !isSupabaseConfigured,
+      bootError: null,
       setCurrentProjectId: async (id) => {
         const cur = get().currentProjectId;
         if (cur === id) return;
         const next = get().projects.find((p) => p.id === id);
         if (!next) return;
         await switchProject(cur, id);
+        // Best-effort: once the stores hold the new project, the header must
+        // switch with them — a failed revision list must not strand the UI
+        // labeled with the old project over the new project's data.
         const revisions = isSupabaseConfigured
-          ? await fetchRevisions(id)
+          ? await fetchRevisions(id).catch(() => [] as Revision[])
           : get().revisionsByProject[id] ?? [];
         set((s) => ({
           currentProjectId: id,
@@ -213,7 +224,7 @@ export const useApp = create<AppState>()(
         }
         const nextProj = remaining[0];
         await initProjectStateFromServer(nextProj.id);
-        const revisions = await fetchRevisions(nextProj.id);
+        const revisions = await fetchRevisions(nextProj.id).catch(() => [] as Revision[]);
         set({
           projects: remaining,
           currentProjectId: nextProj.id,
@@ -241,7 +252,7 @@ export const useApp = create<AppState>()(
           }
           const nextProj = remaining[0];
           await initProjectStateFromServer(nextProj.id);
-          const revisions = await fetchRevisions(nextProj.id);
+          const revisions = await fetchRevisions(nextProj.id).catch(() => [] as Revision[]);
           set({
             projects: remaining,
             currentProjectId: nextProj.id,
@@ -277,6 +288,7 @@ export const useApp = create<AppState>()(
         }
         if (bootstrapping) return;
         bootstrapping = true;
+        set({ bootError: null });
         try {
           try {
             await claimInvites();
@@ -300,7 +312,7 @@ export const useApp = create<AppState>()(
           const persistedId = get().currentProjectId;
           const current = projects.find((p) => p.id === persistedId) ?? projects[0];
           await initProjectStateFromServer(current.id);
-          const revisions = await fetchRevisions(current.id);
+          const revisions = await fetchRevisions(current.id).catch(() => [] as Revision[]);
           try {
             await useCatalog.getState().hydrateFromServer();
           } catch {
@@ -332,6 +344,11 @@ export const useApp = create<AppState>()(
             revisionsByProject: { [current.id]: revisions },
             ready: true,
           });
+        } catch (err) {
+          // A transient failure used to strand the splash forever: the effect
+          // that calls bootstrap never refires (its deps don't change), so the
+          // error must surface with an explicit retry.
+          set({ bootError: errorText(err) });
         } finally {
           bootstrapping = false;
         }
@@ -339,7 +356,7 @@ export const useApp = create<AppState>()(
       resetSession: () => {
         clearActiveProject();
         unsubscribeGlobalTables();
-        set({ ready: false, projects: [], revisions: [], revisionsByProject: {} });
+        set({ ready: false, bootError: null, projects: [], revisions: [], revisionsByProject: {} });
       },
     }),
     {

@@ -3,8 +3,10 @@ import { DeviceLink } from "@/components/DeviceLink";
 import { I } from "@/components/Icon";
 import { PrintSheet } from "@/components/PrintSheet";
 import { downloadCsv, stamp } from "@/lib/export-csv";
+import { canDeleteShared } from "@/lib/ownership";
 import { SYSTEM_DEVICES } from "@/lib/system-data";
 import { useApp } from "@/store/useApp";
+import { useAuth } from "@/store/useAuth";
 import { useCatalog } from "@/store/useCatalog";
 import { confirmDialog, promptDialog } from "@/store/useDialog";
 import type { Lane, PatchEntry, PatchLane, SystemEdge, SystemNode } from "@/types";
@@ -157,6 +159,8 @@ export function SystemDesignerModule() {
   const devices = useCatalog((s) => s.system);
   const addSystemDef = useCatalog((s) => s.addSystemDef);
   const removeSystemDef = useCatalog((s) => s.removeSystemDef);
+  const catalogOwners = useCatalog((s) => s.owners);
+  const myId = useAuth((s) => s.user?.id);
   const [paletteSearch, setPaletteSearch] = useState("");
 
   const addDevice = async () => {
@@ -441,7 +445,7 @@ export function SystemDesignerModule() {
                     >
                       <I.Move size={12} />
                       <span className="lbl">{d.name}</span>
-                      {isCustom && (
+                      {isCustom && canDeleteShared(catalogOwners[d.id], myId) && (
                         <button
                           className="icon-btn"
                           style={{ marginLeft: "auto" }}
