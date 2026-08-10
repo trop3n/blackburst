@@ -1,7 +1,7 @@
 # Supabase setup (auth & sharing)
 
 Blackburst runs in **local-only mode** until these two env vars are set; then it
-enforces magic-link sign-in and stores every project on the server, shared by
+gates behind sign-in and stores every project on the server, shared by
 membership. Follow these once.
 
 ## 1. Create a project
@@ -25,14 +25,23 @@ fire-and-forget (`.catch(() => {})`) so a missing table fails *silently* — the
 catalog, device registry and maintenance log will simply never persist, with no
 error surfaced. If server-backed data seems to vanish, check this first.
 
-## 3. Configure auth URLs
-**Authentication → URL Configuration**:
+## 3. Create the accounts
+**Email + password is the primary sign-in path**, and there is no self-signup:
+create each user under **Authentication → Users → Add user**, with **Auto
+Confirm** on. This sends no email, so it is unaffected by the rate limit below.
+Password resets are done from the same screen.
+
+The magic-link / one-time-code path is built and reachable from the sign-in
+screen ("Email me a sign-in link instead"), but is **impractical on the default
+email service**, which allows only a few messages an hour. To use it, configure
+**custom SMTP** under **Project Settings → Auth**, and — for the 6-digit code —
+add `{{ .Token }}` to the template under **Authentication → Email Templates**;
+the stock template omits it, so no code is actually delivered.
+
+If you enable that path, also set **Authentication → URL Configuration**:
 - **Site URL** — your production origin (e.g. `https://blackburst.vercel.app`).
 - **Redirect URLs** — add `http://localhost:5173` and your Vercel origin so the
-  magic link returns to the app.
-
-Email magic-link sign-in is enabled by default. (Optionally customize the email
-template under **Authentication → Email Templates**.)
+  link returns to the app.
 
 ## 4. Set env vars
 Copy `.env.example` to `.env.local` in the repo root and fill in:
@@ -47,7 +56,7 @@ same two variables in **Vercel → Project Settings → Environment Variables** 
 redeploy.
 
 ## 5. First sign-in
-Enter your email → open the magic link on the same device. The app bootstraps
+Enter the email and password of an account created in step 3. The app bootstraps
 your workspace; if this browser had local projects, it offers to import them once.
 
 ## Model
@@ -59,4 +68,11 @@ your workspace; if this browser had local projects, it offers to import them onc
   (enforced by RLS, with edit affordances disabled in the UI).
 - Each project's full module state is one JSONB row in **`project_state`**;
   autosave upserts it (250 ms debounced), and realtime refreshes collaborators.
+  The global tables — `catalog_items`, `devices`, `venues`, `maintenance_entries`
+  — sync the same way once 0005 is applied.
 - Concurrency is **last-write-wins** per project — fine for v1, not a live CRDT.
+- **Realtime ignores rows whose `updated_by` is the current user**, so a session
+  never reacts to its own echo. Consequence when testing: **one account open in
+  two windows will not sync**, and looks completely broken. Verify with two
+  different accounts in separate browser profiles. Expect roughly a second end to
+  end (400 ms write debounce + 300 ms refresh debounce + network).
