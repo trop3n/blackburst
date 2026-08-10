@@ -267,6 +267,11 @@ button { font-family: inherit; color: inherit; }
   border-radius: 3px;
   cursor: pointer;
   display: flex; align-items: center; gap: 6px;
+  /* A crowded toolbar must squeeze its elastic item, never the buttons: without
+     this a two-word label ("Log Entry", "Check Out") wraps to a second line and
+     the button outgrows the 32px bar it sits in. */
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 .tb-btn:hover { background: var(--color-bg-2); color: var(--color-fg); border-color: var(--color-line-strong); }
 .tb-btn.primary {
@@ -586,22 +591,37 @@ button { font-family: inherit; color: inherit; }
 
 /* Toolbar above canvas */
 .canvas-toolbar {
-  height: 32px;
+  /* min-height, not height: a single row is unchanged at 32px, but a crowded bar
+     (the Maintenance Log's 7 kind filters alone outgrow it below ~1300px) wraps
+     to a second row instead of clipping or overlapping its controls. */
+  min-height: 32px;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  padding: 0 10px;
+  padding: 2px 10px;
   gap: 4px;
   border-bottom: 1px solid var(--color-line);
   background: var(--color-bg-1);
   flex-shrink: 0;
   font-size: var(--text-sm);
 }
+/* The filter field is the toolbar's elastic item and absorbs the slack, so it
+   and its input both need to shrink past their intrinsic width — a flex item's
+   default `min-width: auto` floors them at the input's min-content size and
+   pushes the overflow onto the neighbouring buttons instead. The floor below
+   keeps it a usable field rather than letting it collapse to nothing. */
+.canvas-toolbar .search { min-width: 140px; }
+.canvas-toolbar .search input { min-width: 0; }
 .tg {
   display: flex;
   background: var(--color-bg-2);
   border: 1px solid var(--color-line-strong);
   border-radius: 3px;
   overflow: hidden;
+  /* Paired with the `overflow: hidden` above, shrinking silently clips the
+     trailing segments — the Maintenance Log's 7 kind filters lost the last 3 to
+     it, unreachable rather than merely cramped. */
+  flex-shrink: 0;
 }
 .tg button {
   background: transparent;
@@ -624,6 +644,7 @@ button { font-family: inherit; color: inherit; }
   width: 1px; height: 18px;
   background: var(--color-line-strong);
   margin: 0 4px;
+  flex-shrink: 0;
 }
 
 /* Inspector tabs */
