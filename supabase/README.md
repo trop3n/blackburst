@@ -19,6 +19,7 @@ order. (Or, with the Supabase CLI: `supabase db push`.)
 | [`0003_devices.sql`](./migrations/0003_devices.sql) | `devices` — the global device registry (a physical box outlives the project that specified it) |
 | [`0004_venues_maintenance.sql`](./migrations/0004_venues_maintenance.sql) | `venues` + `maintenance_entries` — the Maintenance Log; requires 0003 |
 | [`0005_realtime_global.sql`](./migrations/0005_realtime_global.sql) | puts the four global tables on the realtime publication and adds `updated_by` so a client can ignore its own echo; requires 0002–0004 |
+| [`0006_project_state_stamp.sql`](./migrations/0006_project_state_stamp.sql) | stamps `project_state.updated_by` / `updated_at` server-side, so the echo check can't be defeated by a forged client value; **must be applied before deploying a client built after it** |
 
 **Applying only 0001 leaves the app half-working.** Server writes are
 fire-and-forget (`.catch(() => {})`) so a missing table fails *silently* — the

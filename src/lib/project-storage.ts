@@ -31,6 +31,33 @@ let autosaveStarted = false;
 let saveTimer: ReturnType<typeof setTimeout> | null = null;
 const SAVE_DEBOUNCE_MS = 250;
 
+// Dirtiness ledger for the pagehide/hidden flush: editSeq advances on every
+// store change, savedSeq on every *confirmed* persist. Equal means nothing
+// unconfirmed, so the flush can skip — the old unconditional flush re-upserted
+// the whole bucket on every tab switch, each write waking every collaborator's
+// realtime handler. Covers the fired-but-in-flight window too, which a plain
+// saveTimer check would miss.
+let editSeq = 0;
+let savedSeq = 0;
+
+// Drop a queued autosave without firing it. Load and teardown paths must call
+// this: a timer that survives into delete/leave fires against a project row
+// that no longer exists, surfacing as a spurious RLS save error.
+export function cancelPendingSave() {
+  if (saveTimer != null) {
+    clearTimeout(saveTimer);
+    saveTimer = null;
+  }
+}
+
+// A freshly loaded (or discarded) project starts clean: the ledger aligns and
+// the status surface resets, so the status bar never describes the previous
+// project's save state.
+function markClean() {
+  savedSeq = editSeq;
+  useSaveStatus.getState().reset();
+}
+
 interface StoreSpec {
   fields: readonly string[];
   defaults: Record<string, unknown>;
@@ -241,10 +268,7 @@ export function applyState(buckets: ProjectStateBuckets) {
 
 export async function switchProject(fromId: string, toId: string) {
   if (fromId === toId) return;
-  if (saveTimer != null) {
-    clearTimeout(saveTimer);
-    saveTimer = null;
-  }
+  cancelPendingSave();
   if (isSupabaseConfigured) {
     // Best-effort save-away: a viewer's write is RLS-denied, and a transient
     // error must never block navigating to another project.
@@ -252,6 +276,7 @@ export async function switchProject(fromId: string, toId: string) {
     const bucket = await fetchBucket(toId);
     applyState(bucket ?? defaultBucket());
     activeProjectId = toId;
+    markClean();
     subscribeToBucket(toId, applyRemote);
     return;
   }
@@ -261,6 +286,7 @@ export async function switchProject(fromId: string, toId: string) {
   applyState(next);
   activeProjectId = toId;
   saveAll(all);
+  markClean();
 }
 
 export function saveCurrentBucket(projectId: string) {
@@ -278,15 +304,13 @@ export function writeBucket(projectId: string, buckets: ProjectStateBuckets) {
 // Local-mode project delete: drop the removed project's bucket and load `nextId`
 // into the live stores (mirrors switchProject's load, minus the save-away).
 export function deleteProjectLocal(deletedId: string, nextId: string) {
-  if (saveTimer != null) {
-    clearTimeout(saveTimer);
-    saveTimer = null;
-  }
+  cancelPendingSave();
   const all = loadAll();
   delete all[deletedId];
   applyState(all[nextId] ?? defaultBucket());
   activeProjectId = nextId;
   saveAll(all);
+  markClean();
 }
 
 function messageOf(err: unknown): string {
@@ -296,16 +320,21 @@ function messageOf(err: unknown): string {
 function persistActiveBucket() {
   if (activeProjectId == null) return;
   const status = useSaveStatus.getState();
+  const seq = editSeq;
   if (isSupabaseConfigured) {
     // Still fire-and-forget so a viewer's RLS-denied write never blocks the UI,
     // but the outcome is now reported instead of swallowed.
     status.markSaving();
     void upsertBucket(activeProjectId, snapshotCurrent())
-      .then(() => useSaveStatus.getState().markSaved())
+      .then(() => {
+        savedSeq = Math.max(savedSeq, seq);
+        useSaveStatus.getState().markSaved();
+      })
       .catch((err: unknown) => useSaveStatus.getState().markError(messageOf(err)));
   } else {
     try {
       saveCurrentBucket(activeProjectId);
+      savedSeq = Math.max(savedSeq, seq);
       status.markSaved();
     } catch (err) {
       status.markError(messageOf(err));
@@ -313,18 +342,27 @@ function persistActiveBucket() {
   }
 }
 
+// Flush on pagehide / visibility→hidden — but only when the ledger says
+// something is unconfirmed. The beacon's status is reported from its actual
+// response: if the page dies first the promise never settles and nobody reads
+// the status bar anyway; if the page survives (tab switch), the bar tells the
+// truth instead of asserting "saved" for a write whose outcome was unknown.
 function flushSave() {
-  if (saveTimer != null) {
-    clearTimeout(saveTimer);
-    saveTimer = null;
-  }
-  if (activeProjectId == null) return;
+  cancelPendingSave();
+  if (activeProjectId == null || editSeq === savedSeq) return;
+  const seq = editSeq;
   if (isSupabaseConfigured) {
-    beaconUpsertBucket(activeProjectId, snapshotCurrent());
-    useSaveStatus.getState().markSaved();
+    useSaveStatus.getState().markSaving();
+    beaconUpsertBucket(activeProjectId, snapshotCurrent())
+      .then(() => {
+        savedSeq = Math.max(savedSeq, seq);
+        useSaveStatus.getState().markSaved();
+      })
+      .catch((err: unknown) => useSaveStatus.getState().markError(messageOf(err)));
   } else {
     try {
       saveCurrentBucket(activeProjectId);
+      savedSeq = Math.max(savedSeq, seq);
       useSaveStatus.getState().markSaved();
     } catch (err) {
       useSaveStatus.getState().markError(messageOf(err));
@@ -334,6 +372,7 @@ function flushSave() {
 
 function scheduleSave() {
   if (applying || activeProjectId == null) return;
+  editSeq++;
   useSaveStatus.getState().markPending();
   if (saveTimer != null) clearTimeout(saveTimer);
   // Null the handle when it fires so applyRemote (which skips while a save is
@@ -368,22 +407,26 @@ export function initProjectState(projectId: string) {
   const buckets = all[projectId] ?? defaultBucket();
   applyState(buckets);
   activeProjectId = projectId;
+  markClean();
   startAutosave();
 }
 
 export async function initProjectStateFromServer(projectId: string) {
+  // Delete/leave land here with the doomed project possibly still holding a
+  // queued autosave; callers cancel before their server call, and this covers
+  // any path that doesn't.
+  cancelPendingSave();
   const bucket = await fetchBucket(projectId);
   applyState(bucket ?? defaultBucket());
   activeProjectId = projectId;
+  markClean();
   startAutosave();
   subscribeToBucket(projectId, applyRemote);
 }
 
 export function clearActiveProject() {
-  if (saveTimer != null) {
-    clearTimeout(saveTimer);
-    saveTimer = null;
-  }
+  cancelPendingSave();
   activeProjectId = null;
+  markClean();
   unsubscribeBucket();
 }

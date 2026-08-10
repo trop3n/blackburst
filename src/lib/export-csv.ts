@@ -1,9 +1,17 @@
 // RFC 4180 quoting: wrap in quotes when the value contains a delimiter, quote or
 // newline, and double any embedded quotes. Model names carry commas often enough
 // (e.g. "BMD 2110 IP Converter 3x3G, SFP") that this can't be skipped.
+//
+// Quoting does NOT stop Excel/Sheets from evaluating a leading = + - @ (or tab/
+// CR) as a formula. Exported cells carry collaborator-supplied text — device
+// models, serials, entry summaries — which must never execute on the machine
+// that opens the file, so string cells get the standard apostrophe prefix
+// (Excel reads it as a text marker and hides it). Numbers are exempt so
+// negative readouts stay numeric.
 function cell(value: string | number): string {
   const s = String(value ?? "");
-  return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  const guarded = typeof value === "string" && /^[=+\-@\t\r]/.test(s) ? `'${s}` : s;
+  return /[",\r\n]/.test(guarded) ? `"${guarded.replace(/"/g, '""')}"` : guarded;
 }
 
 export function toCsv(headers: string[], rows: (string | number)[][]): string {

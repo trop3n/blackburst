@@ -10,6 +10,9 @@ interface SaveStatusState {
   markSaving: () => void;
   markSaved: () => void;
   markError: (message: string) => void;
+  // Back to idle on project load/teardown — a "saved 12:01" or a canceled
+  // "pending" from the previous project must not describe the next one.
+  reset: () => void;
 }
 
 // Autosave is fire-and-forget so it never blocks editing, which used to mean a
@@ -23,4 +26,5 @@ export const useSaveStatus = create<SaveStatusState>((set) => ({
   markSaving: () => set({ state: "saving" }),
   markSaved: () => set({ state: "saved", lastSavedAt: Date.now(), error: null }),
   markError: (message) => set({ state: "error", error: message }),
+  reset: () => set({ state: "idle", lastSavedAt: null, error: null }),
 }));

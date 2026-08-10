@@ -14,6 +14,7 @@ import {
   updateProjectRemote,
 } from "@/lib/project-remote";
 import {
+  cancelPendingSave,
   clearActiveProject,
   deleteProjectLocal,
   initProjectStateFromServer,
@@ -196,6 +197,9 @@ export const useApp = create<AppState>()(
         const id = get().currentProjectId;
         const uid = useAuth.getState().user?.id;
         if (!isSupabaseConfigured || !uid) return;
+        // A queued autosave must not fire against a project we're walking away
+        // from — after removeMember it would be RLS-denied and flash an error.
+        cancelPendingSave();
         await removeMember(id, uid);
         let remaining = get().projects.filter((p) => p.id !== id);
         if (remaining.length === 0) {
@@ -221,6 +225,8 @@ export const useApp = create<AppState>()(
       deleteCurrentProject: async () => {
         const id = get().currentProjectId;
         if (isSupabaseConfigured) {
+          // Same as leave: drop any queued autosave before the row disappears.
+          cancelPendingSave();
           await deleteProjectRemote(id);
           let remaining = get().projects.filter((p) => p.id !== id);
           // Never leave the workspace empty — seed a fresh project if it was the last.

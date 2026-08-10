@@ -60,21 +60,25 @@ export async function fetchBucket(projectId: string): Promise<ProjectStateBucket
   return row?.data ?? null;
 }
 
+// updated_by / updated_at are stamped by a server trigger (0006), never sent
+// from here — a client-supplied updated_by can defeat any subscriber's echo
+// check (write a victim's id and their client discards the change as its own).
 export async function upsertBucket(projectId: string, data: ProjectStateBuckets): Promise<void> {
-  const userId = currentUserId();
   const { error } = await supabase.from("project_state").upsert(
-    { project_id: projectId, data, updated_at: new Date().toISOString(), updated_by: userId },
+    { project_id: projectId, data },
     { onConflict: "project_id" },
   );
   if (error) throw error;
 }
 
-// Fire-and-forget upsert for pagehide/visibilitychange — supabase-js can't set
-// `keepalive`, so this posts straight to PostgREST so the write survives unload.
-export function beaconUpsertBucket(projectId: string, data: ProjectStateBuckets): void {
+// Upsert for pagehide/visibilitychange — supabase-js can't set `keepalive`, so
+// this posts straight to PostgREST so the write survives unload. Returns the
+// outcome so a flush the page outlives (tab switch, not close) can report
+// honestly; if the page dies first the promise just never settles.
+export function beaconUpsertBucket(projectId: string, data: ProjectStateBuckets): Promise<void> {
   const session = useAuth.getState().session;
-  if (!SUPABASE_URL || !session) return;
-  void fetch(`${SUPABASE_URL}/rest/v1/project_state`, {
+  if (!SUPABASE_URL || !session) return Promise.resolve();
+  return fetch(`${SUPABASE_URL}/rest/v1/project_state`, {
     method: "POST",
     keepalive: true,
     headers: {
@@ -83,13 +87,10 @@ export function beaconUpsertBucket(projectId: string, data: ProjectStateBuckets)
       Authorization: `Bearer ${session.access_token}`,
       Prefer: "resolution=merge-duplicates",
     },
-    body: JSON.stringify({
-      project_id: projectId,
-      data,
-      updated_at: new Date().toISOString(),
-      updated_by: session.user.id,
-    }),
-  }).catch(() => {});
+    body: JSON.stringify({ project_id: projectId, data }),
+  }).then((res) => {
+    if (!res.ok) throw new Error(`Save failed (HTTP ${res.status})`);
+  });
 }
 
 export async function createProjectRemote(input: {
@@ -109,7 +110,7 @@ export async function createProjectRemote(input: {
   const project = data as unknown as ProjectRow;
   const { error: stateErr } = await supabase
     .from("project_state")
-    .insert({ project_id: project.id, data: input.bucket, updated_by: userId });
+    .insert({ project_id: project.id, data: input.bucket });
   if (stateErr) throw stateErr;
   return toRemote(project, "owner");
 }
