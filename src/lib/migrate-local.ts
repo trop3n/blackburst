@@ -28,11 +28,24 @@ export async function migrateLocalProjects(): Promise<RemoteProject[]> {
   if (!userId) return [];
   const flagKey = `blackburst:migrated:${userId}`;
   if (localStorage.getItem(flagKey)) return [];
+  // Per-project progress: a failure partway must not re-create the projects
+  // that already made it when bootstrap retries.
+  const doneKey = `blackburst:migrated-projects:${userId}`;
+  const done = new Set(readJSON<string[]>(doneKey) ?? []);
 
   const persisted = readJSON<{ state?: LegacyState }>(APP_KEY);
-  const projects = persisted?.state?.projects ?? [];
+  // Only local-shaped projects: a local project's id IS its code (and pre-code
+  // projects have no code at all), while a server project carries a UUID id ≠
+  // code. The filter matters because accounts mode persists the server project
+  // list back into this same key — without it, the next account to sign in on
+  // this browser would be offered the previous user's cloud projects as an
+  // "import" and create empty duplicates of them.
+  const projects = (persisted?.state?.projects ?? []).filter(
+    (p) => (p.code == null || p.id === p.code) && !done.has(p.id),
+  );
   if (projects.length === 0) {
     localStorage.setItem(flagKey, new Date().toISOString());
+    localStorage.removeItem(doneKey);
     return [];
   }
 
@@ -42,6 +55,7 @@ export async function migrateLocalProjects(): Promise<RemoteProject[]> {
   );
   if (!ok) {
     localStorage.setItem(flagKey, "declined");
+    localStorage.removeItem(doneKey);
     return [];
   }
 
@@ -55,11 +69,17 @@ export async function migrateLocalProjects(): Promise<RemoteProject[]> {
       code: p.code ?? p.id,
       bucket: buckets[p.id] ?? scaffoldBucket(),
     });
+    // The project now exists server-side — record that before anything else
+    // can throw, or a retry would import it twice. Revisions are best-effort
+    // for the same reason: losing a note beats duplicating a project.
+    done.add(p.id);
+    localStorage.setItem(doneKey, JSON.stringify([...done]));
     for (const rev of revisionsByProject[p.id] ?? []) {
-      await insertRevision(remote.id, rev);
+      await insertRevision(remote.id, rev).catch(() => {});
     }
     created.push(remote);
   }
   localStorage.setItem(flagKey, new Date().toISOString());
+  localStorage.removeItem(doneKey);
   return created;
 }

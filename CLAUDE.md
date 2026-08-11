@@ -32,6 +32,8 @@ The app uses **in-app dialogs, not native ones** — drive them through the DOM 
 
 Deployed on Vercel from `main` (`vercel.json` pins the Vite preset + `dist`); accounts mode needs the two `VITE_SUPABASE_*` vars set in the Vercel project.
 
+`vercel.json` also sends the security headers, including a CSP. Two directives are load-bearing and non-obvious: **`font-src` needs `data:`** — `@fontsource` inlines a dozen subset faces as `data:font/woff` URIs, and without it the whole UI silently falls back to system fonts — and **`connect-src` must keep `https://*.supabase.co wss://*.supabase.co`**, or accounts mode is fully blocked (REST *and* realtime). Local `vite preview` does **not** apply these headers, so to test a CSP change, build and inject it as a `<meta http-equiv>` into `dist/index.html` (drop `frame-ancestors`, which is ignored in meta) and serve `dist` statically.
+
 Path alias: `@/` → `src/` (set in both `vite.config.ts` and `tsconfig.app.json`).
 
 ## State architecture (read before touching any store)
