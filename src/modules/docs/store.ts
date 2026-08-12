@@ -14,6 +14,11 @@ interface DocsState {
   versions: Record<string, DocVersion[]>;
   leaveGuard: (() => boolean | Promise<boolean>) | null;
   setLeaveGuard: (fn: (() => boolean | Promise<boolean>) | null) => void;
+  // The editor's draft lives in component state, so nothing outside DocsModule
+  // can see that discarding it would lose work. Load paths that can't stop to
+  // ask (the realtime handler) read this instead. Never persisted.
+  editorDirty: boolean;
+  setEditorDirty: (v: boolean) => void;
   setActive: (id: string) => void;
   toggle: (id: string) => void;
   addDoc: (targetId: string | null, name: string) => string | null;
@@ -178,6 +183,8 @@ export const useDocs = create<DocsState>()((set, get) => ({
       versions: INITIAL_VERSIONS,
       leaveGuard: null,
       setLeaveGuard: (fn) => set({ leaveGuard: fn }),
+      editorDirty: false,
+      setEditorDirty: (editorDirty) => set({ editorDirty }),
       setActive: (activeId) => {
         const state = get();
         if (state.activeId === activeId) {

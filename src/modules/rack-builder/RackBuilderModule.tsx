@@ -8,7 +8,7 @@ import { RACK_CATALOG, RACK_COLOR_MAP } from "@/lib/rack-data";
 import { useApp } from "@/store/useApp";
 import { useAuth } from "@/store/useAuth";
 import { useCatalog } from "@/store/useCatalog";
-import { confirmDialog, promptDialog } from "@/store/useDialog";
+import { alertDialog, confirmDialog, promptDialog } from "@/store/useDialog";
 import type { RackColor, RackSize } from "@/types";
 import { activeRackOf, fits, useRack } from "./store";
 
@@ -115,6 +115,47 @@ export function RackBuilderModule() {
         def.depth,
       ]),
     );
+  };
+
+  // Shrinking past a mounted device used to leave it in a slot that no longer
+  // exists: drawn outside the chassis, still counted in the totals, and absent
+  // from the printed elevation. Refuse instead — nothing is moved or dropped.
+  const changeRackSize = async (size: RackSize) => {
+    if (size === rackSize) return;
+    const above = items.filter((i) => {
+      const d = RACK_CATALOG.find((x) => x.id === i.id);
+      return d ? i.pos + d.u - 1 > size : false;
+    });
+    if (above.length > 0) {
+      await alertDialog(
+        `Can't switch ${rack.name} to ${size}U — ${above.length} ${
+          above.length === 1 ? "device sits" : "devices sit"
+        } above U${size}. Move or remove ${above.length === 1 ? "it" : "them"} first.`,
+      );
+      return;
+    }
+    setRackSize(size);
+  };
+
+  // A rack item can't be re-pointed at another model the way a wall can be
+  // re-pointed at another panel — the slot maths depends on its U height — so an
+  // in-use definition is refused rather than reassigned. Only the loaded
+  // project can be checked; items elsewhere surface as MISSING MODEL.
+  const removeEquipment = async (id: string, model: string) => {
+    const uses = racks.reduce((n, r) => n + r.items.filter((i) => i.id === id).length, 0);
+    if (uses > 0) {
+      await alertDialog(
+        `"${model}" is used by ${uses} rack ${uses === 1 ? "item" : "items"} in this project. Remove ${
+          uses === 1 ? "it" : "them"
+        } before deleting the model.`,
+      );
+      return;
+    }
+    const ok = await confirmDialog(
+      `Remove custom equipment "${model}" from the catalog? Items in other projects that use it will show as a missing model.`,
+      { danger: true, confirmLabel: "Remove" },
+    );
+    if (ok) removeRackDef(id);
   };
 
   const renameRack = async () => {
@@ -460,13 +501,9 @@ export function RackBuilderModule() {
                     <button
                       className="icon-btn"
                       title="Remove custom equipment"
-                      onClick={async (e) => {
+                      onClick={(e) => {
                         e.stopPropagation();
-                        const ok = await confirmDialog(
-                          `Remove custom equipment "${c.model}" from the catalog?`,
-                          { danger: true, confirmLabel: "Remove" },
-                        );
-                        if (ok) removeRackDef(c.id);
+                        removeEquipment(c.id, c.model);
                       }}
                     >
                       <I.Cross size={11} />
@@ -502,7 +539,7 @@ export function RackBuilderModule() {
               <button
                 key={s}
                 data-active={rackSize === s ? "1" : "0"}
-                onClick={() => setRackSize(s)}
+                onClick={() => changeRackSize(s)}
               >
                 {s}U
               </button>
@@ -710,7 +747,38 @@ export function RackBuilderModule() {
                       {/* Items */}
                       {items.map((it) => {
                         const def = RACK_CATALOG.find((d) => d.id === it.id);
-                        if (!def) return null;
+                        // A custom model deleted from the shared catalog (possibly
+                        // by another user) leaves its items behind. Draw them so
+                        // they stay selectable and removable instead of becoming
+                        // invisible ghosts that still occupy the bucket.
+                        if (!def)
+                          return (
+                            <div
+                              key={it.iid}
+                              onClick={() => setSelectedIid(it.iid)}
+                              style={{
+                                position: "absolute",
+                                left: 8,
+                                right: 8,
+                                top: (rackSize - it.pos) * U_HEIGHT,
+                                height: U_HEIGHT - 1,
+                                border: `1px dashed ${
+                                  selectedIid === it.iid ? "var(--accent)" : "var(--color-err)"
+                                }`,
+                                background: "var(--color-bg-2)",
+                                display: "flex",
+                                alignItems: "center",
+                                padding: "0 8px",
+                                fontFamily: "var(--font-mono)",
+                                fontSize: 9.5,
+                                color: "var(--color-err)",
+                                cursor: "pointer",
+                                overflow: "hidden",
+                              }}
+                            >
+                              MISSING MODEL · {it.id}
+                            </div>
+                          );
                         const col = RACK_COLOR_MAP[def.color];
                         const top = (rackSize - (it.pos + def.u - 1)) * U_HEIGHT;
                         const h = def.u * U_HEIGHT;
@@ -1165,6 +1233,33 @@ export function RackBuilderModule() {
               }}
             >
               ↑ / ↓ nudge · DEL removes · drag to reslot
+            </div>
+          </div>
+        ) : selected ? (
+          <div className="pane-body">
+            <div className="readout">
+              <div className="lbl">SELECTED · U{selected.pos}</div>
+              <div className="val" style={{ fontSize: 14, color: "var(--color-err)" }}>
+                Missing model
+              </div>
+            </div>
+            <div className="kv">
+              <span className="k">Model id</span>
+              <span className="v mono">{selected.id}</span>
+            </div>
+            <div style={{ padding: "8px 12px", fontSize: 11, color: "var(--color-fg-mute)" }}>
+              This model is no longer in the equipment catalog, so its specification —
+              height, weight, power and depth — is gone and it counts for nothing in the
+              rack totals. Remove the item, or re-add the model to the catalog.
+            </div>
+            <div style={{ padding: "0 12px 8px" }}>
+              <button
+                className="tb-btn danger"
+                style={{ width: "100%", justifyContent: "center" }}
+                onClick={() => removeItem(selected.iid)}
+              >
+                <I.Cross size={12} /> Remove
+              </button>
             </div>
           </div>
         ) : (

@@ -298,6 +298,24 @@ export function DocsModule() {
     return () => setLeaveGuard(null);
   }, []);
 
+  const dirty = editing && bodyDraft !== bodyDraftInitial;
+
+  // Publish dirtiness for the load paths that can't stop to ask — the realtime
+  // handler applies a collaborator's bucket, which resets the active doc.
+  useEffect(() => {
+    useDocs.getState().setEditorDirty(dirty);
+    return () => useDocs.getState().setEditorDirty(false);
+  }, [dirty]);
+
+  // Every other surface in the app autosaves, so a reload with the editor open
+  // silently took the draft with it. Only armed while there is something to lose.
+  useEffect(() => {
+    if (!dirty) return;
+    const onBeforeUnload = (e: BeforeUnloadEvent) => e.preventDefault();
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => window.removeEventListener("beforeunload", onBeforeUnload);
+  }, [dirty]);
+
   function saveEdit() {
     setBody(activeId, bodyDraft);
     setEditing(false);

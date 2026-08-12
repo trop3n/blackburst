@@ -3,6 +3,7 @@ import { persist } from "zustand/middleware";
 import { subscribeGlobalTables, unsubscribeGlobalTables } from "@/lib/global-realtime";
 import { hoistLegacyDevicesRemote } from "@/lib/migrate-devices";
 import { migrateLocalProjects } from "@/lib/migrate-local";
+import { useDocs } from "@/modules/docs/store";
 import {
   claimInvites,
   createProjectRemote,
@@ -141,6 +142,11 @@ export const useApp = create<AppState>()(
         if (cur === id) return;
         const next = get().projects.find((p) => p.id === id);
         if (!next) return;
+        // Loading another project's bucket resets the docs module's active doc,
+        // which used to discard an open draft without asking. Same guard the
+        // docs tree runs on navigation; a no-op when nothing is unsaved.
+        const leaveGuard = useDocs.getState().leaveGuard;
+        if (leaveGuard && !(await leaveGuard())) return;
         await switchProject(cur, id);
         // Best-effort: once the stores hold the new project, the header must
         // switch with them — a failed revision list must not strand the UI

@@ -78,13 +78,21 @@ export function Topbar() {
 
   const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    // Reset before awaiting so re-picking the same file still fires onChange.
+    e.target.value = "";
     if (!file) return;
+    // Import replaces the open project in place and nothing can undo it —
+    // revisions record notes, not state — so consent has to be explicit.
+    const ok = await confirmDialog(
+      `Import "${file.name}" into ${project.code}? This replaces everything in "${project.name}" — walls, system, racks, inventory and docs — and can't be undone.`,
+      { danger: true, confirmLabel: "Replace project" },
+    );
+    if (!ok) return;
     try {
       await importProject(file);
     } catch (err) {
       await alertDialog(`Import failed: ${err instanceof Error ? err.message : String(err)}`);
     }
-    e.target.value = "";
   };
 
   return (

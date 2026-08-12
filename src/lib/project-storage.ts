@@ -415,9 +415,13 @@ function scheduleSave() {
 }
 
 // A collaborator's saved bucket. Skip while we're mid-apply or have local
-// unsaved edits pending so a remote write never clobbers in-progress work.
+// unsaved edits pending so a remote write never clobbers in-progress work. The
+// docs editor counts as pending too: its draft isn't in the store, so a save
+// isn't queued, but applyState would reset the active doc and drop it. Like the
+// pending-save case, the update is dropped rather than deferred — the next
+// collaborator write re-delivers it.
 function applyRemote(data: ProjectStateBuckets) {
-  if (applying || saveTimer != null) return;
+  if (applying || saveTimer != null || useDocs.getState().editorDirty) return;
   applyState(data);
 }
 
