@@ -1,4 +1,4 @@
-import { Fragment, useRef, useState } from "react";
+import { Fragment, memo, useCallback, useMemo, useRef, useState } from "react";
 import { DeviceLink } from "@/components/DeviceLink";
 import { I } from "@/components/Icon";
 import { PrintSheet } from "@/components/PrintSheet";
@@ -52,7 +52,7 @@ interface PatchRow extends PatchEntry {
   custom: { srcPort: boolean; destPort: boolean; cable: boolean };
 }
 
-function buildPatchRows(nodes: SystemNode[], edges: SystemEdge[]): PatchRow[] {
+function buildPatchRows(byId: Map<string, SystemNode>, edges: SystemEdge[]): PatchRow[] {
   const outSeen = new Map<string, number>();
   const inSeen = new Map<string, number>();
   return edges.map((e, i) => {
@@ -64,9 +64,9 @@ function buildPatchRows(nodes: SystemNode[], edges: SystemEdge[]): PatchRow[] {
     inSeen.set(inKey, inN);
     return {
       id: `P${String(i + 1).padStart(3, "0")}`,
-      src: nodes.find((n) => n.id === e.from)?.name ?? e.from,
+      src: byId.get(e.from)?.name ?? e.from,
       srcPort: e.srcPort ?? `OUT ${outN}`,
-      dest: nodes.find((n) => n.id === e.to)?.name ?? e.to,
+      dest: byId.get(e.to)?.name ?? e.to,
       destPort: e.destPort ?? `IN ${inN}`,
       lane: LANE_TO_PATCH_LANE[e.lane],
       cable: e.cable ?? LANE_CABLE[e.lane],
@@ -123,14 +123,86 @@ const NODE_H_BASE = 56;
 // Slack past the furthest node, so there is always somewhere to drag to.
 const GRAPH_PAD = 160;
 
+// Memoized so dragging one node re-renders one node. updateNode replaces only
+// the moved node's object, so identity comparison is enough to skip the rest —
+// which is why both handlers are useCallback'd in the parent.
+const GraphNode = memo(function GraphNode({
+  node: n,
+  selected,
+  dragging,
+  onNodeMouseDown,
+  onPortMouseDown,
+}: {
+  node: SystemNode;
+  selected: boolean;
+  dragging: boolean;
+  onNodeMouseDown: (e: React.MouseEvent, n: SystemNode) => void;
+  onPortMouseDown: (e: React.MouseEvent, n: SystemNode, lane: Lane) => void;
+}) {
+  return (
+    <div
+      className="node"
+      data-selected={selected ? "1" : "0"}
+      data-dragging={dragging ? "1" : "0"}
+      style={{ left: n.x, top: n.y, width: NODE_W }}
+      onMouseDown={(e) => onNodeMouseDown(e, n)}
+    >
+      <div className="node-hd">
+        <span style={{ color: "var(--accent)" }}>●</span>
+        <span className="typ">{n.type}</span>
+        <span style={{ marginLeft: "auto", color: "var(--color-fg-faint)" }}>{n.id}</span>
+      </div>
+      <div className="node-bd">
+        <div
+          style={{
+            color: "var(--color-fg)",
+            fontFamily: "var(--font-sans)",
+            fontSize: 11,
+            marginBottom: 4,
+          }}
+        >
+          {n.name}
+        </div>
+        {Object.entries(n.details).map(([k, v]) => (
+          <div className="row" key={k}>
+            <span className="k">{k}</span>
+            <span>{v}</span>
+          </div>
+        ))}
+      </div>
+      {n.in?.map((lane, i) => (
+        <span
+          key={`in${i}`}
+          className={`node-port in ${lane}`}
+          style={{ top: 28 + i * 14 }}
+          data-node-id={n.id}
+          data-port-dir="in"
+          data-lane={lane}
+        />
+      ))}
+      {n.out?.map((lane, i) => (
+        <span
+          key={`out${i}`}
+          className={`node-port out ${lane}`}
+          style={{ top: 28 + i * 14 }}
+          data-node-id={n.id}
+          data-port-dir="out"
+          data-lane={lane}
+          onMouseDown={(e) => onPortMouseDown(e, n, lane)}
+        />
+      ))}
+    </div>
+  );
+});
+
 const PALETTE_MIME = "application/x-blackburst-palette";
 
 const LANES: Lane[] = ["video", "audio", "network", "power"];
 const PATCH_LANES: PatchLane[] = ["video", "audio", "net", "pwr"];
 
-function pathFor(e: SystemEdge, nodes: SystemNode[]): string {
-  const a = nodes.find((n) => n.id === e.from);
-  const b = nodes.find((n) => n.id === e.to);
+function pathFor(e: SystemEdge, byId: Map<string, SystemNode>): string {
+  const a = byId.get(e.from);
+  const b = byId.get(e.to);
   if (!a || !b) return "";
   const x1 = a.x + NODE_W;
   const y1 = a.y + NODE_H_BASE / 2;
@@ -187,9 +259,13 @@ export function SystemDesignerModule() {
     });
   };
 
-  const node = nodes.find((n) => n.id === selectedId);
-  const visibleEdges = edges.filter((e) => lanes[e.lane]);
-  const patchRows = buildPatchRows(nodes, edges);
+  // One index per render instead of two linear scans per edge: every edge path,
+  // label and patch row resolved its endpoints with nodes.find, so the work grew
+  // as nodes × edges on every frame of a drag.
+  const nodeById = useMemo(() => new Map(nodes.map((n) => [n.id, n])), [nodes]);
+  const node = nodeById.get(selectedId);
+  const visibleEdges = useMemo(() => edges.filter((e) => lanes[e.lane]), [edges, lanes]);
+  const patchRows = useMemo(() => buildPatchRows(nodeById, edges), [nodeById, edges]);
 
   // Scroll extent of the graph. Node coordinates are unbounded above zero, so
   // without this a node dragged past the canvas edge was clipped away with no
@@ -239,7 +315,9 @@ export function SystemDesignerModule() {
     cursorY: number;
   } | null>(null);
 
-  const onPortMouseDown = (e: React.MouseEvent, fromNode: SystemNode, lane: Lane) => {
+  // Both drag handlers are passed to the memoized node rows, so they have to keep
+  // a stable identity across renders or every node re-renders on every frame.
+  const onPortMouseDown = useCallback((e: React.MouseEvent, fromNode: SystemNode, lane: Lane) => {
     if (e.button !== 0) return;
     e.stopPropagation();
     e.preventDefault();
@@ -293,9 +371,9 @@ export function SystemDesignerModule() {
     window.addEventListener("mousemove", onMove);
     window.addEventListener("mouseup", onUp);
     window.addEventListener("keydown", onKey);
-  };
+  }, [addEdge]);
 
-  const onNodeMouseDown = (e: React.MouseEvent, n: SystemNode) => {
+  const onNodeMouseDown = useCallback((e: React.MouseEvent, n: SystemNode) => {
     if (e.button !== 0) return;
     e.stopPropagation();
     e.preventDefault();
@@ -334,7 +412,7 @@ export function SystemDesignerModule() {
 
     window.addEventListener("mousemove", onMove);
     window.addEventListener("mouseup", onUp);
-  };
+  }, [updateNode, setSelected]);
 
   const onCanvasDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     if (!e.dataTransfer.types.includes(PALETTE_MIME)) return;
@@ -582,7 +660,7 @@ export function SystemDesignerModule() {
                   {visibleEdges.map((e, i) => (
                     <g key={`p${i}`} style={{ color: LANE_COLOR[e.lane] }}>
                       <path
-                        d={pathFor(e, nodes)}
+                        d={pathFor(e, nodeById)}
                         fill="none"
                         stroke="currentColor"
                         strokeWidth="1.2"
@@ -592,8 +670,8 @@ export function SystemDesignerModule() {
                     </g>
                   ))}
                   {visibleEdges.map((e, i) => {
-                    const a = nodes.find((n) => n.id === e.from);
-                    const b = nodes.find((n) => n.id === e.to);
+                    const a = nodeById.get(e.from);
+                    const b = nodeById.get(e.to);
                     if (!a || !b) return null;
                     const mx = (a.x + NODE_W + b.x) / 2;
                     const my = (a.y + b.y) / 2 + NODE_H_BASE / 2;
@@ -638,61 +716,14 @@ export function SystemDesignerModule() {
                 </svg>
 
                 {nodes.map((n) => (
-                  <div
+                  <GraphNode
                     key={n.id}
-                    className="node"
-                    data-selected={selectedId === n.id ? "1" : "0"}
-                    data-dragging={draggingId === n.id ? "1" : "0"}
-                    style={{ left: n.x, top: n.y, width: NODE_W }}
-                    onMouseDown={(e) => onNodeMouseDown(e, n)}
-                  >
-                    <div className="node-hd">
-                      <span style={{ color: "var(--accent)" }}>●</span>
-                      <span className="typ">{n.type}</span>
-                      <span style={{ marginLeft: "auto", color: "var(--color-fg-faint)" }}>
-                        {n.id}
-                      </span>
-                    </div>
-                    <div className="node-bd">
-                      <div
-                        style={{
-                          color: "var(--color-fg)",
-                          fontFamily: "var(--font-sans)",
-                          fontSize: 11,
-                          marginBottom: 4,
-                        }}
-                      >
-                        {n.name}
-                      </div>
-                      {Object.entries(n.details).map(([k, v]) => (
-                        <div className="row" key={k}>
-                          <span className="k">{k}</span>
-                          <span>{v}</span>
-                        </div>
-                      ))}
-                    </div>
-                    {n.in?.map((lane, i) => (
-                      <span
-                        key={`in${i}`}
-                        className={`node-port in ${lane}`}
-                        style={{ top: 28 + i * 14 }}
-                        data-node-id={n.id}
-                        data-port-dir="in"
-                        data-lane={lane}
-                      />
-                    ))}
-                    {n.out?.map((lane, i) => (
-                      <span
-                        key={`out${i}`}
-                        className={`node-port out ${lane}`}
-                        style={{ top: 28 + i * 14 }}
-                        data-node-id={n.id}
-                        data-port-dir="out"
-                        data-lane={lane}
-                        onMouseDown={(e) => onPortMouseDown(e, n, lane)}
-                      />
-                    ))}
-                  </div>
+                    node={n}
+                    selected={selectedId === n.id}
+                    dragging={draggingId === n.id}
+                    onNodeMouseDown={onNodeMouseDown}
+                    onPortMouseDown={onPortMouseDown}
+                  />
                 ))}
               </div>
             </div>

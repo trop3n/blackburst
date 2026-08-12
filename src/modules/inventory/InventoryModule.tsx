@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { memo, useMemo, useState } from "react";
 import { DeviceLink } from "@/components/DeviceLink";
 import { I } from "@/components/Icon";
 import { ASSET_CATEGORIES, INV_MODELS } from "@/lib/inventory-data";
@@ -6,7 +6,7 @@ import { canDeleteShared } from "@/lib/ownership";
 import { useAuth } from "@/store/useAuth";
 import { useCatalog } from "@/store/useCatalog";
 import { alertDialog, confirmDialog, promptDialog } from "@/store/useDialog";
-import type { AssetStatus, ShowSchedule } from "@/types";
+import type { Asset, AssetStatus, ShowSchedule } from "@/types";
 import { useInventory } from "./store";
 import { issuesByAsset, summarizeAssetIssues, validateAssets } from "./validation";
 
@@ -434,62 +434,21 @@ export function InventoryModule() {
               <tbody>
                 {filtered.map((a) => {
                   const rowIssues = issuesIndex.get(a.id);
-                  const rowLevel = rowIssues?.some((i) => i.level === "error")
-                    ? "error"
-                    : rowIssues?.length
-                      ? "warn"
-                      : null;
                   return (
-                  <tr
-                    key={a.id}
-                    data-active={selected === a.id ? "1" : "0"}
-                    onClick={() => setSelected(a.id)}
-                    style={{ cursor: "pointer" }}
-                  >
-                    <td>
-                      {rowLevel && (
-                        <span
-                          className={`dot ${rowLevel}`}
-                          title={rowIssues?.map((i) => i.title).join(" · ")}
-                          style={{
-                            display: "inline-block",
-                            width: 6,
-                            height: 6,
-                            borderRadius: "50%",
-                            marginRight: 6,
-                            verticalAlign: "middle",
-                            background:
-                              rowLevel === "error" ? "var(--color-err)" : "var(--color-warn)",
-                          }}
-                        />
-                      )}
-                      {a.id}
-                    </td>
-                    <td style={{ fontFamily: "var(--font-sans)" }}>{a.model}</td>
-                    <td className="muted">{a.cat}</td>
-                    <td>
-                      <span className={`status-pill ${a.status}`}>
-                        {a.status === "maint" ? "MAINT" : a.status.toUpperCase()}
-                      </span>
-                    </td>
-                    <td>{a.show}</td>
-                    <td className="muted">{a.due}</td>
-                    <td>
-                      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                        <div className="bar" style={{ width: 50 }}>
-                          <div
-                            className="bar-fill"
-                            style={{
-                              width: `${a.utilization}%`,
-                              background: a.utilization > 85 ? "var(--color-warn)" : "var(--accent)",
-                            }}
-                          />
-                        </div>
-                        <span>{a.utilization}%</span>
-                      </div>
-                    </td>
-                    <td className="muted">{a.last}</td>
-                  </tr>
+                    <AssetRow
+                      key={a.id}
+                      asset={a}
+                      active={selected === a.id}
+                      level={
+                        rowIssues?.some((i) => i.level === "error")
+                          ? "error"
+                          : rowIssues?.length
+                            ? "warn"
+                            : null
+                      }
+                      issueTitles={rowIssues?.map((i) => i.title).join(" · ")}
+                      onSelect={setSelected}
+                    />
                   );
                 })}
               </tbody>
@@ -688,6 +647,77 @@ export function InventoryModule() {
     </>
   );
 }
+
+// Memoized because editing one asset in the inspector re-rendered every row —
+// ~37ms per keystroke at 300 assets. The issue list is passed as a level plus a
+// tooltip string rather than the array itself: validateAssets rebuilds that
+// array on every keystroke, so passing it would defeat the memo for all rows.
+// `asset` is safe to compare by identity — updateAsset replaces only the one it
+// edits — and `onSelect` is the store action, which is stable.
+const AssetRow = memo(function AssetRow({
+  asset: a,
+  active,
+  level,
+  issueTitles,
+  onSelect,
+}: {
+  asset: Asset;
+  active: boolean;
+  level: "error" | "warn" | null;
+  issueTitles: string | undefined;
+  onSelect: (id: string) => void;
+}) {
+  return (
+    <tr
+      data-active={active ? "1" : "0"}
+      onClick={() => onSelect(a.id)}
+      style={{ cursor: "pointer" }}
+    >
+      <td>
+        {level && (
+          <span
+            className={`dot ${level}`}
+            title={issueTitles}
+            style={{
+              display: "inline-block",
+              width: 6,
+              height: 6,
+              borderRadius: "50%",
+              marginRight: 6,
+              verticalAlign: "middle",
+              background: level === "error" ? "var(--color-err)" : "var(--color-warn)",
+            }}
+          />
+        )}
+        {a.id}
+      </td>
+      <td style={{ fontFamily: "var(--font-sans)" }}>{a.model}</td>
+      <td className="muted">{a.cat}</td>
+      <td>
+        <span className={`status-pill ${a.status}`}>
+          {a.status === "maint" ? "MAINT" : a.status.toUpperCase()}
+        </span>
+      </td>
+      <td>{a.show}</td>
+      <td className="muted">{a.due}</td>
+      <td>
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <div className="bar" style={{ width: 50 }}>
+            <div
+              className="bar-fill"
+              style={{
+                width: `${a.utilization}%`,
+                background: a.utilization > 85 ? "var(--color-warn)" : "var(--accent)",
+              }}
+            />
+          </div>
+          <span>{a.utilization}%</span>
+        </div>
+      </td>
+      <td className="muted">{a.last}</td>
+    </tr>
+  );
+});
 
 function GanttRow({
   show: s,

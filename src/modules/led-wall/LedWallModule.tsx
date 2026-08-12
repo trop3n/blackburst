@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { memo, useEffect } from "react";
 import { I } from "@/components/Icon";
 import { PrintSheet } from "@/components/PrintSheet";
 import { FAULT_PANELS, PANEL_LIBRARY } from "@/lib/data";
@@ -9,8 +9,76 @@ import { useAuth } from "@/store/useAuth";
 import { useCatalog } from "@/store/useCatalog";
 import { confirmDialog, promptDialog } from "@/store/useDialog";
 import { computeWallCalc } from "./calculations";
-import { useLedWall } from "./store";
+import { useLedWall, type CellRef, type LedTool } from "./store";
 import { validateWall } from "./validation";
+
+// The cell grid is the expensive part of the canvas — up to 1500 absolutely
+// positioned divs. It's split out and memoized so panning the zoom slider, which
+// now only changes a transform on an ancestor, doesn't reconcile a single cell.
+// Every prop here is zoom-independent for exactly that reason.
+const WallGrid = memo(function WallGrid({
+  cols,
+  rows,
+  panelPxW,
+  panelPxH,
+  tool,
+  showFaults,
+  showLabels,
+  selected,
+  measureFrom,
+  measureTo,
+  onCellClick,
+}: {
+  cols: number;
+  rows: number;
+  panelPxW: number;
+  panelPxH: number;
+  tool: LedTool;
+  showFaults: boolean;
+  showLabels: boolean;
+  selected: CellRef | null;
+  measureFrom: CellRef | null;
+  measureTo: CellRef | null;
+  onCellClick: (cell: CellRef) => void;
+}) {
+  return (
+    <>
+      {Array.from({ length: rows }).map((_, r) =>
+        Array.from({ length: cols }).map((_, c) => {
+          const fault = showFaults && FAULT_PANELS.some((f) => f.c === c && f.r === r);
+          const sel = selected && selected.c === c && selected.r === r;
+          const isMeasureFrom = measureFrom && measureFrom.c === c && measureFrom.r === r;
+          const isMeasureTo = measureTo && measureTo.c === c && measureTo.r === r;
+          const eraseTarget =
+            tool === "erase" &&
+            ((c === cols - 1 && cols > 1) || (r === rows - 1 && rows > 1));
+          let cellCursor: string | undefined;
+          if (tool === "erase") cellCursor = eraseTarget ? "pointer" : "not-allowed";
+          return (
+            <div
+              key={`${c}-${r}`}
+              className="led-panel"
+              data-fault={fault ? "1" : "0"}
+              data-selected={sel ? "1" : "0"}
+              data-measure={isMeasureFrom ? "from" : isMeasureTo ? "to" : undefined}
+              data-erase-target={tool === "erase" && eraseTarget ? "1" : undefined}
+              style={{
+                left: c * panelPxW,
+                top: r * panelPxH,
+                width: panelPxW,
+                height: panelPxH,
+                cursor: cellCursor,
+              }}
+              onClick={() => onCellClick({ c, r })}
+            >
+              {showLabels && `${c + 1},${r + 1}`}
+            </div>
+          );
+        }),
+      )}
+    </>
+  );
+});
 
 
 export function LedWallModule() {
@@ -108,15 +176,26 @@ export function LedWallModule() {
   const calc = computeWallCalc(layout, panel);
   const issues = validateWall(layout, panel, calc);
 
-  // Render scale: fit wall into ~520×320 frame
+  // Render scale: fit wall into ~520×320 frame. Zoom is deliberately *not*
+  // folded in here — the grid is up to 1500 absolutely-positioned cells, and
+  // recomputing every cell's geometry per slider step cost ~38ms a frame. Cell
+  // layout stays at fit scale and zoom is a CSS transform on the wrapper, so a
+  // slider step touches two style properties instead of six thousand.
   const maxFrameW = 520;
   const maxFrameH = 320;
   const aspectFit = Math.min(maxFrameW / calc.wallWmm, maxFrameH / calc.wallHmm);
-  const scale = aspectFit * (zoom / 100);
-  const frameW = calc.wallWmm * scale;
-  const frameH = calc.wallHmm * scale;
-  const panelPxW = panel.w * scale;
-  const panelPxH = panel.h * scale;
+  const zoomFactor = zoom / 100;
+  const frameW = calc.wallWmm * aspectFit;
+  const frameH = calc.wallHmm * aspectFit;
+  const panelPxW = panel.w * aspectFit;
+  const panelPxH = panel.h * aspectFit;
+  // The drawing ratio the readout quotes is what's on screen, so it keeps zoom.
+  const displayScale = aspectFit * zoomFactor;
+  // Gate the per-cell labels on the *displayed* size, not the layout size, so
+  // zooming in still reveals them.
+  const showCellLabels = panelPxW * zoomFactor > 28;
+  const padTop = showDims ? 30 : 0;
+  const padLeft = showDims ? 50 : 0;
 
   const dataRateGbps = (calc.resW * calc.resH * 60 * 30) / 1e9;
 
@@ -421,135 +500,123 @@ export function LedWallModule() {
             </div>
             <div className="row" style={{ justifyContent: "flex-end" }}>
               <span className="k">SCALE</span>
-              <span className="v">1:{(Math.round((1 / scale) * 100) / 100).toFixed(2)}</span>
+              <span className="v">1:{(Math.round((1 / displayScale) * 100) / 100).toFixed(2)}</span>
             </div>
           </div>
           <div className="canvas-stage">
+            {/* Outer box reserves the scaled size, so the stage still centres the
+                wall and can scroll to all of it; the transform inside then scales
+                the drawing without any cell knowing about zoom. */}
             <div
               style={{
-                position: "relative",
-                paddingTop: showDims ? 30 : 0,
-                paddingLeft: showDims ? 50 : 0,
+                width: (frameW + padLeft) * zoomFactor,
+                height: (frameH + padTop) * zoomFactor,
               }}
             >
               <div
-                className="led-wall-frame"
-                style={{ width: frameW, height: frameH, cursor: cursorByTool[tool] }}
+                style={{
+                  position: "relative",
+                  paddingTop: padTop,
+                  paddingLeft: padLeft,
+                  transform: `scale(${zoomFactor})`,
+                  transformOrigin: "top left",
+                }}
               >
-                {showDims && (
-                  <>
-                    <div className="dim-arrow h">
-                      {calc.wallWmm}mm · {calc.wallWft.toFixed(1)}ft
-                    </div>
-                    <div className="dim-arrow v">
-                      {calc.wallHmm}mm · {calc.wallHft.toFixed(1)}ft
-                    </div>
-                  </>
-                )}
-                {Array.from({ length: layout.rows }).map((_, r) =>
-                  Array.from({ length: layout.cols }).map((_, c) => {
-                    const fault =
-                      showFaults && FAULT_PANELS.some((f) => f.c === c && f.r === r);
-                    const sel = selected && selected.c === c && selected.r === r;
-                    const isMeasureFrom =
-                      measureFrom && measureFrom.c === c && measureFrom.r === r;
-                    const isMeasureTo =
-                      measureTo && measureTo.c === c && measureTo.r === r;
-                    const eraseTarget =
-                      tool === "erase" &&
-                      ((c === layout.cols - 1 && layout.cols > 1) ||
-                        (r === layout.rows - 1 && layout.rows > 1));
-                    let cellCursor: string | undefined;
-                    if (tool === "erase") cellCursor = eraseTarget ? "pointer" : "not-allowed";
-                    return (
-                      <div
-                        key={`${c}-${r}`}
-                        className="led-panel"
-                        data-fault={fault ? "1" : "0"}
-                        data-selected={sel ? "1" : "0"}
-                        data-measure={isMeasureFrom ? "from" : isMeasureTo ? "to" : undefined}
-                        data-erase-target={tool === "erase" && eraseTarget ? "1" : undefined}
-                        style={{
-                          left: c * panelPxW,
-                          top: r * panelPxH,
-                          width: panelPxW,
-                          height: panelPxH,
-                          cursor: cellCursor,
-                        }}
-                        onClick={() => handleCellClick({ c, r })}
-                      >
-                        {panelPxW > 28 && `${c + 1},${r + 1}`}
+                <div
+                  className="led-wall-frame"
+                  style={{ width: frameW, height: frameH, cursor: cursorByTool[tool] }}
+                >
+                  {showDims && (
+                    <>
+                      <div className="dim-arrow h">
+                        {calc.wallWmm}mm · {calc.wallWft.toFixed(1)}ft
                       </div>
-                    );
-                  })
-                )}
-                {/* Draw mode: clickable grow zones outside the wall */}
-                {tool === "draw" && (
-                  <>
-                    <div
-                      className="draw-zone right"
+                      <div className="dim-arrow v">
+                        {calc.wallHmm}mm · {calc.wallHft.toFixed(1)}ft
+                      </div>
+                    </>
+                  )}
+                  <WallGrid
+                    cols={layout.cols}
+                    rows={layout.rows}
+                    panelPxW={panelPxW}
+                    panelPxH={panelPxH}
+                    tool={tool}
+                    showFaults={showFaults}
+                    showLabels={showCellLabels}
+                    selected={selected}
+                    measureFrom={measureFrom}
+                    measureTo={measureTo}
+                    onCellClick={handleCellClick}
+                  />
+                  {/* Draw mode: clickable grow zones outside the wall */}
+                  {tool === "draw" && (
+                    <>
+                      <div
+                        className="draw-zone right"
+                        style={{
+                          left: frameW + 4,
+                          top: 0,
+                          width: drawZoneSize,
+                          height: frameH,
+                        }}
+                        onClick={() => addCol()}
+                        title="Add column"
+                      >
+                        <span>+ COL</span>
+                      </div>
+                      <div
+                        className="draw-zone bottom"
+                        style={{
+                          left: 0,
+                          top: frameH + 4,
+                          width: frameW,
+                          height: drawZoneSize,
+                        }}
+                        onClick={() => addRow()}
+                        title="Add row"
+                      >
+                        <span>+ ROW</span>
+                      </div>
+                    </>
+                  )}
+                  {/* Measure connecting line */}
+                  {measureFrom && measureTo && (
+                    <svg
                       style={{
-                        left: frameW + 4,
-                        top: 0,
-                        width: drawZoneSize,
-                        height: frameH,
+                        position: "absolute",
+                        inset: 0,
+                        width: "100%",
+                        height: "100%",
+                        pointerEvents: "none",
+                        overflow: "visible",
                       }}
-                      onClick={() => addCol()}
-                      title="Add column"
                     >
-                      <span>+ COL</span>
-                    </div>
-                    <div
-                      className="draw-zone bottom"
-                      style={{
-                        left: 0,
-                        top: frameH + 4,
-                        width: frameW,
-                        height: drawZoneSize,
-                      }}
-                      onClick={() => addRow()}
-                      title="Add row"
-                    >
-                      <span>+ ROW</span>
-                    </div>
-                  </>
-                )}
-                {/* Measure connecting line */}
-                {measureFrom && measureTo && (
-                  <svg
+                      <line
+                        x1={(measureFrom.c + 0.5) * panelPxW}
+                        y1={(measureFrom.r + 0.5) * panelPxH}
+                        x2={(measureTo.c + 0.5) * panelPxW}
+                        y2={(measureTo.r + 0.5) * panelPxH}
+                        stroke="var(--color-info)"
+                        strokeWidth={1.5}
+                        strokeDasharray="4 3"
+                      />
+                    </svg>
+                  )}
+                  {/* Processor split overlay */}
+                  <div
                     style={{
                       position: "absolute",
-                      inset: 0,
-                      width: "100%",
-                      height: "100%",
+                      top: 0,
+                      bottom: 0,
+                      left: frameW / 2 - 0.5,
+                      width: 1,
+                      background: "var(--accent)",
+                      opacity: 0.4,
                       pointerEvents: "none",
-                      overflow: "visible",
                     }}
-                  >
-                    <line
-                      x1={(measureFrom.c + 0.5) * panelPxW}
-                      y1={(measureFrom.r + 0.5) * panelPxH}
-                      x2={(measureTo.c + 0.5) * panelPxW}
-                      y2={(measureTo.r + 0.5) * panelPxH}
-                      stroke="var(--color-info)"
-                      strokeWidth={1.5}
-                      strokeDasharray="4 3"
-                    />
-                  </svg>
-                )}
-                {/* Processor split overlay */}
-                <div
-                  style={{
-                    position: "absolute",
-                    top: 0,
-                    bottom: 0,
-                    left: frameW / 2 - 0.5,
-                    width: 1,
-                    background: "var(--accent)",
-                    opacity: 0.4,
-                    pointerEvents: "none",
-                  }}
-                />
+                  />
+                </div>
               </div>
             </div>
           </div>

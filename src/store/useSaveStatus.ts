@@ -18,11 +18,16 @@ interface SaveStatusState {
 // Autosave is fire-and-forget so it never blocks editing, which used to mean a
 // failed write looked exactly like a successful one. This is the surface the
 // status bar reads so the outcome is always visible.
-export const useSaveStatus = create<SaveStatusState>((set) => ({
+export const useSaveStatus = create<SaveStatusState>((set, get) => ({
   state: "idle",
   lastSavedAt: null,
   error: null,
-  markPending: () => set({ state: "pending" }),
+  // Idempotent: a drag schedules a save on every frame, and re-notifying
+  // subscribers with an unchanged "pending" re-rendered the status bar (and its
+  // validation pass) ~60 times a second for no visible change.
+  markPending: () => {
+    if (get().state !== "pending") set({ state: "pending" });
+  },
   markSaving: () => set({ state: "saving" }),
   markSaved: () => set({ state: "saved", lastSavedAt: Date.now(), error: null }),
   markError: (message) => set({ state: "error", error: message }),
