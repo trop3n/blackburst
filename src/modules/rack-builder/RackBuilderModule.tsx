@@ -568,7 +568,7 @@ export function RackBuilderModule() {
         <div
           className="led-canvas"
           data-canvas-style={canvasStyle}
-          style={{ cursor: "default", overflow: "auto" }}
+          style={{ cursor: "default" }}
         >
           <div className="canvas-overlay tl">
             <div className="row">

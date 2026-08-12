@@ -120,6 +120,8 @@ function PatchCell({
 
 const NODE_W = 150;
 const NODE_H_BASE = 56;
+// Slack past the furthest node, so there is always somewhere to drag to.
+const GRAPH_PAD = 160;
 
 const PALETTE_MIME = "application/x-blackburst-palette";
 
@@ -189,6 +191,13 @@ export function SystemDesignerModule() {
   const visibleEdges = edges.filter((e) => lanes[e.lane]);
   const patchRows = buildPatchRows(nodes, edges);
 
+  // Scroll extent of the graph. Node coordinates are unbounded above zero, so
+  // without this a node dragged past the canvas edge was clipped away with no
+  // way to scroll to it — and selecting a node means clicking it, so it could
+  // never be recovered.
+  const contentW = nodes.reduce((m, n) => Math.max(m, n.x + NODE_W), 0) + GRAPH_PAD;
+  const contentH = nodes.reduce((m, n) => Math.max(m, n.y + NODE_H_BASE), 0) + GRAPH_PAD;
+
   const isRowCustom = (p: PatchRow) => p.custom.srcPort || p.custom.destPort || p.custom.cable;
 
   const commitPatchField = (p: PatchRow, field: PatchField, raw: string) => {
@@ -248,9 +257,13 @@ export function SystemDesignerModule() {
       cursorY: e.clientY - rect.top,
     });
 
+    // Re-read the box each move rather than closing over it: the graph scrolls,
+    // so a rect captured at mousedown would put the rubber band in the wrong
+    // place as soon as the view moves.
     const onMove = (ev: MouseEvent) => {
+      const r = canvas.getBoundingClientRect();
       setEdgeDraft((d) =>
-        d ? { ...d, cursorX: ev.clientX - rect.left, cursorY: ev.clientY - rect.top } : null,
+        d ? { ...d, cursorX: ev.clientX - r.left, cursorY: ev.clientY - r.top } : null,
       );
     };
     const cleanup = () => {
@@ -517,13 +530,10 @@ export function SystemDesignerModule() {
 
         {view === "graph" && (
           <div
-            ref={canvasRef}
             className="led-canvas"
             data-canvas-style={canvasStyle}
             data-edge-draft={edgeDraft?.lane ?? undefined}
             style={{ cursor: edgeDraft ? "crosshair" : "default" }}
-            onDragOver={onCanvasDragOver}
-            onDrop={onCanvasDrop}
           >
             <div className="canvas-overlay tl">
               <div className="row">
@@ -539,143 +549,153 @@ export function SystemDesignerModule() {
                 </span>
               </div>
             </div>
-            <svg
-              style={{
-                position: "absolute",
-                inset: 0,
-                width: "100%",
-                height: "100%",
-                pointerEvents: "none",
-              }}
-            >
-              <defs>
-                <marker
-                  id="arrow"
-                  viewBox="0 0 10 10"
-                  refX="9"
-                  refY="5"
-                  markerWidth="5"
-                  markerHeight="5"
-                  orient="auto"
-                >
-                  <path d="M0,0 L10,5 L0,10" fill="currentColor" />
-                </marker>
-              </defs>
-              {visibleEdges.map((e, i) => (
-                <g key={`p${i}`} style={{ color: LANE_COLOR[e.lane] }}>
-                  <path
-                    d={pathFor(e, nodes)}
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.2"
-                    strokeOpacity="0.7"
-                    markerEnd="url(#arrow)"
-                  />
-                </g>
-              ))}
-              {visibleEdges.map((e, i) => {
-                const a = nodes.find((n) => n.id === e.from);
-                const b = nodes.find((n) => n.id === e.to);
-                if (!a || !b) return null;
-                const mx = (a.x + NODE_W + b.x) / 2;
-                const my = (a.y + b.y) / 2 + NODE_H_BASE / 2;
-                return (
-                  <g key={`l${i}`}>
-                    <rect
-                      x={mx - 28}
-                      y={my - 8}
-                      width="56"
-                      height="14"
-                      rx="2"
-                      fill="var(--color-bg-1)"
-                      stroke={LANE_COLOR[e.lane]}
-                      strokeWidth="0.5"
-                      strokeOpacity="0.5"
-                    />
-                    <text
-                      x={mx}
-                      y={my + 2}
-                      textAnchor="middle"
-                      fontFamily="var(--font-mono)"
-                      fontSize="9"
-                      fill={LANE_COLOR[e.lane]}
-                    >
-                      {e.label}
-                    </text>
-                  </g>
-                );
-              })}
-              {edgeDraft && (
-                <line
-                  x1={edgeDraft.startX}
-                  y1={edgeDraft.startY}
-                  x2={edgeDraft.cursorX}
-                  y2={edgeDraft.cursorY}
-                  stroke={LANE_COLOR[edgeDraft.lane]}
-                  strokeWidth="1.5"
-                  strokeDasharray="4 4"
-                  strokeOpacity="0.85"
-                />
-              )}
-            </svg>
-
-            {nodes.map((n) => (
+            <div className="graph-scroll">
               <div
-                key={n.id}
-                className="node"
-                data-selected={selectedId === n.id ? "1" : "0"}
-                data-dragging={draggingId === n.id ? "1" : "0"}
-                style={{ left: n.x, top: n.y, width: NODE_W }}
-                onMouseDown={(e) => onNodeMouseDown(e, n)}
+                ref={canvasRef}
+                className="graph-content"
+                style={{ width: contentW, height: contentH }}
+                onDragOver={onCanvasDragOver}
+                onDrop={onCanvasDrop}
               >
-                <div className="node-hd">
-                  <span style={{ color: "var(--accent)" }}>●</span>
-                  <span className="typ">{n.type}</span>
-                  <span style={{ marginLeft: "auto", color: "var(--color-fg-faint)" }}>
-                    {n.id}
-                  </span>
-                </div>
-                <div className="node-bd">
-                  <div
-                    style={{
-                      color: "var(--color-fg)",
-                      fontFamily: "var(--font-sans)",
-                      fontSize: 11,
-                      marginBottom: 4,
-                    }}
-                  >
-                    {n.name}
-                  </div>
-                  {Object.entries(n.details).map(([k, v]) => (
-                    <div className="row" key={k}>
-                      <span className="k">{k}</span>
-                      <span>{v}</span>
-                    </div>
+                <svg
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    width: "100%",
+                    height: "100%",
+                    pointerEvents: "none",
+                  }}
+                >
+                  <defs>
+                    <marker
+                      id="arrow"
+                      viewBox="0 0 10 10"
+                      refX="9"
+                      refY="5"
+                      markerWidth="5"
+                      markerHeight="5"
+                      orient="auto"
+                    >
+                      <path d="M0,0 L10,5 L0,10" fill="currentColor" />
+                    </marker>
+                  </defs>
+                  {visibleEdges.map((e, i) => (
+                    <g key={`p${i}`} style={{ color: LANE_COLOR[e.lane] }}>
+                      <path
+                        d={pathFor(e, nodes)}
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.2"
+                        strokeOpacity="0.7"
+                        markerEnd="url(#arrow)"
+                      />
+                    </g>
                   ))}
-                </div>
-                {n.in?.map((lane, i) => (
-                  <span
-                    key={`in${i}`}
-                    className={`node-port in ${lane}`}
-                    style={{ top: 28 + i * 14 }}
-                    data-node-id={n.id}
-                    data-port-dir="in"
-                    data-lane={lane}
-                  />
-                ))}
-                {n.out?.map((lane, i) => (
-                  <span
-                    key={`out${i}`}
-                    className={`node-port out ${lane}`}
-                    style={{ top: 28 + i * 14 }}
-                    data-node-id={n.id}
-                    data-port-dir="out"
-                    data-lane={lane}
-                    onMouseDown={(e) => onPortMouseDown(e, n, lane)}
-                  />
+                  {visibleEdges.map((e, i) => {
+                    const a = nodes.find((n) => n.id === e.from);
+                    const b = nodes.find((n) => n.id === e.to);
+                    if (!a || !b) return null;
+                    const mx = (a.x + NODE_W + b.x) / 2;
+                    const my = (a.y + b.y) / 2 + NODE_H_BASE / 2;
+                    return (
+                      <g key={`l${i}`}>
+                        <rect
+                          x={mx - 28}
+                          y={my - 8}
+                          width="56"
+                          height="14"
+                          rx="2"
+                          fill="var(--color-bg-1)"
+                          stroke={LANE_COLOR[e.lane]}
+                          strokeWidth="0.5"
+                          strokeOpacity="0.5"
+                        />
+                        <text
+                          x={mx}
+                          y={my + 2}
+                          textAnchor="middle"
+                          fontFamily="var(--font-mono)"
+                          fontSize="9"
+                          fill={LANE_COLOR[e.lane]}
+                        >
+                          {e.label}
+                        </text>
+                      </g>
+                    );
+                  })}
+                  {edgeDraft && (
+                    <line
+                      x1={edgeDraft.startX}
+                      y1={edgeDraft.startY}
+                      x2={edgeDraft.cursorX}
+                      y2={edgeDraft.cursorY}
+                      stroke={LANE_COLOR[edgeDraft.lane]}
+                      strokeWidth="1.5"
+                      strokeDasharray="4 4"
+                      strokeOpacity="0.85"
+                    />
+                  )}
+                </svg>
+
+                {nodes.map((n) => (
+                  <div
+                    key={n.id}
+                    className="node"
+                    data-selected={selectedId === n.id ? "1" : "0"}
+                    data-dragging={draggingId === n.id ? "1" : "0"}
+                    style={{ left: n.x, top: n.y, width: NODE_W }}
+                    onMouseDown={(e) => onNodeMouseDown(e, n)}
+                  >
+                    <div className="node-hd">
+                      <span style={{ color: "var(--accent)" }}>●</span>
+                      <span className="typ">{n.type}</span>
+                      <span style={{ marginLeft: "auto", color: "var(--color-fg-faint)" }}>
+                        {n.id}
+                      </span>
+                    </div>
+                    <div className="node-bd">
+                      <div
+                        style={{
+                          color: "var(--color-fg)",
+                          fontFamily: "var(--font-sans)",
+                          fontSize: 11,
+                          marginBottom: 4,
+                        }}
+                      >
+                        {n.name}
+                      </div>
+                      {Object.entries(n.details).map(([k, v]) => (
+                        <div className="row" key={k}>
+                          <span className="k">{k}</span>
+                          <span>{v}</span>
+                        </div>
+                      ))}
+                    </div>
+                    {n.in?.map((lane, i) => (
+                      <span
+                        key={`in${i}`}
+                        className={`node-port in ${lane}`}
+                        style={{ top: 28 + i * 14 }}
+                        data-node-id={n.id}
+                        data-port-dir="in"
+                        data-lane={lane}
+                      />
+                    ))}
+                    {n.out?.map((lane, i) => (
+                      <span
+                        key={`out${i}`}
+                        className={`node-port out ${lane}`}
+                        style={{ top: 28 + i * 14 }}
+                        data-node-id={n.id}
+                        data-port-dir="out"
+                        data-lane={lane}
+                        onMouseDown={(e) => onPortMouseDown(e, n, lane)}
+                      />
+                    ))}
+                  </div>
                 ))}
               </div>
-            ))}
+            </div>
 
             <div className="crosshair-readout">
               SCHEMATIC · GRID 16 · AUTO-ROUTE: ORTHOGONAL

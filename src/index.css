@@ -739,13 +739,20 @@ button { font-family: inherit; color: inherit; }
   background-size: 16px 16px;
 }
 
+/* The stage scrolls, not .led-canvas — the overlays and crosshair readout are
+   positioned against the canvas and have to stay pinned while content moves.
+   Centring is done with auto margins on the child rather than align/justify
+   because auto margins collapse to 0 once free space goes negative: a rack or
+   wall taller than the viewport then starts at the top edge and scrolls fully,
+   instead of overflowing equally in both directions where everything above the
+   scroll origin is unreachable. */
 .canvas-stage {
   position: absolute;
   inset: 0;
+  overflow: auto;
   display: flex;
-  align-items: center;
-  justify-content: center;
 }
+.canvas-stage > * { margin: auto; }
 
 .led-wall-frame {
   position: relative;
@@ -1000,6 +1007,23 @@ button { font-family: inherit; color: inherit; }
 /* ─────────────────────────────────────────────────────────────
    System designer (node graph)
    ───────────────────────────────────────────────────────────── */
+
+/* Nodes sit at absolute content coordinates that can run past the viewport, so
+   the graph gets its own scroll layer (the canvas itself must stay unscrolled to
+   keep the overlays pinned). .graph-content is sized to the node extent and the
+   edge <svg> spans that same box — sized to the viewport instead, wires to
+   distant nodes would be clipped. min-*:100% keeps it a drop target when the
+   graph is smaller than the canvas. */
+.graph-scroll {
+  position: absolute;
+  inset: 0;
+  overflow: auto;
+}
+.graph-content {
+  position: relative;
+  min-width: 100%;
+  min-height: 100%;
+}
 
 .node {
   position: absolute;
