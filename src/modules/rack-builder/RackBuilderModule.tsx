@@ -18,6 +18,9 @@ const RACK_SIZES: RackSize[] = [24, 42, 48];
 // Static load rating assumed for the shelf/rack until racks carry their own spec.
 const RACK_SWL_KG = 800;
 const RACK_SWL_WARN_KG = RACK_SWL_KG * 0.8;
+// One 15A / 120V branch circuit, un-derated. The single source for both the
+// power meter's circuit count and the inspector's circuit map.
+const CIRCUIT_W = 1800;
 
 // Colour a user-added device by its category, matching the built-in palette.
 const CAT_COLOR: Record<string, RackColor> = {
@@ -239,8 +242,12 @@ export function RackBuilderModule() {
     return Math.max(m, d?.depth ?? 0);
   }, 0);
   const usedPct = Math.round((totalU / rackSize) * 100);
-  const watts120 = Math.ceil(totalWatts / 1800);
-  const watts208 = (totalWatts / 208).toFixed(1);
+  // One figure feeds both the meter row and the inspector's circuit map. They
+  // used to disagree: the meter counted 15A/120V circuits while the inspector
+  // listed two fixed "L6-30" circuits capped at 2400W — an L6-30 is 30A/208V,
+  // about 6.2kW, and 2400W is a 20A/120V circuit, so neither label matched.
+  const circuits = Math.ceil(totalWatts / CIRCUIT_W);
+  const amps208 = (totalWatts / 208).toFixed(1);
   const btu = Math.round(totalWatts * 3.412);
 
   const selected = items.find((i) => i.iid === selectedIid) ?? null;
@@ -1110,7 +1117,7 @@ export function RackBuilderModule() {
               />
             </div>
             <div className="mono" style={{ fontSize: 10, color: "var(--color-fg-faint)" }}>
-              {watts120} × 15A · {watts208}A @ 208V
+              {circuits} × 15A · {amps208}A @ 208V
             </div>
           </div>
           <div className="meter-block">
@@ -1308,20 +1315,30 @@ export function RackBuilderModule() {
             <span>CIRCUIT MAP</span>
             <span className="line" />
           </div>
-          <div className="kv">
-            <span className="k">L6-30 #1</span>
-            <span className="v" style={{ color: "var(--accent)" }}>
-              {Math.min(2400, totalWatts)}W / 2400W
-            </span>
-            <span className="k">L6-30 #2</span>
-            <span className="v">
-              {Math.max(0, Math.min(2400, totalWatts - 2400))}W / 2400W
-            </span>
-            <span className="k">UPS runtime</span>
-            <span className="v">
-              {totalWatts > 0 ? Math.round(180000 / totalWatts) : "—"} min @ load
-            </span>
-          </div>
+          {circuits === 0 ? (
+            <div
+              className="mono"
+              style={{ padding: "0 12px 8px", fontSize: 10, color: "var(--color-fg-faint)" }}
+            >
+              Nothing drawing power in this rack yet.
+            </div>
+          ) : (
+            <div className="kv">
+              {/* As many circuits as the load actually needs, filled in order —
+                  the fixed pair of rows hid everything above 4800W. */}
+              {Array.from({ length: circuits }).map((_, i) => {
+                const load = Math.min(CIRCUIT_W, totalWatts - i * CIRCUIT_W);
+                return (
+                  <Fragment key={i}>
+                    <span className="k">15A #{i + 1}</span>
+                    <span className="v" style={i === 0 ? { color: "var(--accent)" } : undefined}>
+                      {Math.round(load)}W / {CIRCUIT_W}W
+                    </span>
+                  </Fragment>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
     </>

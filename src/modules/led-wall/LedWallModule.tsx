@@ -603,19 +603,6 @@ export function LedWallModule() {
                       />
                     </svg>
                   )}
-                  {/* Processor split overlay */}
-                  <div
-                    style={{
-                      position: "absolute",
-                      top: 0,
-                      bottom: 0,
-                      left: frameW / 2 - 0.5,
-                      width: 1,
-                      background: "var(--accent)",
-                      opacity: 0.4,
-                      pointerEvents: "none",
-                    }}
-                  />
                 </div>
               </div>
             </div>
@@ -651,30 +638,30 @@ export function LedWallModule() {
 
         {/* Bottom meter row */}
         <div className="canvas-meter">
+          {/* One readout for the whole processing budget. Two fixed PROC blocks
+              asserted a second unit that often wasn't needed, and collapsed
+              everything past the second into it when three or more were. */}
           <div className="meter-block">
-            <div className="h">PROC #1</div>
+            <div className="h">PROCESSING</div>
             <div className="v accent">
-              {Math.min(100, calc.proc1Pct)}
+              {calc.capacityPct}
               <span style={{ fontSize: 10, color: "var(--color-fg-faint)", marginLeft: 4 }}>%</span>
             </div>
             <div className="bar">
-              <div className="bar-fill" style={{ width: `${Math.min(100, calc.proc1Pct)}%` }} />
+              <div className="bar-fill" style={{ width: `${Math.min(100, calc.capacityPct)}%` }} />
             </div>
             <div className="mono" style={{ fontSize: 10, color: "var(--color-fg-faint)" }}>
-              {Math.min(calc.totalPixels, calc.procCapacity).toLocaleString()} px
+              {calc.procsNeeded} × {calc.procName}
             </div>
           </div>
           <div className="meter-block">
-            <div className="h">PROC #2</div>
-            <div className="v accent">
-              {Math.min(100, calc.proc2Pct)}
-              <span style={{ fontSize: 10, color: "var(--color-fg-faint)", marginLeft: 4 }}>%</span>
-            </div>
-            <div className="bar">
-              <div className="bar-fill" style={{ width: `${Math.min(100, calc.proc2Pct)}%` }} />
+            <div className="h">PIXEL BUDGET</div>
+            <div className="v">
+              {(calc.totalPixels / 1e6).toFixed(2)}
+              <span style={{ fontSize: 10, color: "var(--color-fg-faint)", marginLeft: 4 }}>MP</span>
             </div>
             <div className="mono" style={{ fontSize: 10, color: "var(--color-fg-faint)" }}>
-              {Math.max(0, calc.totalPixels - calc.procCapacity).toLocaleString()} px
+              of {((calc.procsNeeded * calc.procCapacity) / 1e6).toFixed(1)} MP available
             </div>
           </div>
           <div className="meter-block">
@@ -921,8 +908,11 @@ export function LedWallModule() {
                 <span className="unit">MP</span>
               </div>
             </div>
+            {/* Not a calculation — the industry rule of thumb of roughly one
+                metre of viewing distance per millimetre of pitch. Labelled as
+                such so it doesn't read as derived from the wall. */}
             <div className="readout">
-              <div className="lbl">Viewing distance (min)</div>
+              <div className="lbl">Min viewing distance · ≈1m per mm pitch</div>
               <div className="val">
                 {panel.pitch.toFixed(1)}
                 <span className="unit">m</span>

@@ -17,10 +17,13 @@ const STATUS_OPTIONS: { value: AssetStatus; label: string }[] = [
   { value: "maint", label: "MAINT" },
 ];
 
+// A show's start/end are 1-based day positions in this window, not dates.
+const SCHEDULE_DAYS = 14;
+
 function clampDay(raw: string, fallback: number): number {
   const n = Math.round(Number(raw));
   if (!Number.isFinite(n)) return fallback;
-  return Math.max(0, Math.min(14, n));
+  return Math.max(1, Math.min(SCHEDULE_DAYS, n));
 }
 
 function nextShowId(shows: ShowSchedule[]): string {
@@ -186,7 +189,8 @@ export function InventoryModule() {
     const endRaw = await promptDialog("End day (1–14)?", "6");
     if (endRaw === null) return;
     const start = clampDay(startRaw, 1);
-    const end = Math.max(start + 1, clampDay(endRaw, start + 1));
+    // Inclusive days, so end === start is a legitimate one-day show.
+    const end = Math.max(start, clampDay(endRaw, start));
     addShow({ id: nextShowId(shows), name, start, end, pct: 0 });
   };
   const handleEditShow = async (show: ShowSchedule) => {
@@ -199,7 +203,7 @@ export function InventoryModule() {
     const pctRaw = await promptDialog("Utilization %?", String(show.pct));
     if (pctRaw === null) return;
     const start = clampDay(startRaw, show.start);
-    const end = Math.max(start + 1, clampDay(endRaw, show.end));
+    const end = Math.max(start, clampDay(endRaw, show.end));
     const pct = Math.max(0, Math.min(100, Math.round(Number(pctRaw)) || 0));
     updateShow(show.id, { name, start, end, pct });
   };
@@ -466,17 +470,15 @@ export function InventoryModule() {
                   <I.Plus size={12} />
                 </button>
               </div>
+              {/* Day positions, not dates. A show stores start/end as offsets in a
+                  14-day window and carries no calendar date, so the old axis
+                  invented one — it read 28/04–11/05 whatever today was. */}
               <div className="gantt-hdr">
-                {Array.from({ length: 14 }).map((_, i) => {
-                  const day = i + 28;
-                  const d = day > 30 ? day - 30 : day;
-                  const m = day > 30 ? "05" : "04";
-                  return (
-                    <div key={i} className="gantt-hdr-cell">
-                      {String(d).padStart(2, "0")}/{m}
-                    </div>
-                  );
-                })}
+                {Array.from({ length: SCHEDULE_DAYS }).map((_, i) => (
+                  <div key={i} className="gantt-hdr-cell">
+                    D{i + 1}
+                  </div>
+                ))}
               </div>
               {shows.map((s) => (
                 <GanttRow key={s.id} show={s} onEdit={handleEditShow} onRemove={handleRemoveShow} />
@@ -750,8 +752,12 @@ function GanttRow({
         <div
           className={`gantt-bar ${s.kind ?? ""}`}
           style={{
-            left: `${(s.start / 14) * 100}%`,
-            width: `${((s.end - s.start) / 14) * 100}%`,
+            // Days are 1-based and inclusive: day 1 is the first column, and a
+            // show ending on day 6 covers day 6. The bar used to be offset by
+            // start/14, which drew a day-1 show over the day-2 column. Shows
+            // saved before the day range was clamped can hold 0, so normalise.
+            left: `${((Math.max(1, s.start) - 1) / SCHEDULE_DAYS) * 100}%`,
+            width: `${((Math.max(s.start, s.end) - Math.max(1, s.start) + 1) / SCHEDULE_DAYS) * 100}%`,
           }}
         >
           {s.name} · {s.pct}%

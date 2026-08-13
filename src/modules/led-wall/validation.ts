@@ -12,7 +12,6 @@ export interface WallIssue {
   detail: string;
 }
 
-export const PROC_PIXEL_CAPACITY = 8_800_000;
 export const DISTRO_CAPACITY_W = 144_000;
 export const DATA_LINK_CAPACITY_GBPS = 20;
 export const TRUSS_SWL_KG = 600;
@@ -44,15 +43,19 @@ export function validateWall(
 ): WallIssue[] {
   const issues: WallIssue[] = [];
 
-  const procCapacity = calc.procsNeeded * PROC_PIXEL_CAPACITY;
-  const procPct = calc.totalPixels / procCapacity;
+  // Budget comes from the processor the wall actually selects. This used to use
+  // a local 8.8 MP constant and name "SX40" in both messages, so choosing any
+  // other processor produced headroom advice for hardware that wasn't specified
+  // — and contradicted procsNeeded, which was computed from the real capacity.
+  const budget = calc.procsNeeded * calc.procCapacity;
+  const procPct = budget === 0 ? 0 : calc.totalPixels / budget;
   if (procPct > 1) {
     issues.push({
       id: "proc-over",
       level: "error",
       category: "processor",
       title: "Processor capacity exceeded",
-      detail: `${calc.totalPixels.toLocaleString()} px > ${procCapacity.toLocaleString()} px (${calc.procsNeeded} × SX40). Add a processor.`,
+      detail: `${calc.totalPixels.toLocaleString()} px > ${budget.toLocaleString()} px (${calc.procsNeeded} × ${calc.procName}). Add a processor.`,
     });
   } else if (procPct > NEAR_THRESHOLD) {
     issues.push({
@@ -60,7 +63,7 @@ export function validateWall(
       level: "warn",
       category: "processor",
       title: "Processor near capacity",
-      detail: `${(procPct * 100).toFixed(0)}% of ${calc.procsNeeded} × SX40 budget — margin under 15%.`,
+      detail: `${(procPct * 100).toFixed(0)}% of ${calc.procsNeeded} × ${calc.procName} budget — margin under 15%.`,
     });
   }
 

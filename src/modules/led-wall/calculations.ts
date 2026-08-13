@@ -16,8 +16,10 @@ export interface WallCalc {
   procName: string;
   procCapacity: number;
   procsNeeded: number;
-  proc1Pct: number;
-  proc2Pct: number;
+  // Share of the whole processing budget (procsNeeded × capacity) in use. The
+  // per-unit proc1Pct/proc2Pct it replaces could only ever describe two units,
+  // and reported the third unit's load as the second one's.
+  capacityPct: number;
   circuitsNeeded: number;
   btuPerHr: number;
 }
@@ -37,10 +39,7 @@ export function computeWallCalc(layout: WallLayout, panel: Panel): WallCalc {
 
   const proc = processorById(layout.processor);
   const procsNeeded = Math.max(1, Math.ceil(totalPixels / proc.pixelCapacity));
-  const proc1Pct = Math.round((Math.min(proc.pixelCapacity, totalPixels) / proc.pixelCapacity) * 100);
-  const proc2Pct = Math.round(
-    (Math.max(0, totalPixels - proc.pixelCapacity) / proc.pixelCapacity) * 100,
-  );
+  const capacityPct = Math.round((totalPixels / (procsNeeded * proc.pixelCapacity)) * 100);
 
   const circuitsNeeded = Math.ceil(totalWatts / 2400);
   const btuPerHr = Math.round(totalWatts * 3.412);
@@ -60,8 +59,7 @@ export function computeWallCalc(layout: WallLayout, panel: Panel): WallCalc {
     procName: proc.name,
     procCapacity: proc.pixelCapacity,
     procsNeeded,
-    proc1Pct,
-    proc2Pct,
+    capacityPct,
     circuitsNeeded,
     btuPerHr,
   };

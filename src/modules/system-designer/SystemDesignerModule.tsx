@@ -728,8 +728,10 @@ export function SystemDesignerModule() {
               </div>
             </div>
 
+            {/* Was "GRID 16 · AUTO-ROUTE: ORTHOGONAL": there is no grid snap —
+                dragging is free to the pixel — and the wires are bézier curves. */}
             <div className="crosshair-readout">
-              SCHEMATIC · GRID 16 · AUTO-ROUTE: ORTHOGONAL
+              SCHEMATIC · DRAG A PORT TO CONNECT · ESC CANCELS
             </div>
           </div>
         )}

@@ -28,14 +28,28 @@ interface DocsState {
   renameDoc: (docId: string, newName: string) => boolean;
   deleteDoc: (docId: string) => boolean;
   moveNode: (dragId: string, targetId: string, pos: DropPos) => boolean;
-  addComment: (docId: string, text: string) => void;
-  editComment: (docId: string, index: number, text: string) => void;
-  deleteComment: (docId: string, index: number) => void;
-  addVersion: (docId: string, note: string) => string | null;
+  // Identity comes from the caller, the way the maintenance log does it — the
+  // store stays free of auth imports.
+  addComment: (docId: string, text: string, author: DocAuthor) => void;
+  editComment: (docId: string, index: number, text: string, expected: DocComment) => void;
+  deleteComment: (docId: string, index: number, expected: DocComment) => void;
+  addVersion: (docId: string, note: string, author: DocAuthor) => string | null;
   restoreVersion: (docId: string, v: string) => boolean;
 }
 
 export type DropPos = "before" | "after" | "inside";
+
+export interface DocAuthor {
+  who: string;
+  byId: string | null;
+}
+
+// Comments are addressed by position, and they are prepended — so a collaborator
+// posting one between render and click shifts the target. Verify the row still
+// holds what the caller saw before touching it.
+function sameComment(a: DocComment | undefined, b: DocComment): boolean {
+  return a != null && a.c === b.c && a.who === b.who && a.t === b.t;
+}
 
 const MAX_RECENT_DOCS = 6;
 
@@ -329,33 +343,35 @@ export const useDocs = create<DocsState>()((set, get) => ({
         set({ tree: nextTree, expanded });
         return true;
       },
-      addComment: (docId, rawText) => {
+      addComment: (docId, rawText, author) => {
         const text = rawText.trim();
         if (!text) return;
         const state = get();
         const existing = state.comments[docId] ?? [];
-        const entry: DocComment = { who: "You", t: "now", c: text };
+        // Was hardcoded to who: "You", t: "now" — so on a shared project every
+        // comment claimed to be yours, posted just now, forever.
+        const entry: DocComment = { who: author.who, t: nowStamp(), c: text, byId: author.byId };
         set({
           comments: { ...state.comments, [docId]: [entry, ...existing] },
         });
       },
-      editComment: (docId, index, rawText) => {
+      editComment: (docId, index, rawText, expected) => {
         const text = rawText.trim();
         if (!text) return;
         const state = get();
         const existing = state.comments[docId];
-        if (!existing || !existing[index]) return;
+        if (!existing || !sameComment(existing[index], expected)) return;
         const next = existing.map((c, i) => (i === index ? { ...c, c: text } : c));
         set({ comments: { ...state.comments, [docId]: next } });
       },
-      deleteComment: (docId, index) => {
+      deleteComment: (docId, index, expected) => {
         const state = get();
         const existing = state.comments[docId];
-        if (!existing || !existing[index]) return;
+        if (!existing || !sameComment(existing[index], expected)) return;
         const next = existing.filter((_, i) => i !== index);
         set({ comments: { ...state.comments, [docId]: next } });
       },
-      addVersion: (docId, rawNote) => {
+      addVersion: (docId, rawNote, author) => {
         const note = rawNote.trim();
         if (!note) return null;
         const state = get();
@@ -363,7 +379,7 @@ export const useDocs = create<DocsState>()((set, get) => ({
         const nextV = bumpVersion(existing[0]?.v);
         const entry: DocVersion = {
           v: nextV,
-          who: "You",
+          who: author.who,
           when: nowStamp(),
           note,
           body: state.bodies[docId],

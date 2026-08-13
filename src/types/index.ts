@@ -225,6 +225,11 @@ export interface DocComment {
   who: string;
   t: string;
   c: string;
+  // Author's user id, so the edit/delete affordance can be gated on the real
+  // author rather than on the display name. Absent on comments written before
+  // this existed and in local mode, where there is no account to attribute to;
+  // canDeleteShared treats that as unowned.
+  byId?: string | null;
 }
 
 export interface PatchEntry {

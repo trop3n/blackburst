@@ -3,8 +3,10 @@ import { I } from "@/components/Icon";
 import { extractRefs, REF_KIND_LABEL } from "@/lib/doc-refs";
 import { goto } from "@/lib/nav";
 import { DOC_BODIES } from "@/lib/docs-data";
+import { canDeleteShared } from "@/lib/ownership";
+import { displayNameOf, useAuth } from "@/store/useAuth";
 import { alertDialog, confirmDialog, promptDialog } from "@/store/useDialog";
-import type { DocNode } from "@/types";
+import type { DocComment, DocNode } from "@/types";
 import { MarkdownBody } from "./MarkdownBody";
 import { useDocs, type DropPos } from "./store";
 
@@ -213,6 +215,11 @@ export function DocsModule() {
   const bodiesMap = useDocs((s) => s.bodies);
   const setBody = useDocs((s) => s.setBody);
   const clearBody = useDocs((s) => s.clearBody);
+  const user = useAuth((s) => s.user);
+  const myId = user?.id ?? null;
+  // Local mode has no account to attribute to, so "You" is the honest answer
+  // there; in accounts mode a comment carries the signed-in identity.
+  const author = { who: displayNameOf(user) || user?.email || "You", byId: myId };
   const [search, setSearch] = useState("");
   const [draft, setDraft] = useState("");
   const [previewing, setPreviewing] = useState(false);
@@ -386,7 +393,7 @@ export function DocsModule() {
 
   async function onAddVersion() {
     const note = await promptDialog("Version note (what changed?):");
-    if (note && note.trim()) addVersion(activeId, note);
+    if (note && note.trim()) addVersion(activeId, note, author);
   }
 
   async function onRestoreVersion(v: string) {
@@ -399,21 +406,21 @@ export function DocsModule() {
 
   function submitComment() {
     if (!trimmedDraft) return;
-    addComment(activeId, trimmedDraft);
+    addComment(activeId, trimmedDraft, author);
     setDraft("");
   }
 
-  async function onEditComment(index: number, current: string) {
-    const next = await promptDialog("Edit comment:", current);
+  async function onEditComment(index: number, comment: DocComment) {
+    const next = await promptDialog("Edit comment:", comment.c);
     if (next === null) return;
-    if (!next.trim() || next.trim() === current) return;
-    editComment(activeId, index, next);
+    if (!next.trim() || next.trim() === comment.c) return;
+    editComment(activeId, index, next, comment);
   }
 
-  async function onDeleteComment(index: number) {
+  async function onDeleteComment(index: number, comment: DocComment) {
     const ok = await confirmDialog("Delete this comment?", { danger: true, confirmLabel: "Delete" });
     if (!ok) return;
-    deleteComment(activeId, index);
+    deleteComment(activeId, index, comment);
   }
 
   function onComposerKey(e: React.KeyboardEvent<HTMLTextAreaElement>) {
@@ -615,15 +622,27 @@ export function DocsModule() {
                   <span>{v.who}</span>
                   <span>{v.when}</span>
                 </div>
-                {v.body !== undefined && v.body !== customBody && (
-                  <button
-                    type="button"
-                    className="version-restore"
-                    title="Restore this version"
-                    onClick={() => onRestoreVersion(v.v)}
+                {v.body === undefined ? (
+                  // A version saved while the doc still showed its stock body has
+                  // no text to restore. Say so, rather than just omitting the
+                  // button and leaving the row looking broken.
+                  <span
+                    className="mono"
+                    style={{ fontSize: 9.5, color: "var(--color-fg-faint)" }}
                   >
-                    <I.Undo size={11} /> Restore
-                  </button>
+                    note only
+                  </span>
+                ) : (
+                  v.body !== customBody && (
+                    <button
+                      type="button"
+                      className="version-restore"
+                      title="Restore this version"
+                      onClick={() => onRestoreVersion(v.v)}
+                    >
+                      <I.Undo size={11} /> Restore
+                    </button>
+                  )
                 )}
               </div>
             ))
@@ -660,11 +679,12 @@ export function DocsModule() {
         <div className="pane-hd">
           <span>COMMENTS</span>
           <span className="spacer" />
+          {/* Was "N OPEN" — comments have no resolved state to be open against. */}
           <span
             className="mono"
             style={{ fontSize: 10, color: "var(--color-fg-faint)" }}
           >
-            {comments.length} OPEN
+            {comments.length}
           </span>
         </div>
         <div style={{ padding: "0 12px 12px", fontSize: 11.5 }}>
@@ -700,12 +720,16 @@ export function DocsModule() {
                   <span className="mono" style={{ fontSize: 10, color: "var(--accent)" }}>{cm.who}</span>
                   <span className="spacer" />
                   <span className="mono" style={{ fontSize: 10, color: "var(--color-fg-faint)" }}>{cm.t}</span>
-                  {cm.who === "You" && (
+                  {/* Gated on the author's id, not the display name — every
+                      comment used to be labelled "You", which let anyone edit
+                      and delete anyone else's. Same rule as the other shared
+                      records: yours, or unattributed. */}
+                  {canDeleteShared(cm.byId ?? null, myId) && (
                     <span className="comment-actions">
-                      <button type="button" title="Edit" onClick={() => onEditComment(i, cm.c)}>
+                      <button type="button" title="Edit" onClick={() => onEditComment(i, cm)}>
                         <I.Edit size={11} />
                       </button>
-                      <button type="button" title="Delete" onClick={() => onDeleteComment(i)}>
+                      <button type="button" title="Delete" onClick={() => onDeleteComment(i, cm)}>
                         <I.Cross size={11} />
                       </button>
                     </span>
