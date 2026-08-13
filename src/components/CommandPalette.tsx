@@ -155,6 +155,10 @@ export function CommandPalette() {
   const listRef = useRef<HTMLDivElement>(null);
 
   const allRows = useMemo<CmdRow[]>(() => {
+    // The palette is mounted permanently and returns null when closed, so this
+    // index was rebuilt on every keystroke anywhere in the app — every asset,
+    // node, rack item, venue and log entry — for a list nobody could see.
+    if (!open) return [];
     const docs = flattenDocs(docTree).map<RefRow>((d) => ({
       group: "Docs",
       kind: "doc",
@@ -230,7 +234,7 @@ export function CommandPalette() {
       ...venueRows,
       ...entryRows,
     ];
-  }, [assets, walls, nodes, docTree, racks, venues, entries, devices]);
+  }, [open, assets, walls, nodes, docTree, racks, venues, entries, devices]);
 
   const { mode, rest } = useMemo(() => parseQuery(query), [query]);
   const q = rest.trim().toLowerCase();

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { PANEL_LIBRARY } from "@/lib/data";
 import { computeWallCalc } from "@/modules/led-wall/calculations";
 import { useLedWall } from "@/modules/led-wall/store";
@@ -7,6 +7,7 @@ import { useInventory } from "@/modules/inventory/store";
 import { summarizeAssetIssues, validateAssets } from "@/modules/inventory/validation";
 import { useApp } from "@/store/useApp";
 import { useAuth } from "@/store/useAuth";
+import { useCatalog } from "@/store/useCatalog";
 import { useSaveStatus } from "@/store/useSaveStatus";
 
 export function StatusBar() {
@@ -20,6 +21,7 @@ export function StatusBar() {
   const layoutId = useLedWall((s) => s.layoutId);
   const inventoryAssets = useInventory((s) => s.assets);
   const inventoryShows = useInventory((s) => s.shows);
+  const customPanels = useCatalog((s) => s.panel);
   const latest = revisions[0];
   const saveState = useSaveStatus((s) => s.state);
   const savedAt = useSaveStatus((s) => s.lastSavedAt);
@@ -42,11 +44,20 @@ export function StatusBar() {
     tzMinutes ? `:${String(tzMinutes).padStart(2, "0")}` : ""
   }`;
 
-  const layout = walls.find((l) => l.id === layoutId) ?? walls[0];
-  const panel = PANEL_LIBRARY.find((p) => p.id === layout.panel) ?? PANEL_LIBRARY[0];
-  const calc = computeWallCalc(layout, panel);
-  const wall = summarize(validateWall(layout, panel, calc));
-  const assets = summarizeAssetIssues(validateAssets(inventoryAssets, inventoryShows));
+  // Memoized against the clock: this component re-renders every second, and
+  // without these it re-ran the wall maths and validated the entire asset list
+  // on each tick to produce the same answer.
+  const wall = useMemo(() => {
+    const layout = walls.find((l) => l.id === layoutId) ?? walls[0];
+    const panel = PANEL_LIBRARY.find((p) => p.id === layout.panel) ?? PANEL_LIBRARY[0];
+    return summarize(validateWall(layout, panel, computeWallCalc(layout, panel)));
+    // customPanels is a dep because PANEL_LIBRARY is a live binding: editing the
+    // catalog changes the panel this resolves to without touching `walls`.
+  }, [walls, layoutId, customPanels]);
+  const assets = useMemo(
+    () => summarizeAssetIssues(validateAssets(inventoryAssets, inventoryShows)),
+    [inventoryAssets, inventoryShows],
+  );
   const errors = wall.errors + assets.errors;
   const warnings = wall.warnings + assets.warnings;
   const level: "ok" | "warn" | "error" =

@@ -10,7 +10,7 @@ import { useApp } from "@/store/useApp";
 import { useAuth } from "@/store/useAuth";
 import { useCatalog } from "@/store/useCatalog";
 import { alertDialog, confirmDialog, promptDialog } from "@/store/useDialog";
-import type { RackColor, RackSize } from "@/types";
+import type { RackColor, RackItem, RackItemDef, RackSize } from "@/types";
 import { activeRackOf, fits, useRack } from "./store";
 
 const U_HEIGHT = 14;
@@ -71,26 +71,31 @@ export function RackBuilderModule() {
   const catalogOwners = useCatalog((s) => s.owners);
   const myId = useAuth((s) => s.user?.id);
 
+  // One index per render in place of a RACK_CATALOG.find at every lookup — the
+  // totals, the elevation, both canvas views and the drag preview each used to
+  // scan the whole catalog per item. Built fresh rather than memoized because
+  // RACK_CATALOG is a live binding that the catalog store reassigns.
+  const defById = new Map(RACK_CATALOG.map((d) => [d.id, d]));
+
   // Elevation rows run top-of-rack down, the way a rack is read on site. A
   // device renders once at its topmost U and spans its height.
   const elevationRows = () => {
-    const out: {
-      u: number;
-      def: (typeof RACK_CATALOG)[number] | null;
-      span: number;
-      covered: boolean;
-    }[] = [];
+    // Which item covers each U, resolved in one pass instead of scanning every
+    // item (and the catalog) again for each of up to 48 slots.
+    const coverage = new Map<number, { item: RackItem; def: RackItemDef }>();
+    for (const item of items) {
+      const def = defById.get(item.id);
+      if (!def) continue;
+      for (let u = item.pos; u < item.pos + def.u; u++) coverage.set(u, { item, def });
+    }
+    const out: { u: number; def: RackItemDef | null; span: number; covered: boolean }[] = [];
     for (let u = rackSize; u >= 1; u--) {
-      const item = items.find((i) => {
-        const d = RACK_CATALOG.find((x) => x.id === i.id);
-        return d ? u >= i.pos && u < i.pos + d.u : false;
-      });
-      const def = item ? RACK_CATALOG.find((d) => d.id === item.id) ?? null : null;
-      if (item && def) {
+      const hit = coverage.get(u);
+      if (hit) {
         // Every U gets a row so the ruler stays continuous; the device cell is
         // emitted once at its topmost U and spans downward from there.
-        const isTop = u === item.pos + def.u - 1;
-        out.push({ u, def: isTop ? def : null, span: def.u, covered: !isTop });
+        const isTop = u === hit.item.pos + hit.def.u - 1;
+        out.push({ u, def: isTop ? hit.def : null, span: hit.def.u, covered: !isTop });
       } else {
         out.push({ u, def: null, span: 1, covered: false });
       }
@@ -99,7 +104,7 @@ export function RackBuilderModule() {
   };
 
   const rackRowsSorted = [...items]
-    .map((i) => ({ item: i, def: RACK_CATALOG.find((d) => d.id === i.id) }))
+    .map((i) => ({ item: i, def: defById.get(i.id) }))
     .filter((r): r is { item: typeof r.item; def: NonNullable<typeof r.def> } => r.def != null)
     .sort((a, b) => b.item.pos - a.item.pos);
 
@@ -127,7 +132,7 @@ export function RackBuilderModule() {
   const changeRackSize = async (size: RackSize) => {
     if (size === rackSize) return;
     const above = items.filter((i) => {
-      const d = RACK_CATALOG.find((x) => x.id === i.id);
+      const d = defById.get(i.id);
       return d ? i.pos + d.u - 1 > size : false;
     });
     if (above.length > 0) {
@@ -226,22 +231,22 @@ export function RackBuilderModule() {
     return true;
   });
 
-  const totalU = items.reduce((s, i) => {
-    const d = RACK_CATALOG.find((x) => x.id === i.id);
-    return s + (d?.u ?? 0);
-  }, 0);
-  const totalW = items.reduce((s, i) => {
-    const d = RACK_CATALOG.find((x) => x.id === i.id);
-    return s + (d?.w ?? 0);
-  }, 0);
-  const totalWatts = items.reduce((s, i) => {
-    const d = RACK_CATALOG.find((x) => x.id === i.id);
-    return s + (d?.watts ?? 0);
-  }, 0);
-  const maxDepth = items.reduce((m, i) => {
-    const d = RACK_CATALOG.find((x) => x.id === i.id);
-    return Math.max(m, d?.depth ?? 0);
-  }, 0);
+  // Five separate traversals of the same items — four reduces and the power
+  // breakdown below — collapsed into one.
+  let totalU = 0;
+  let totalW = 0;
+  let totalWatts = 0;
+  let maxDepth = 0;
+  const byCat: Record<string, number> = {};
+  for (const it of items) {
+    const d = defById.get(it.id);
+    if (!d) continue;
+    totalU += d.u;
+    totalW += d.w;
+    totalWatts += d.watts;
+    maxDepth = Math.max(maxDepth, d.depth);
+    byCat[d.cat] = (byCat[d.cat] ?? 0) + d.watts;
+  }
   const usedPct = Math.round((totalU / rackSize) * 100);
   // One figure feeds both the meter row and the inspector's circuit map. They
   // used to disagree: the meter counted 15A/120V circuits while the inspector
@@ -252,13 +257,11 @@ export function RackBuilderModule() {
   const btu = Math.round(totalWatts * 3.412);
 
   const selected = items.find((i) => i.iid === selectedIid) ?? null;
-  const selectedDef = selected ? RACK_CATALOG.find((d) => d.id === selected.id) : null;
+  const selectedDef = selected ? defById.get(selected.id) : null;
 
   const movingItem = draggingIid != null ? items.find((i) => i.iid === draggingIid) : null;
-  const movingDef = movingItem ? RACK_CATALOG.find((d) => d.id === movingItem.id) : null;
-  const hoverDef = draggingId
-    ? RACK_CATALOG.find((d) => d.id === draggingId) ?? null
-    : movingDef;
+  const movingDef = movingItem ? defById.get(movingItem.id) : null;
+  const hoverDef = draggingId ? defById.get(draggingId) ?? null : movingDef;
   const hoverValid =
     hoverDef && hoverPos != null
       ? draggingIid != null
@@ -271,12 +274,6 @@ export function RackBuilderModule() {
         : fits(items, rackSize, hoverDef, hoverPos)
       : false;
 
-  const byCat: Record<string, number> = {};
-  for (const it of items) {
-    const d = RACK_CATALOG.find((x) => x.id === it.id);
-    if (!d) continue;
-    byCat[d.cat] = (byCat[d.cat] ?? 0) + d.watts;
-  }
   const maxByCat = Math.max(...Object.values(byCat), 1);
 
   return (
@@ -754,7 +751,7 @@ export function RackBuilderModule() {
 
                       {/* Items */}
                       {items.map((it) => {
-                        const def = RACK_CATALOG.find((d) => d.id === it.id);
+                        const def = defById.get(it.id);
                         // A custom model deleted from the shared catalog (possibly
                         // by another user) leaves its items behind. Draw them so
                         // they stay selectable and removable instead of becoming
@@ -980,7 +977,7 @@ export function RackBuilderModule() {
                     }}
                   >
                     {items.map((it) => {
-                      const def = RACK_CATALOG.find((d) => d.id === it.id);
+                      const def = defById.get(it.id);
                       if (!def) return null;
                       const col = RACK_COLOR_MAP[def.color];
                       const top = (rackSize - (it.pos + def.u - 1)) * U_HEIGHT;
