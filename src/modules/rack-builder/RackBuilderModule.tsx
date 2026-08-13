@@ -1,6 +1,7 @@
 import { Fragment, useEffect } from "react";
 import { DeviceLink } from "@/components/DeviceLink";
 import { I } from "@/components/Icon";
+import { NumField } from "@/components/NumField";
 import { PrintSheet } from "@/components/PrintSheet";
 import { downloadCsv, stamp } from "@/lib/export-csv";
 import { canDeleteShared } from "@/lib/ownership";
@@ -1206,12 +1207,13 @@ export function RackBuilderModule() {
             </div>
             <div className="fld" style={{ gridTemplateColumns: "90px 1fr 60px 60px" }}>
               <span className="k">U slot</span>
-              <input
-                type="number"
+              {/* movePos clamps and refuses occupied slots; a refused move simply
+                  shows the old number again. */}
+              <NumField
                 value={selected.pos}
                 min={1}
                 max={rackSize - selectedDef.u + 1}
-                onChange={(e) => movePos(selected.iid, Number(e.target.value))}
+                onCommit={(n) => movePos(selected.iid, Math.round(n))}
               />
               <button className="tb-btn" onClick={() => movePos(selected.iid, selected.pos + 1)}>
                 ↑

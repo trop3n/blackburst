@@ -14,6 +14,7 @@ const REF_KINDS: readonly RefKind[] = [
   "doc",
   "rack-item",
   "maint-entry",
+  "venue",
 ];
 
 export interface DocRef {
@@ -57,4 +58,5 @@ export const REF_KIND_LABEL: Record<RefKind, string> = {
   doc: "DOC",
   "rack-item": "RACK",
   "maint-entry": "MAINT",
+  venue: "VENUE",
 };

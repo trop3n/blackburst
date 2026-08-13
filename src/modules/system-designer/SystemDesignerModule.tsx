@@ -96,21 +96,30 @@ function PatchCell({
   onCommit: (row: PatchRow, field: PatchField, value: string) => void;
 }) {
   const [draft, setDraft] = useState<string | null>(null);
+  // Ref mirror of the draft: Escape clears it and blurs in the same tick, and a
+  // blur handler reading state would still see the pre-clear value and commit
+  // the abandoned edit. (Same reason NumField carries one.)
+  const draftRef = useRef<string | null>(null);
+  const setBoth = (v: string | null) => {
+    draftRef.current = v;
+    setDraft(v);
+  };
   const value = draft ?? row[field];
   return (
     <input
       className="tbl-input"
       data-custom={row.custom[field] ? "1" : "0"}
       value={value}
-      onChange={(e) => setDraft(e.target.value)}
+      onChange={(e) => setBoth(e.target.value)}
       onBlur={() => {
-        if (draft != null) onCommit(row, field, draft);
-        setDraft(null);
+        const pending = draftRef.current;
+        setBoth(null);
+        if (pending != null) onCommit(row, field, pending);
       }}
       onKeyDown={(e) => {
         if (e.key === "Enter") e.currentTarget.blur();
         if (e.key === "Escape") {
-          setDraft(null);
+          setBoth(null);
           e.currentTarget.blur();
         }
       }}
@@ -846,6 +855,20 @@ export function SystemDesignerModule() {
               <div className="val" style={{ fontSize: 16 }}>
                 {node.name}
               </div>
+            </div>
+            <div className="section-h">
+              <span>IDENTITY</span>
+              <span className="line" />
+            </div>
+            {/* Drop two of the same model on the canvas and the generated id was
+                the only thing telling them apart, on the canvas and in the patch
+                sheet alike. */}
+            <div className="fld">
+              <span className="k">Name</span>
+              <input
+                value={node.name}
+                onChange={(e) => updateNode(node.id, { name: e.target.value })}
+              />
             </div>
             <div className="section-h">
               <span>SPECIFICATION</span>

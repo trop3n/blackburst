@@ -1,5 +1,6 @@
 import { memo, useEffect } from "react";
 import { I } from "@/components/Icon";
+import { NumField } from "@/components/NumField";
 import { PrintSheet } from "@/components/PrintSheet";
 import { PANEL_LIBRARY } from "@/lib/data";
 import { LED_PROCESSORS } from "@/lib/led-processor-data";
@@ -722,28 +723,22 @@ export function LedWallModule() {
               <span>GEOMETRY</span>
               <span className="line" />
             </div>
+            {/* updateWall clamps to the module's column/row limits, so these
+                commit the raw number and let the store be the authority. */}
             <div className="fld">
               <span className="k">Columns</span>
-              <input
+              <NumField
                 value={layout.cols}
-                type="number"
                 min={1}
-                onChange={(e) => {
-                  const n = Math.max(1, Math.floor(Number(e.target.value) || 1));
-                  updateWall(layout.id, { cols: n });
-                }}
+                onCommit={(n) => updateWall(layout.id, { cols: Math.floor(n) })}
               />
             </div>
             <div className="fld">
               <span className="k">Rows</span>
-              <input
+              <NumField
                 value={layout.rows}
-                type="number"
                 min={1}
-                onChange={(e) => {
-                  const n = Math.max(1, Math.floor(Number(e.target.value) || 1));
-                  updateWall(layout.id, { rows: n });
-                }}
+                onCommit={(n) => updateWall(layout.id, { rows: Math.floor(n) })}
               />
             </div>
             <div className="fld">

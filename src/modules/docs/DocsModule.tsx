@@ -504,7 +504,9 @@ export function DocsModule() {
               >
                 <I.File size={12} />
                 <span className="lbl">{d.name}</span>
-                <span className="meta">{i === 0 ? "now" : `#${i + 1}`}</span>
+                {/* Plain position in the list. The first row used to read "now",
+                    which claimed a recency the app never recorded. */}
+                <span className="meta">#{i + 1}</span>
               </div>
             ))
           )}

@@ -1,6 +1,7 @@
 import { memo, useMemo, useState } from "react";
 import { DeviceLink } from "@/components/DeviceLink";
 import { I } from "@/components/Icon";
+import { NumField } from "@/components/NumField";
 import { ASSET_CATEGORIES, INV_MODELS } from "@/lib/inventory-data";
 import { canDeleteShared } from "@/lib/ownership";
 import { useAuth } from "@/store/useAuth";
@@ -104,10 +105,24 @@ export function InventoryModule() {
   const handleCheckOut = async () => {
     if (!asset) return;
     if (asset.status === "out") return;
-    const show = (await promptDialog(`Check out ${asset.id} — show / job name?`, asset.show !== "—" ? asset.show : ""))?.trim();
+    // Consistency treats a show that isn't on the schedule as an error, so the
+    // most common action in the module used to produce one every time unless the
+    // typed name matched exactly. Show what's bookable, then offer to add it.
+    const onSchedule = shows.map((s) => s.name);
+    const prompt = onSchedule.length
+      ? `Check out ${asset.id} — show / job name?\n\nOn the schedule: ${onSchedule.join(", ")}`
+      : `Check out ${asset.id} — show / job name?`;
+    const show = (await promptDialog(prompt, asset.show !== "—" ? asset.show : ""))?.trim();
     if (!show) return;
     const due = (await promptDialog(`Due back date (e.g. "Apr 28")?`, asset.due !== "—" ? asset.due : ""))?.trim();
     if (!due) return;
+    if (!shows.some((s) => s.name === show)) {
+      const add = await confirmDialog(
+        `"${show}" isn't on the schedule. Add it? It will span the whole window until you set its days.`,
+        { confirmLabel: "Add show" },
+      );
+      if (add) addShow({ id: nextShowId(shows), name: show, start: 1, end: SCHEDULE_DAYS, pct: 0 });
+    }
     checkOut(asset.id, show, due);
   };
   // Create a unit of a known model: category is already resolved, so only the
@@ -572,14 +587,15 @@ export function InventoryModule() {
               <div className="fld">
                 <span className="k">Utilization</span>
                 <div className="unit-input" data-unit="%">
-                  <input
-                    type="number"
+                  {/* Same commit-on-blur treatment: clearing this to retype used
+                      to drop the asset to 0% on the way. */}
+                  <NumField
+                    value={asset.utilization}
                     min={0}
                     max={100}
-                    value={asset.utilization}
-                    onChange={(e) =>
+                    onCommit={(n) =>
                       updateAsset(asset.id, {
-                        utilization: Math.max(0, Math.min(100, Number(e.target.value) || 0)),
+                        utilization: Math.max(0, Math.min(100, Math.round(n))),
                       })
                     }
                   />

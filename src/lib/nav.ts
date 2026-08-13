@@ -6,7 +6,7 @@ import { useSystem } from "@/modules/system-designer/store";
 import { useApp } from "@/store/useApp";
 import { useMaintenance } from "@/store/useMaintenance";
 
-export type RefKind = "asset" | "wall" | "node" | "doc" | "rack-item" | "maint-entry";
+export type RefKind = "asset" | "wall" | "node" | "doc" | "rack-item" | "maint-entry" | "venue";
 
 export interface RefTarget {
   kind: RefKind;
@@ -42,6 +42,16 @@ export function goto(target: RefTarget) {
       if (!Number.isFinite(iid)) break;
       if (b != null && rack.racks.some((r) => r.id === a)) rack.setRackId(a);
       rack.setSelectedIid(iid);
+      break;
+    }
+    case "venue": {
+      setModule("maint");
+      const maint = useMaintenance.getState();
+      maint.setSelectedVenueId(target.id);
+      // Same reason as maint-entry: land on a log the filters aren't hiding.
+      maint.setKindFilter("all");
+      maint.setOpenOnly(false);
+      maint.setSearch("");
       break;
     }
     // Entry ids are globally unique, so the venue is looked up rather than

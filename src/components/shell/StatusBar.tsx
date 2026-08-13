@@ -32,9 +32,15 @@ export function StatusBar() {
   }, []);
 
   const tt = now.toTimeString().slice(0, 8);
-  const offsetHours = -now.getTimezoneOffset() / 60;
-  const sign = offsetHours >= 0 ? "+" : "-";
-  const tz = `UTC${sign}${String(Math.abs(offsetHours)).padStart(2, "0")}`;
+  // Whole hours were assumed, so India rendered as "UTC+5.5". Minutes are only
+  // shown where they're non-zero, keeping the common case two digits.
+  const offsetMin = -now.getTimezoneOffset();
+  const sign = offsetMin >= 0 ? "+" : "-";
+  const absMin = Math.abs(offsetMin);
+  const tzMinutes = absMin % 60;
+  const tz = `UTC${sign}${String(Math.floor(absMin / 60)).padStart(2, "0")}${
+    tzMinutes ? `:${String(tzMinutes).padStart(2, "0")}` : ""
+  }`;
 
   const layout = walls.find((l) => l.id === layoutId) ?? walls[0];
   const panel = PANEL_LIBRARY.find((p) => p.id === layout.panel) ?? PANEL_LIBRARY[0];

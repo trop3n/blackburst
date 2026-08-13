@@ -33,6 +33,21 @@ function dayOf(iso: string): string {
   return iso.slice(0, 10);
 }
 
+// An entry's `at` is a calendar day, not an instant — the picker is a date field
+// and every readout slices the first ten characters off the UTC string. Anchor
+// it at midday UTC so that slice returns the day the technician actually chose:
+// local noon put UTC+13 on the previous day, and a plain `new Date()` did the
+// same to anything logged after 11am there.
+function dayStamp(day: string): string {
+  return `${day}T12:00:00.000Z`;
+}
+
+function todayStamp(): string {
+  const d = new Date();
+  const local = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  return dayStamp(local);
+}
+
 export function MaintenanceModule() {
   const venues = useVenues((s) => s.venues);
   const addVenue = useVenues((s) => s.addVenue);
@@ -69,7 +84,10 @@ export function MaintenanceModule() {
 
   const venue = venues.find((v) => v.id === selectedVenueId) ?? venues[0];
   const venueDevices = venue ? devices.filter((d) => d.venueId === venue.id) : [];
-  const unassigned = venue ? devices.filter((d) => d.venueId !== venue.id) : [];
+  // Everything not already here, which includes gear installed at *another*
+  // venue — those rows name where they'd be moved from and confirm first.
+  const assignable = venue ? devices.filter((d) => d.venueId !== venue.id) : [];
+  const venueName = (id: string | undefined) => venues.find((v) => v.id === id)?.name;
 
   const venueEntries = venue ? entries.filter((e) => e.venueId === venue.id) : [];
   const q = search.trim().toLowerCase();
@@ -116,6 +134,21 @@ export function MaintenanceModule() {
     setSelectedVenueId("");
   };
 
+  // Installing gear that lives at another venue is a move, not an addition, so
+  // it asks — the row is otherwise indistinguishable from unassigned stock.
+  const assignDevice = async (id: string, label: string, from: string | undefined) => {
+    if (!venue) return;
+    if (from) {
+      const ok = await confirmDialog(
+        `${label} is installed at ${from}. Move it to ${venue.name}?`,
+        { confirmLabel: "Move" },
+      );
+      if (!ok) return;
+    }
+    updateDevice(id, { venueId: venue.id });
+    setAssigning(false);
+  };
+
   const handleLogEntry = async () => {
     if (!venue || !selectedDeviceId) return;
     const summary = (await promptDialog("What was done?"))?.trim();
@@ -124,13 +157,18 @@ export function MaintenanceModule() {
       id: newEntryId(),
       venueId: venue.id,
       deviceId: selectedDeviceId,
-      at: new Date().toISOString(),
+      at: todayStamp(),
       who: useAuth.getState().user?.email ?? "",
       kind: "inspect",
       summary,
       body: "",
       resolved: true,
     });
+    // The entry is selected by addEntry, but an active filter could still hide
+    // its row — the same reason goto() clears these when following a link.
+    setKindFilter("all");
+    setOpenOnly(false);
+    setSearch("");
   };
 
   const exportCsv = () => {
@@ -214,24 +252,26 @@ export function MaintenanceModule() {
                 className="mono"
                 style={{ padding: "6px 12px", fontSize: 10, color: "var(--color-fg-faint)" }}
               >
-                {unassigned.length === 0
+                {assignable.length === 0
                   ? "Every device is already here."
                   : "Pick a device to install here:"}
               </div>
-              {unassigned.map((d) => (
-                <div
-                  key={d.id}
-                  className="list-row"
-                  onClick={() => {
-                    updateDevice(d.id, { venueId: venue.id });
-                    setAssigning(false);
-                  }}
-                >
-                  <I.Plus size={12} />
-                  <span className="lbl">{d.label}</span>
-                  <span className="meta">{d.model}</span>
-                </div>
-              ))}
+              {assignable.map((d) => {
+                const from = venueName(d.venueId);
+                return (
+                  <div
+                    key={d.id}
+                    className="list-row"
+                    onClick={() => void assignDevice(d.id, d.label, from)}
+                  >
+                    <I.Plus size={12} />
+                    <span className="lbl">{d.label}</span>
+                    {/* Where it is now, so moving another venue's gear is a
+                        visible decision rather than a silent side effect. */}
+                    <span className="meta">{from ? `at ${from}` : d.model}</span>
+                  </div>
+                );
+              })}
               <div style={{ padding: "6px 12px" }}>
                 <button
                   className="tb-btn"
@@ -476,7 +516,7 @@ export function MaintenanceModule() {
                 value={dayOf(entry.at)}
                 onChange={(ev) => {
                   const d = ev.target.value;
-                  if (d) updateEntry(entry.id, { at: new Date(`${d}T12:00:00`).toISOString() });
+                  if (d) updateEntry(entry.id, { at: dayStamp(d) });
                 }}
               />
             </div>

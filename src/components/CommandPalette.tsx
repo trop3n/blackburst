@@ -11,11 +11,14 @@ import { useSystem } from "@/modules/system-designer/store";
 import { useApp } from "@/store/useApp";
 import { useCmdk } from "@/store/useCmdk";
 import { useCmdkRecents } from "@/store/useCmdkRecents";
+import { useDevices } from "@/store/useDevices";
+import { useMaintenance } from "@/store/useMaintenance";
+import { useVenues } from "@/store/useVenues";
 import type { DocNode, ModuleId } from "@/types";
 
-type SectionId = "Recents" | "Jump" | "Docs" | "Assets" | "Walls" | "Nodes" | "Rack";
+type SectionId = "Recents" | "Jump" | "Docs" | "Assets" | "Walls" | "Nodes" | "Rack" | "Venues" | "Log";
 type RowGroup = Exclude<SectionId, "Recents">;
-type Mode = null | "doc" | "asset" | "wall" | "node" | "rack-item" | "module";
+type Mode = null | "doc" | "asset" | "wall" | "node" | "rack-item" | "module" | "venue" | "maint-entry";
 
 interface BaseRow {
   group: RowGroup;
@@ -47,7 +50,7 @@ const MODULE_ROWS: ModuleRow[] = [
   { group: "Jump", kind: "module", mod: "maint", label: "Maintenance Log", sub: "Module", haystack: "maintenance log venue service module" },
 ];
 
-const GROUP_ORDER: RowGroup[] = ["Jump", "Docs", "Assets", "Walls", "Nodes", "Rack"];
+const GROUP_ORDER: RowGroup[] = ["Jump", "Docs", "Assets", "Walls", "Nodes", "Rack", "Venues", "Log"];
 const PER_GROUP_LIMIT = 6;
 const RECENTS_LIMIT = 5;
 
@@ -58,6 +61,8 @@ const MODE_TO_GROUP: Record<Exclude<Mode, null>, RowGroup> = {
   wall: "Walls",
   node: "Nodes",
   "rack-item": "Rack",
+  venue: "Venues",
+  "maint-entry": "Log",
 };
 
 const MODE_PLACEHOLDER: Record<Exclude<Mode, null>, string> = {
@@ -67,6 +72,8 @@ const MODE_PLACEHOLDER: Record<Exclude<Mode, null>, string> = {
   wall: "Find a wall…",
   node: "Find a system node…",
   "rack-item": "Find a rack item…",
+  venue: "Find a venue…",
+  "maint-entry": "Find a log entry…",
 };
 
 function parseQuery(raw: string): { mode: Mode; rest: string } {
@@ -79,6 +86,8 @@ function parseQuery(raw: string): { mode: Mode; rest: string } {
   if (prefix === "wall" || prefix === "walls") return { mode: "wall", rest };
   if (prefix === "node" || prefix === "nodes") return { mode: "node", rest };
   if (prefix === "rack") return { mode: "rack-item", rest };
+  if (prefix === "venue" || prefix === "venues") return { mode: "venue", rest };
+  if (prefix === "log" || prefix === "maint") return { mode: "maint-entry", rest };
   if (prefix === "mod" || prefix === "jump" || prefix === "go") return { mode: "module", rest };
   return { mode: null, rest: raw };
 }
@@ -131,6 +140,11 @@ export function CommandPalette() {
   const nodes = useSystem((s) => s.nodes);
   const docTree = useDocs((s) => s.tree);
   const racks = useRack((s) => s.racks);
+  // The maintenance layer is global rather than per-project, but it's the one
+  // surface holding real production data and none of it was searchable.
+  const venues = useVenues((s) => s.venues);
+  const entries = useMaintenance((s) => s.entries);
+  const devices = useDevices((s) => s.devices);
   const setModule = useApp((s) => s.setModule);
   const recents = useCmdkRecents((s) => s.recents);
   const pushRecent = useCmdkRecents((s) => s.push);
@@ -186,8 +200,37 @@ export function CommandPalette() {
         };
       }),
     );
-    return [...MODULE_ROWS, ...docs, ...assetRows, ...wallRows, ...nodeRows, ...rackRows];
-  }, [assets, walls, nodes, docTree, racks]);
+    const venueRows = venues.map<RefRow>((v) => ({
+      group: "Venues",
+      kind: "venue",
+      id: v.id,
+      label: v.name,
+      sub: v.address || "Venue",
+      haystack: `${v.name} ${v.address}`.toLowerCase(),
+    }));
+    const entryRows = entries.map<RefRow>((e) => {
+      const venue = venues.find((v) => v.id === e.venueId);
+      const device = devices.find((d) => d.id === e.deviceId);
+      return {
+        group: "Log",
+        kind: "maint-entry",
+        id: e.id,
+        label: e.summary,
+        sub: `${venue?.name ?? "—"} · ${device?.label ?? "—"} · ${e.kind.toUpperCase()}`,
+        haystack: `${e.summary} ${e.body} ${e.who} ${e.kind} ${venue?.name ?? ""} ${device?.label ?? ""}`.toLowerCase(),
+      };
+    });
+    return [
+      ...MODULE_ROWS,
+      ...docs,
+      ...assetRows,
+      ...wallRows,
+      ...nodeRows,
+      ...rackRows,
+      ...venueRows,
+      ...entryRows,
+    ];
+  }, [assets, walls, nodes, docTree, racks, venues, entries, devices]);
 
   const { mode, rest } = useMemo(() => parseQuery(query), [query]);
   const q = rest.trim().toLowerCase();
@@ -368,7 +411,7 @@ export function CommandPalette() {
           <span><kbd>↑</kbd><kbd>↓</kbd> select</span>
           <span><kbd>↵</kbd> open</span>
           <span><kbd>ESC</kbd> close</span>
-          <span><kbd>&gt;</kbd>doc / asset / wall / node / rack</span>
+          <span><kbd>&gt;</kbd>doc / asset / wall / node / rack / venue / log</span>
           <span style={{ marginLeft: "auto" }}>{filtered.flat.length} results</span>
         </div>
       </div>

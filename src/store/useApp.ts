@@ -85,7 +85,9 @@ function nextCode(projects: Project[]): string {
     .map((p) => Number(p.code.split("-")[1]))
     .filter((n) => Number.isFinite(n));
   const max = nums.length ? Math.max(...nums) : 2450;
-  return `PRJ-${max + 1}`;
+  // Padded to match the seeded PRJ-0001, which otherwise produced PRJ-0001,
+  // PRJ-2, PRJ-3 — and the code shows up in every export filename.
+  return `PRJ-${String(max + 1).padStart(4, "0")}`;
 }
 
 let bootstrapping = false;

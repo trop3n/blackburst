@@ -5,7 +5,8 @@ import type { RefKind } from "@/lib/nav";
 import { useInventory } from "@/modules/inventory/store";
 import { useRack } from "@/modules/rack-builder/store";
 import { useSystem } from "@/modules/system-designer/store";
-import { promptDialog } from "@/store/useDialog";
+import { useMaintenance } from "@/store/useMaintenance";
+import { confirmDialog, promptDialog } from "@/store/useDialog";
 import { newDeviceId, useDevices } from "@/store/useDevices";
 
 interface Usage {
@@ -29,9 +30,11 @@ export function DeviceLink({ deviceId, onChange, defaultLabel, model, omit }: De
   const devices = useDevices((s) => s.devices);
   const addDevice = useDevices((s) => s.addDevice);
   const updateDevice = useDevices((s) => s.updateDevice);
+  const removeDevice = useDevices((s) => s.removeDevice);
   const racks = useRack((s) => s.racks);
   const nodes = useSystem((s) => s.nodes);
   const assets = useInventory((s) => s.assets);
+  const entries = useMaintenance((s) => s.entries);
   const [picking, setPicking] = useState(false);
 
   const device = deviceId ? devices.find((d) => d.id === deviceId) : undefined;
@@ -68,6 +71,38 @@ export function DeviceLink({ deviceId, onChange, defaultLabel, model, omit }: De
     updateDevice(device.id, { serial });
   };
 
+  // A device's name was write-once: set at creation and never editable again,
+  // so a typo was permanent.
+  const rename = async () => {
+    if (!device) return;
+    const label = (await promptDialog("Device name?", device.label))?.trim();
+    if (!label) return;
+    updateDevice(device.id, { label });
+  };
+
+  // And nothing called removeDevice, so the registry only ever grew. Deleting
+  // leaves references behind by design — the registry never reaches into the
+  // modules — but they degrade to "unlinked" rather than breaking, so the count
+  // goes in the confirm instead of a cascade.
+  const deleteDevice = async () => {
+    if (!device) return;
+    const logged = entries.filter((e) => e.deviceId === device.id).length;
+    const here = usages.length;
+    const refs = [
+      here > 0 ? `${here} place${here === 1 ? "" : "s"} in this project` : null,
+      logged > 0 ? `${logged} log ${logged === 1 ? "entry" : "entries"}` : null,
+    ].filter(Boolean);
+    const ok = await confirmDialog(
+      refs.length > 0
+        ? `Delete "${device.label}" from the device registry? It's referenced by ${refs.join(" and ")}; those will show as unlinked. Other projects can't be checked from here.`
+        : `Delete "${device.label}" from the device registry?`,
+      { danger: true, confirmLabel: "Delete" },
+    );
+    if (!ok) return;
+    removeDevice(device.id);
+    onChange(undefined);
+  };
+
   return (
     <>
       <div className="section-h">
@@ -98,16 +133,28 @@ export function DeviceLink({ deviceId, onChange, defaultLabel, model, omit }: De
               ))}
             </>
           )}
-          <div style={{ padding: "8px 12px", display: "flex", gap: 6 }}>
+          <div style={{ padding: "8px 12px 4px", display: "flex", gap: 6 }}>
+            <button className="tb-btn" style={{ flex: 1, justifyContent: "center" }} onClick={rename}>
+              <I.Edit size={12} /> Name
+            </button>
             <button className="tb-btn" style={{ flex: 1, justifyContent: "center" }} onClick={editSerial}>
               <I.Edit size={12} /> Serial
             </button>
+          </div>
+          <div style={{ padding: "0 12px 8px", display: "flex", gap: 6 }}>
             <button
               className="tb-btn"
               style={{ flex: 1, justifyContent: "center" }}
               onClick={() => onChange(undefined)}
             >
               <I.Cross size={12} /> Unlink
+            </button>
+            <button
+              className="tb-btn danger"
+              style={{ flex: 1, justifyContent: "center" }}
+              onClick={deleteDevice}
+            >
+              <I.Cross size={12} /> Delete
             </button>
           </div>
         </>
@@ -119,7 +166,7 @@ export function DeviceLink({ deviceId, onChange, defaultLabel, model, omit }: De
                 className="mono"
                 style={{ padding: "8px 12px", fontSize: 10, color: "var(--color-fg-faint)" }}
               >
-                No devices in this project yet.
+                No devices in the registry yet.
               </div>
             )}
             {devices.map((d) => (
