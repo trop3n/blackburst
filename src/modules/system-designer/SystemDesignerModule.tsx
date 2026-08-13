@@ -572,23 +572,31 @@ export function SystemDesignerModule() {
               PATCH SHEET
             </button>
           </div>
-          <div className="divider-v" />
-          <span className="mono" style={{ fontSize: 10, color: "var(--color-fg-faint)" }}>
-            LAYERS
-          </span>
-          <div className="lane-toggles">
-            {LANES.map((l) => (
-              <button
-                key={l}
-                className={`lane-tg ${l}`}
-                data-on={lanes[l] ? "1" : "0"}
-                onClick={() => toggleLane(l)}
-              >
-                <span className="sw" />
-                {l.toUpperCase()}
-              </button>
-            ))}
-          </div>
+          {/* Graph only: LAYERS hides edges on the canvas. The patch sheet, its
+              CSV and its print all list every lane regardless, so leaving these
+              live in patch view meant four toggles that responded to clicks and
+              changed nothing on screen. */}
+          {view === "graph" && (
+            <>
+              <div className="divider-v" />
+              <span className="mono" style={{ fontSize: 10, color: "var(--color-fg-faint)" }}>
+                LAYERS
+              </span>
+              <div className="lane-toggles">
+                {LANES.map((l) => (
+                  <button
+                    key={l}
+                    className={`lane-tg ${l}`}
+                    data-on={lanes[l] ? "1" : "0"}
+                    onClick={() => toggleLane(l)}
+                  >
+                    <span className="sw" />
+                    {l.toUpperCase()}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
           <span style={{ flex: 1 }} />
           {view === "patch" && (
             <>

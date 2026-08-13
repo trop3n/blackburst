@@ -1,7 +1,7 @@
 import { memo, useEffect } from "react";
 import { I } from "@/components/Icon";
 import { PrintSheet } from "@/components/PrintSheet";
-import { FAULT_PANELS, PANEL_LIBRARY } from "@/lib/data";
+import { PANEL_LIBRARY } from "@/lib/data";
 import { LED_PROCESSORS } from "@/lib/led-processor-data";
 import { canDeleteShared } from "@/lib/ownership";
 import { useApp } from "@/store/useApp";
@@ -22,7 +22,6 @@ const WallGrid = memo(function WallGrid({
   panelPxW,
   panelPxH,
   tool,
-  showFaults,
   showLabels,
   selected,
   measureFrom,
@@ -34,7 +33,6 @@ const WallGrid = memo(function WallGrid({
   panelPxW: number;
   panelPxH: number;
   tool: LedTool;
-  showFaults: boolean;
   showLabels: boolean;
   selected: CellRef | null;
   measureFrom: CellRef | null;
@@ -45,7 +43,6 @@ const WallGrid = memo(function WallGrid({
     <>
       {Array.from({ length: rows }).map((_, r) =>
         Array.from({ length: cols }).map((_, c) => {
-          const fault = showFaults && FAULT_PANELS.some((f) => f.c === c && f.r === r);
           const sel = selected && selected.c === c && selected.r === r;
           const isMeasureFrom = measureFrom && measureFrom.c === c && measureFrom.r === r;
           const isMeasureTo = measureTo && measureTo.c === c && measureTo.r === r;
@@ -58,7 +55,6 @@ const WallGrid = memo(function WallGrid({
             <div
               key={`${c}-${r}`}
               className="led-panel"
-              data-fault={fault ? "1" : "0"}
               data-selected={sel ? "1" : "0"}
               data-measure={isMeasureFrom ? "from" : isMeasureTo ? "to" : undefined}
               data-erase-target={tool === "erase" && eraseTarget ? "1" : undefined}
@@ -90,13 +86,11 @@ export function LedWallModule() {
   const tool = useLedWall((s) => s.tool);
   const zoom = useLedWall((s) => s.zoom);
   const showDims = useLedWall((s) => s.showDims);
-  const showFaults = useLedWall((s) => s.showFaults);
   const tab = useLedWall((s) => s.tab);
   const setLayoutId = useLedWall((s) => s.setLayoutId);
   const setTool = useLedWall((s) => s.setTool);
   const setZoom = useLedWall((s) => s.setZoom);
   const setShowDims = useLedWall((s) => s.setShowDims);
-  const setShowFaults = useLedWall((s) => s.setShowFaults);
   const setTab = useLedWall((s) => s.setTab);
   const updateWall = useLedWall((s) => s.updateWall);
   const addWall = useLedWall((s) => s.addWall);
@@ -452,15 +446,6 @@ export function LedWallModule() {
             <span className="box" />
             DIMENSIONS
           </label>
-          <label className="checkbox">
-            <input
-              type="checkbox"
-              checked={showFaults}
-              onChange={(e) => setShowFaults(e.target.checked)}
-            />
-            <span className="box" />
-            FAULT MAP
-          </label>
           <span style={{ flex: 1 }} />
           <span className="mono" style={{ fontSize: 10, color: "var(--color-fg-faint)" }}>
             ZOOM
@@ -542,7 +527,6 @@ export function LedWallModule() {
                     panelPxW={panelPxW}
                     panelPxH={panelPxH}
                     tool={tool}
-                    showFaults={showFaults}
                     showLabels={showCellLabels}
                     selected={selected}
                     measureFrom={measureFrom}
@@ -759,19 +743,6 @@ export function LedWallModule() {
                 onChange={(e) => {
                   const n = Math.max(1, Math.floor(Number(e.target.value) || 1));
                   updateWall(layout.id, { rows: n });
-                }}
-              />
-            </div>
-            <div className="fld">
-              <span className="k">Curve °</span>
-              <input
-                value={layout.curve}
-                type="number"
-                min={-30}
-                max={30}
-                onChange={(e) => {
-                  const n = Math.max(-30, Math.min(30, Number(e.target.value) || 0));
-                  updateWall(layout.id, { curve: n });
                 }}
               />
             </div>

@@ -1,4 +1,4 @@
-import type { FaultPanel, Panel, SystemEdge, SystemNode, WallLayout } from "@/types";
+import type { Panel, SystemEdge, SystemNode, WallLayout } from "@/types";
 
 // Built-in LED panel catalog. User-added panels layer on top at runtime via
 // setCustomPanelDefs (see @/store/useCatalog); PANEL_LIBRARY is the merged list
@@ -46,10 +46,8 @@ export function setCustomPanelDefs(defs: Panel[]) {
 // One empty wall so the LED builder always has an active layout to draw on
 // (matches scaffoldBucket). All other demo content starts empty.
 export const WALL_LAYOUTS: WallLayout[] = [
-  { id: "W1", name: "Wall 1", panel: "ROE-RB2.6", processor: "sx40", cols: 4, rows: 3, curve: 0, active: true },
+  { id: "W1", name: "Wall 1", panel: "ROE-RB2.6", processor: "sx40", cols: 4, rows: 3, active: true },
 ];
-
-export const FAULT_PANELS: FaultPanel[] = [];
 
 export const SYSTEM_NODES: SystemNode[] = [];
 

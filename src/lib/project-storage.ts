@@ -83,7 +83,7 @@ interface StoreSpec {
 
 const SPECS = {
   "led-wall": {
-    fields: ["walls", "layoutId", "selected", "tool", "zoom", "showDims", "showFaults", "tab"],
+    fields: ["walls", "layoutId", "selected", "tool", "zoom", "showDims", "tab"],
     defaults: {
       walls: WALL_LAYOUTS,
       layoutId: "W1",
@@ -91,7 +91,6 @@ const SPECS = {
       tool: "select",
       zoom: 100,
       showDims: true,
-      showFaults: true,
       tab: "wall",
     },
     store: useLedWall as unknown as StoreSpec["store"],
@@ -193,14 +192,13 @@ export function scaffoldBucket(): ProjectStateBuckets {
   return {
     "led-wall": {
       walls: [
-        { id: "W1", name: "Wall 1", panel: "ROE-RB2.6", processor: "sx40", cols: 4, rows: 3, curve: 0, active: true },
+        { id: "W1", name: "Wall 1", panel: "ROE-RB2.6", processor: "sx40", cols: 4, rows: 3, active: true },
       ],
       layoutId: "W1",
       selected: null,
       tool: "select",
       zoom: 100,
       showDims: true,
-      showFaults: true,
       tab: "wall",
     },
     system: {

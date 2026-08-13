@@ -774,13 +774,6 @@ button { font-family: inherit; color: inherit; }
   transition: background 80ms;
 }
 .led-panel:hover { background: oklch(0.86 0.19 145 / 0.18); }
-.led-panel[data-fault="1"] {
-  background: oklch(0.68 0.21 25 / 0.12);
-  border-color: oklch(0.68 0.21 25 / 0.6);
-  color: var(--color-err);
-  animation: blink 1.4s infinite;
-}
-@keyframes blink { 50% { background: oklch(0.68 0.21 25 / 0.25); } }
 .led-panel[data-selected="1"] {
   background: oklch(0.86 0.19 145 / 0.3);
   border-color: var(--accent);

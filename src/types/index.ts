@@ -45,13 +45,7 @@ export interface WallLayout {
   processor: string;
   cols: number;
   rows: number;
-  curve: number;
   active: boolean;
-}
-
-export interface FaultPanel {
-  c: number;
-  r: number;
 }
 
 export type Lane = "video" | "audio" | "network" | "power";
