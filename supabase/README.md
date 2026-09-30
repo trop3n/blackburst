@@ -1,6 +1,6 @@
 # Supabase setup (auth & sharing)
 
-Blackburst runs in **local-only mode** until these two env vars are set; then it
+SAMC AV Studio runs in **local-only mode** until these two env vars are set; then it
 gates behind sign-in and stores every project on the server, shared by
 membership. Follow these once.
 

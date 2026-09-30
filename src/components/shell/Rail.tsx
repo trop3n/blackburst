@@ -21,12 +21,12 @@ function RailButton({ label, active, onClick, children }: RailButtonProps) {
 }
 
 const ITEMS: { id: ModuleId; label: string; icon: ReactNode }[] = [
-  { id: "wall", label: "WALL", icon: <I.Wall size={18} /> },
-  { id: "system", label: "SYS", icon: <I.System size={18} /> },
-  { id: "rack", label: "RACK", icon: <I.Rack size={18} /> },
-  { id: "inv", label: "INV", icon: <I.Inventory size={18} /> },
-  { id: "docs", label: "DOCS", icon: <I.Docs size={18} /> },
-  { id: "maint", label: "MAINT", icon: <I.Wrench size={18} /> },
+  { id: "wall", label: "LED Wall", icon: <I.Wall size={20} /> },
+  { id: "system", label: "System", icon: <I.System size={20} /> },
+  { id: "rack", label: "Racks", icon: <I.Rack size={20} /> },
+  { id: "inv", label: "Inventory", icon: <I.Inventory size={20} /> },
+  { id: "docs", label: "Docs", icon: <I.Docs size={20} /> },
+  { id: "maint", label: "Maintenance", icon: <I.Wrench size={20} /> },
 ];
 
 export function Rail() {
@@ -36,7 +36,7 @@ export function Rail() {
 
   return (
     <aside className="rail">
-      <div className="rail-logo">BB</div>
+      <div className="rail-logo">SAMC</div>
       <div className="rail-section">
         {ITEMS.map((it) => (
           <RailButton
@@ -54,8 +54,8 @@ export function Rail() {
         className="rail-section"
         style={{ borderBottom: 0, borderTop: "1px solid var(--color-line)" }}
       >
-        <RailButton label="SET" onClick={() => openSettings(true)}>
-          <I.Settings size={16} />
+        <RailButton label="Settings" onClick={() => openSettings(true)}>
+          <I.Settings size={20} />
         </RailButton>
       </div>
     </aside>

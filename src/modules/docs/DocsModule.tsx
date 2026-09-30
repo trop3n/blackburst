@@ -434,7 +434,7 @@ export function DocsModule() {
     <>
       <div className="left-pane">
         <div className="pane-hd">
-          <span>DOCS TREE</span>
+          <span>Documents</span>
           <span className="spacer" />
           <button className="icon-btn" onClick={onAddFolder} title="New folder">
             <I.Folder size={12} />
@@ -446,7 +446,7 @@ export function DocsModule() {
         <div className="search">
           <I.Search size={12} />
           <input
-            placeholder="Search docs…"
+            placeholder="Search docs"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -457,7 +457,7 @@ export function DocsModule() {
               <div
                 style={{
                   padding: "12px 8px",
-                  fontSize: 11,
+                  fontSize: 12,
                   color: "var(--color-fg-faint)",
                 }}
               >
@@ -487,7 +487,7 @@ export function DocsModule() {
             <div
               style={{
                 padding: "8px 12px",
-                fontSize: 11,
+                fontSize: 12,
                 color: "var(--color-fg-faint)",
               }}
             >
@@ -530,7 +530,7 @@ export function DocsModule() {
             <>
               <span
                 className="mono"
-                style={{ fontSize: 10, color: "var(--color-fg-faint)" }}
+                style={{ fontSize: 12, color: "var(--color-fg-faint)" }}
               >
                 ⌘↵ save · Esc cancel
               </span>
@@ -582,7 +582,7 @@ export function DocsModule() {
               <>
                 <h1>{activeNode?.name ?? "Untitled"}</h1>
                 <div className="meta-row">
-                  <span>NO CONTENT YET</span>
+                  <span>No content yet</span>
                 </div>
                 <p style={{ color: "var(--color-fg-faint)" }}>
                   This document doesn't have a body yet. Click <b>Edit</b> to start writing.
@@ -595,7 +595,7 @@ export function DocsModule() {
 
       <div className="right-pane">
         <div className="pane-hd">
-          <span>VERSION HISTORY</span>
+          <span>Version history</span>
           <span className="spacer" />
           <button
             className="icon-btn"
@@ -610,7 +610,8 @@ export function DocsModule() {
             <div
               style={{
                 padding: "8px 12px",
-                fontSize: 11,
+                fontSize: 12,
+                fontFamily: "var(--font-sans)",
                 color: "var(--color-fg-faint)",
               }}
             >
@@ -630,7 +631,7 @@ export function DocsModule() {
                   // button and leaving the row looking broken.
                   <span
                     className="mono"
-                    style={{ fontSize: 9.5, color: "var(--color-fg-faint)" }}
+                    style={{ fontSize: 12, color: "var(--color-fg-faint)" }}
                   >
                     note only
                   </span>
@@ -650,13 +651,14 @@ export function DocsModule() {
             ))
           )}
         </div>
-        <div className="pane-hd"><span>LINKED REFERENCES</span></div>
+        <div className="pane-hd"><span>Linked references</span></div>
         <div style={{ padding: "0 0 12px" }}>
           {linked.length === 0 ? (
             <div
               style={{
                 padding: "4px 12px 8px",
-                fontSize: 11,
+                fontSize: 12,
+                fontFamily: "var(--font-sans)",
                 color: "var(--color-fg-faint)",
               }}
             >
@@ -679,21 +681,21 @@ export function DocsModule() {
           )}
         </div>
         <div className="pane-hd">
-          <span>COMMENTS</span>
+          <span>Comments</span>
           <span className="spacer" />
           {/* Was "N OPEN" — comments have no resolved state to be open against. */}
           <span
             className="mono"
-            style={{ fontSize: 10, color: "var(--color-fg-faint)" }}
+            style={{ fontSize: 12, color: "var(--color-fg-faint)" }}
           >
             {comments.length}
           </span>
         </div>
-        <div style={{ padding: "0 12px 12px", fontSize: 11.5 }}>
+        <div style={{ padding: "0 12px 12px", fontSize: 12 }}>
           <div className="comment-composer">
             <textarea
               className="comment-input"
-              placeholder="Add a comment…"
+              placeholder="Add a comment"
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               onKeyDown={onComposerKey}
@@ -719,9 +721,9 @@ export function DocsModule() {
             comments.map((cm, i) => (
               <div key={i} className="comment-row">
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3, alignItems: "center" }}>
-                  <span className="mono" style={{ fontSize: 10, color: "var(--accent)" }}>{cm.who}</span>
+                  <span className="mono" style={{ fontSize: 12, color: "var(--accent)" }}>{cm.who}</span>
                   <span className="spacer" />
-                  <span className="mono" style={{ fontSize: 10, color: "var(--color-fg-faint)" }}>{cm.t}</span>
+                  <span className="mono" style={{ fontSize: 12, color: "var(--color-fg-faint)" }}>{cm.t}</span>
                   {/* Gated on the author's id, not the display name — every
                       comment used to be labelled "You", which let anyone edit
                       and delete anyone else's. Same rule as the other shared
@@ -747,8 +749,8 @@ export function DocsModule() {
       {previewing && (
         <div className="docs-preview-overlay">
           <div className="docs-preview-toolbar">
-            <span className="mono" style={{ fontSize: 11, color: "var(--color-fg-faint)" }}>
-              PREVIEW · {activeNode?.name ?? "Untitled"}
+            <span className="mono" style={{ fontSize: 12, color: "var(--color-fg-faint)" }}>
+              Preview · {activeNode?.name ?? "Untitled"}
               {currentVersion ? ` · ${currentVersion}` : ""}
             </span>
             <span style={{ flex: 1 }} />
@@ -773,7 +775,7 @@ export function DocsModule() {
                   <>
                     <h1>{activeNode?.name ?? "Untitled"}</h1>
                     <div className="meta-row">
-                      <span>NO CONTENT YET</span>
+                      <span>No content yet</span>
                     </div>
                     <p style={{ color: "var(--color-fg-faint)" }}>
                       This document doesn't have a body yet. Click <b>Edit</b> to start writing.

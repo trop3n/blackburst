@@ -15,7 +15,7 @@ import { LedWallModule } from "@/modules/led-wall/LedWallModule";
 import { MaintenanceModule } from "@/modules/maintenance/MaintenanceModule";
 import { RackBuilderModule } from "@/modules/rack-builder/RackBuilderModule";
 import { SystemDesignerModule } from "@/modules/system-designer/SystemDesignerModule";
-import { ACCENTS, useApp } from "@/store/useApp";
+import { useApp } from "@/store/useApp";
 import { useAuth } from "@/store/useAuth";
 import { useCmdk } from "@/store/useCmdk";
 
@@ -45,10 +45,6 @@ export default function App() {
     const root = document.documentElement;
     root.dataset.density = tweaks.density;
     root.dataset.shell = tweaks.shell;
-    const a = ACCENTS[tweaks.accent] ?? ACCENTS["acid-green"];
-    root.style.setProperty("--accent", a.c);
-    root.style.setProperty("--accent-dim", a.dim);
-    root.style.setProperty("--accent-faint", a.faint);
   }, [tweaks]);
 
   useEffect(() => {
@@ -69,7 +65,7 @@ export default function App() {
   // during bootstrap (e.g. the first-login local→cloud import prompt).
   let content;
   if (authConfigured && authStatus === "loading") {
-    content = <div className="boot-splash">Blackburst</div>;
+    content = <div className="boot-splash">SAMC AV Studio</div>;
   } else if (authConfigured && authStatus === "signed-out") {
     content = <AuthScreen />;
   } else if (authConfigured && !ready) {

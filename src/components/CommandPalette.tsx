@@ -66,14 +66,14 @@ const MODE_TO_GROUP: Record<Exclude<Mode, null>, RowGroup> = {
 };
 
 const MODE_PLACEHOLDER: Record<Exclude<Mode, null>, string> = {
-  module: "Jump to a module…",
-  doc: "Find a document…",
-  asset: "Find an asset…",
-  wall: "Find a wall…",
-  node: "Find a system node…",
-  "rack-item": "Find a rack item…",
-  venue: "Find a venue…",
-  "maint-entry": "Find a log entry…",
+  module: "Jump to a module",
+  doc: "Find a document",
+  asset: "Find an asset",
+  wall: "Find a wall",
+  node: "Find a system node",
+  "rack-item": "Find a rack item",
+  venue: "Find a venue",
+  "maint-entry": "Find a log entry",
 };
 
 function parseQuery(raw: string): { mode: Mode; rest: string } {
@@ -358,7 +358,7 @@ export function CommandPalette() {
   let flatCursor = 0;
   const placeholder = mode
     ? MODE_PLACEHOLDER[mode]
-    : "Jump to a doc, asset, wall, node, rack item… (try >doc, >asset)";
+    : "Jump to a doc, asset, wall, node or rack item (try >doc, >asset)";
 
   return (
     <div className="cmdk-overlay" onMouseDown={() => setOpen(false)}>
@@ -385,7 +385,7 @@ export function CommandPalette() {
           ) : (
             filtered.sections.map((section) => (
               <div key={section.group} className="cmdk-group">
-                <div className="cmdk-group-h">{section.group.toUpperCase()}</div>
+                <div className="cmdk-group-h">{section.group}</div>
                 {section.rows.map((row) => {
                   const i = flatCursor++;
                   const active = i === index;

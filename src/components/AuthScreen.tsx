@@ -47,8 +47,7 @@ export function AuthScreen() {
     <div className="auth-screen">
       <div className="auth-card">
         <div className="auth-brand">
-          <span className="auth-logo">BLACKBURST</span>
-          <span className="auth-tag">AV / live-production design</span>
+          <span className="auth-logo">SAMC AV STUDIO</span>
         </div>
 
         {mode === "password" ? (
@@ -70,7 +69,6 @@ export function AuthScreen() {
               type="email"
               autoComplete="username"
               autoFocus
-              placeholder="you@studio.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
@@ -155,7 +153,6 @@ export function AuthScreen() {
               type="email"
               autoComplete="email"
               autoFocus
-              placeholder="you@studio.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />

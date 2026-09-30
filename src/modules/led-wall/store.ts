@@ -89,7 +89,7 @@ export const useLedWall = create<LedWallState>()((set) => ({
           const wall: WallLayout = {
             id,
             name: `New Wall ${s.walls.length + 1}`,
-            panel: "ROE-RB2.6",
+            panel: "ABS-A3PRO",
             processor: DEFAULT_PROCESSOR_ID,
             cols: 4,
             rows: 3,

@@ -2,7 +2,6 @@ export type ModuleId = "wall" | "system" | "rack" | "inv" | "docs" | "maint";
 
 export type Density = "compact" | "normal" | "cozy";
 export type Shell = "rail" | "tabs" | "palette";
-export type AccentName = "acid-green" | "amber" | "cyan" | "magenta" | "white";
 export type CanvasStyle = "grid" | "blueprint" | "schematic";
 
 export type MemberRole = "owner" | "editor" | "viewer";

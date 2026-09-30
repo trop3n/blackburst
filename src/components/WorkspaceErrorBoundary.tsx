@@ -56,7 +56,7 @@ export class WorkspaceErrorBoundary extends Component<Props, State> {
           <div style={{ display: "flex", justifyContent: "center", marginBottom: 8 }}>
             <I.Bolt size={20} />
           </div>
-          <div className="t">WORKSPACE FAILED TO RENDER</div>
+          <div className="t">Workspace failed to load</div>
           <p style={{ maxWidth: 420 }}>
             This project&apos;s data crashed the view — usually a malformed import or a
             corrupted record. {this.state.error}

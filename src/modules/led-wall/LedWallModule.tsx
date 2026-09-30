@@ -308,7 +308,7 @@ export function LedWallModule() {
       {/* LEFT — Walls + Panel library + Rigging */}
       <div className="left-pane">
         <div className="pane-hd">
-          <span>WALLS</span>
+          <span>Walls</span>
           <span className="spacer" />
           <button
             className="icon-btn"
@@ -350,9 +350,9 @@ export function LedWallModule() {
         </div>
 
         <div className="pane-hd">
-          <span>PANEL LIBRARY</span>
+          <span>Panel library</span>
           <span className="spacer" />
-          <span className="mono" style={{ fontSize: 10, color: "var(--color-fg-faint)" }}>
+          <span className="mono" style={{ fontSize: 12, color: "var(--color-fg-faint)" }}>
             {filteredPanels.length}/{PANEL_LIBRARY.length}
           </span>
           <button className="icon-btn" title="Add panel" onClick={addPanel}>
@@ -362,7 +362,7 @@ export function LedWallModule() {
         <div className="search">
           <I.Search size={12} />
           <input
-            placeholder="Filter by pitch, model…"
+            placeholder="Filter by pitch, model"
             value={panelSearch}
             onChange={(e) => setPanelSearch(e.target.value)}
           />
@@ -385,7 +385,7 @@ export function LedWallModule() {
                     opacity: panel.id === p.id ? 1 : 0.3,
                   }}
                 />
-                <span className="lbl mono" style={{ fontSize: 11 }}>
+                <span className="lbl mono" style={{ fontSize: 12 }}>
                   {p.model}
                 </span>
                 <span className="meta">P{p.pitch}</span>
@@ -406,7 +406,7 @@ export function LedWallModule() {
           })}
 
           <div className="section-h">
-            <span>RIGGING</span>
+            <span>Rigging</span>
             <span className="line" />
           </div>
           <div className="kv">
@@ -421,16 +421,16 @@ export function LedWallModule() {
         <div className="canvas-toolbar">
           <div className="tg">
             <button data-active={tool === "select" ? "1" : "0"} onClick={() => setTool("select")}>
-              SELECT
+              Select
             </button>
             <button data-active={tool === "draw" ? "1" : "0"} onClick={() => setTool("draw")}>
-              DRAW
+              Draw
             </button>
             <button data-active={tool === "erase" ? "1" : "0"} onClick={() => setTool("erase")}>
-              ERASE
+              Erase
             </button>
             <button data-active={tool === "measure" ? "1" : "0"} onClick={() => setTool("measure")}>
-              MEASURE
+              Measure
             </button>
           </div>
           <div className="divider-v" />
@@ -445,12 +445,10 @@ export function LedWallModule() {
               onChange={(e) => setShowDims(e.target.checked)}
             />
             <span className="box" />
-            DIMENSIONS
+            Dimensions
           </label>
           <span style={{ flex: 1 }} />
-          <span className="mono" style={{ fontSize: 10, color: "var(--color-fg-faint)" }}>
-            ZOOM
-          </span>
+          <span style={{ fontSize: 12, color: "var(--color-fg-faint)" }}>Zoom</span>
           <input
             type="range"
             min={40}
@@ -459,7 +457,7 @@ export function LedWallModule() {
             onChange={(e) => setZoom(Number(e.target.value))}
             style={{ width: 80 }}
           />
-          <span className="mono" style={{ fontSize: 11, width: 36 }}>
+          <span className="mono" style={{ fontSize: 12, width: 36 }}>
             {zoom}%
           </span>
         </div>
@@ -467,25 +465,25 @@ export function LedWallModule() {
         <div className="led-canvas" data-canvas-style={canvasStyle}>
           <div className="canvas-overlay tl">
             <div className="row">
-              <span className="k">WALL</span>
+              <span className="k">Wall</span>
               <span className="v">{layout.name}</span>
             </div>
             <div className="row">
-              <span className="k">PANEL</span>
+              <span className="k">Panel</span>
               <span className="v">{panel.model}</span>
             </div>
             <div className="row">
-              <span className="k">PITCH</span>
+              <span className="k">Pitch</span>
               <span className="v">{panel.pitch}mm</span>
             </div>
           </div>
           <div className="canvas-overlay tr">
             <div className="row" style={{ justifyContent: "flex-end" }}>
-              <span className="k">REV</span>
+              <span className="k">Revision</span>
               <span className="v">{String(latestRev?.n ?? 0).padStart(4, "0")}</span>
             </div>
             <div className="row" style={{ justifyContent: "flex-end" }}>
-              <span className="k">SCALE</span>
+              <span className="k">Scale</span>
               <span className="v">1:{(Math.round((1 / displayScale) * 100) / 100).toFixed(2)}</span>
             </div>
           </div>
@@ -548,7 +546,7 @@ export function LedWallModule() {
                         onClick={() => addCol()}
                         title="Add column"
                       >
-                        <span>+ COL</span>
+                        <span>+ Column</span>
                       </div>
                       <div
                         className="draw-zone bottom"
@@ -561,7 +559,7 @@ export function LedWallModule() {
                         onClick={() => addRow()}
                         title="Add row"
                       >
-                        <span>+ ROW</span>
+                        <span>+ Row</span>
                       </div>
                     </>
                   )}
@@ -597,25 +595,25 @@ export function LedWallModule() {
             {tool === "measure" ? (
               measureDistMm != null && measureFrom && measureTo ? (
                 <>
-                  MEASURE · ({measureFrom.c + 1},{measureFrom.r + 1}) → ({measureTo.c + 1},
+                  Measured ({measureFrom.c + 1},{measureFrom.r + 1}) → ({measureTo.c + 1},
                   {measureTo.r + 1}) · {measureDistMm.toFixed(0)}mm ·{" "}
-                  {(measureDistMm / 304.8).toFixed(2)}ft · ESC to clear
+                  {(measureDistMm / 304.8).toFixed(2)}ft · press Esc to clear
                 </>
               ) : measureFrom ? (
                 <>
-                  MEASURE · from ({measureFrom.c + 1},{measureFrom.r + 1}) — click second panel
+                  Measuring from ({measureFrom.c + 1},{measureFrom.r + 1}) — click the second panel
                 </>
               ) : (
-                <>MEASURE · click first panel</>
+                <>Measure — click the first panel</>
               )
             ) : tool === "draw" ? (
-              <>DRAW · click + COL or + ROW to grow the wall</>
+              <>Draw — click + Column or + Row to grow the wall</>
             ) : tool === "erase" ? (
-              <>ERASE · click last column or last row to remove</>
+              <>Erase — click the last column or last row to remove</>
             ) : (
               <>
                 X: {selected ? selected.c * panel.w : 0}mm · Y:{" "}
-                {selected ? selected.r * panel.h : 0}mm · GRID {panel.w}×{panel.h}
+                {selected ? selected.r * panel.h : 0}mm · Grid {panel.w}×{panel.h}
               </>
             )}
           </div>
@@ -627,47 +625,47 @@ export function LedWallModule() {
               asserted a second unit that often wasn't needed, and collapsed
               everything past the second into it when three or more were. */}
           <div className="meter-block">
-            <div className="h">PROCESSING</div>
+            <div className="h">Processing</div>
             <div className="v accent">
               {calc.capacityPct}
-              <span style={{ fontSize: 10, color: "var(--color-fg-faint)", marginLeft: 4 }}>%</span>
+              <span style={{ fontSize: 12, color: "var(--color-fg-faint)", marginLeft: 4 }}>%</span>
             </div>
             <div className="bar">
               <div className="bar-fill" style={{ width: `${Math.min(100, calc.capacityPct)}%` }} />
             </div>
-            <div className="mono" style={{ fontSize: 10, color: "var(--color-fg-faint)" }}>
+            <div className="mono" style={{ fontSize: 12, color: "var(--color-fg-faint)" }}>
               {calc.procsNeeded} × {calc.procName}
             </div>
           </div>
           <div className="meter-block">
-            <div className="h">PIXEL BUDGET</div>
+            <div className="h">Pixel budget</div>
             <div className="v">
               {(calc.totalPixels / 1e6).toFixed(2)}
-              <span style={{ fontSize: 10, color: "var(--color-fg-faint)", marginLeft: 4 }}>MP</span>
+              <span style={{ fontSize: 12, color: "var(--color-fg-faint)", marginLeft: 4 }}>MP</span>
             </div>
-            <div className="mono" style={{ fontSize: 10, color: "var(--color-fg-faint)" }}>
+            <div className="mono" style={{ fontSize: 12, color: "var(--color-fg-faint)" }}>
               of {((calc.procsNeeded * calc.procCapacity) / 1e6).toFixed(1)} MP available
             </div>
           </div>
           <div className="meter-block">
-            <div className="h">POWER</div>
+            <div className="h">Power</div>
             <div className="v warn">
               {(calc.totalWatts / 1000).toFixed(1)}
-              <span style={{ fontSize: 10, color: "var(--color-fg-faint)", marginLeft: 4 }}>kW</span>
+              <span style={{ fontSize: 12, color: "var(--color-fg-faint)", marginLeft: 4 }}>kW</span>
             </div>
-            <div className="mono" style={{ fontSize: 10, color: "var(--color-fg-faint)" }}>
+            <div className="mono" style={{ fontSize: 12, color: "var(--color-fg-faint)" }}>
               {calc.circuitsNeeded} × 20A circuits
             </div>
           </div>
           <div className="meter-block">
-            <div className="h">DATA RATE · UNCOMP 4:4:4</div>
+            <div className="h">Data rate · uncompressed 4:4:4</div>
             <div className="v">
               {dataRateGbps.toFixed(1)}
-              <span style={{ fontSize: 10, color: "var(--color-fg-faint)", marginLeft: 4 }}>
+              <span style={{ fontSize: 12, color: "var(--color-fg-faint)", marginLeft: 4 }}>
                 Gbps
               </span>
             </div>
-            <div className="mono" style={{ fontSize: 10, color: "var(--color-fg-faint)" }}>
+            <div className="mono" style={{ fontSize: 12, color: "var(--color-fg-faint)" }}>
               60p · 10-bit · 4:4:4
             </div>
           </div>
@@ -832,9 +830,7 @@ export function LedWallModule() {
         {tab === "panel" && !selected && (
           <div className="empty">
             <I.Grid size={28} />
-            <span className="mono" style={{ fontSize: 11, color: "var(--color-fg-faint)" }}>
-              SELECT A PANEL
-            </span>
+            <span className="s">Select a panel on the wall to see its specification.</span>
           </div>
         )}
 

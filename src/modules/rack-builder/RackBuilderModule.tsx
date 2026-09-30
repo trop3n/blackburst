@@ -13,7 +13,7 @@ import { alertDialog, confirmDialog, promptDialog } from "@/store/useDialog";
 import type { RackColor, RackItem, RackItemDef, RackSize } from "@/types";
 import { activeRackOf, fits, useRack } from "./store";
 
-const U_HEIGHT = 14;
+const U_HEIGHT = 20;
 const RACK_W = 360;
 const RACK_SIZES: RackSize[] = [24, 42, 48];
 // Static load rating assumed for the shelf/rack until racks carry their own spec.
@@ -110,7 +110,7 @@ export function RackBuilderModule() {
 
   const exportRackCsv = () => {
     downloadCsv(
-      `Blackburst-${projectCode}-${rack.id}-${stamp()}.csv`,
+      `SAMC-${projectCode}-${rack.id}-${stamp()}.csv`,
       ["Rack", "Location", "U", "Model", "Category", "U height", "Weight kg", "Power W", "Depth mm"],
       rackRowsSorted.map(({ item, def }) => [
         rack.name,
@@ -354,7 +354,7 @@ export function RackBuilderModule() {
       {/* LEFT — Racks + equipment catalog */}
       <div className="left-pane">
         <div className="pane-hd">
-          <span>RACKS</span>
+          <span>Racks</span>
           <span className="spacer" />
           <button className="icon-btn" aria-label="New rack" onClick={() => addRack()}>
             <I.Plus size={12} />
@@ -397,9 +397,9 @@ export function RackBuilderModule() {
         </div>
 
         <div className="pane-hd">
-          <span>EQUIPMENT CATALOG</span>
+          <span>Equipment catalog</span>
           <span className="spacer" />
-          <span className="mono" style={{ fontSize: 10, color: "var(--color-fg-faint)" }}>
+          <span className="mono" style={{ fontSize: 12, color: "var(--color-fg-faint)" }}>
             {visibleCatalog.length}
           </span>
           <button className="icon-btn" title="Add equipment" onClick={addEquipment}>
@@ -409,7 +409,7 @@ export function RackBuilderModule() {
         <div className="search">
           <I.Search size={12} />
           <input
-            placeholder="Filter equipment…"
+            placeholder="Filter equipment"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -431,14 +431,14 @@ export function RackBuilderModule() {
                 className="tb-btn"
                 style={{
                   padding: "2px 6px",
-                  fontSize: 10,
+                  fontSize: 12,
                   background: active ? "var(--accent-faint)" : "transparent",
                   color: active ? "var(--accent)" : "var(--color-fg-mute)",
                   border: `1px solid ${active ? "var(--accent-dim)" : "var(--color-line-strong)"}`,
                 }}
                 onClick={() => setFilter(c)}
               >
-                {c.toUpperCase()}
+                {c}
               </button>
             );
           })}
@@ -459,8 +459,8 @@ export function RackBuilderModule() {
                 }}
                 onDoubleClick={() => addItem(c.id)}
                 style={{
-                  height: 40,
-                  padding: "4px 10px",
+                  height: 56,
+                  padding: "6px 12px",
                   flexDirection: "column",
                   alignItems: "stretch",
                   gap: 2,
@@ -469,15 +469,15 @@ export function RackBuilderModule() {
                 <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                   <span
                     style={{
-                      width: 14,
-                      height: 14,
+                      width: 20,
+                      height: 18,
                       background: col.bg,
                       border: `1px solid ${col.bd}`,
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
                       fontFamily: "var(--font-mono)",
-                      fontSize: 8,
+                      fontSize: 12,
                       color: col.fg,
                     }}
                   >
@@ -487,7 +487,7 @@ export function RackBuilderModule() {
                     className="lbl"
                     style={{
                       fontFamily: "var(--font-sans)",
-                      fontSize: 11.5,
+                      fontSize: 12,
                       color: "var(--color-fg)",
                     }}
                   >
@@ -518,14 +518,14 @@ export function RackBuilderModule() {
                 <div
                   className="mono"
                   style={{
-                    fontSize: 10,
+                    fontSize: 12,
                     display: "flex",
                     gap: 8,
                     paddingLeft: 20,
                     color: "var(--color-fg-faint)",
                   }}
                 >
-                  <span>{c.cat.toUpperCase()}</span>
+                  <span>{c.cat}</span>
                   <span>{c.w}kg</span>
                   <span>{c.watts}W</span>
                   <span>{c.depth}mm</span>
@@ -551,15 +551,15 @@ export function RackBuilderModule() {
             ))}
           </div>
           <div className="divider-v" />
-          <span className="mono" style={{ fontSize: 10, color: "var(--color-fg-faint)" }}>
-            RACK · {rack.id}
+          <span className="mono" style={{ fontSize: 12, color: "var(--color-fg-faint)" }}>
+            Rack · {rack.id}
           </span>
           <button className="tb-btn" onClick={renameRack}>
             <I.Edit size={13} /> Rename
           </button>
           <span style={{ flex: 1 }} />
-          <span className="mono" style={{ fontSize: 10, color: "var(--color-fg-faint)" }}>
-            DRAG FROM CATALOG · ↕ TO REORDER
+          <span className="mono" style={{ fontSize: 12, color: "var(--color-fg-faint)" }}>
+            Drag from the catalog · drag a device to reorder
           </span>
           <div className="divider-v" />
           <button className="tb-btn" disabled={items.length === 0} onClick={exportRackCsv}>
@@ -577,24 +577,24 @@ export function RackBuilderModule() {
         >
           <div className="canvas-overlay tl">
             <div className="row">
-              <span className="k">RACK</span>
+              <span className="k">Rack</span>
               <span className="v">
                 {rack.name}
                 {rack.location ? ` · ${rack.location}` : ""}
               </span>
             </div>
             <div className="row">
-              <span className="k">SIZE</span>
+              <span className="k">Size</span>
               <span className="v">{rackSize}U · 600×1070mm</span>
             </div>
             <div className="row">
-              <span className="k">SWL</span>
+              <span className="k">Safe working load</span>
               <span className="v">{RACK_SWL_KG} kg static</span>
             </div>
           </div>
           <div className="canvas-overlay tr">
             <div className="row" style={{ justifyContent: "flex-end" }}>
-              <span className="k">USED</span>
+              <span className="k">Used</span>
               <span
                 className="v"
                 style={{ color: usedPct > 85 ? "var(--color-warn)" : "var(--accent)" }}
@@ -603,7 +603,7 @@ export function RackBuilderModule() {
               </span>
             </div>
             <div className="row" style={{ justifyContent: "flex-end" }}>
-              <span className="k">FREE</span>
+              <span className="k">Free</span>
               <span className="v">{rackSize - totalU}U</span>
             </div>
           </div>
@@ -616,13 +616,13 @@ export function RackBuilderModule() {
                   style={{
                     textAlign: "center",
                     fontFamily: "var(--font-mono)",
-                    fontSize: 10,
+                    fontSize: 12,
                     color: "var(--color-fg-faint)",
                     letterSpacing: "0.08em",
                     marginBottom: 8,
                   }}
                 >
-                  FRONT VIEW
+                  Front view
                 </div>
                 <div
                   style={{
@@ -645,11 +645,11 @@ export function RackBuilderModule() {
                     {/* Left U-numbers */}
                     <div
                       style={{
-                        width: 22,
+                        width: 26,
                         display: "flex",
                         flexDirection: "column",
                         fontFamily: "var(--font-mono)",
-                        fontSize: 8,
+                        fontSize: 12,
                         color: "var(--color-fg-ghost)",
                       }}
                     >
@@ -775,7 +775,7 @@ export function RackBuilderModule() {
                                 alignItems: "center",
                                 padding: "0 8px",
                                 fontFamily: "var(--font-mono)",
-                                fontSize: 9.5,
+                                fontSize: 12,
                                 color: "var(--color-err)",
                                 cursor: "pointer",
                                 overflow: "hidden",
@@ -818,7 +818,7 @@ export function RackBuilderModule() {
                               padding: "0 8px",
                               gap: 8,
                               fontFamily: "var(--font-mono)",
-                              fontSize: 9.5,
+                              fontSize: 12,
                               color: col.fg,
                               cursor: draggingIid === it.iid ? "grabbing" : "grab",
                               opacity: draggingIid === it.iid ? 0.4 : 1,
@@ -835,7 +835,7 @@ export function RackBuilderModule() {
                                 textOverflow: "ellipsis",
                                 whiteSpace: "nowrap",
                                 fontFamily: "var(--font-sans)",
-                                fontSize: 11,
+                                fontSize: 12,
                                 color: "var(--color-fg)",
                               }}
                             >
@@ -878,13 +878,13 @@ export function RackBuilderModule() {
                             }`,
                             background: hoverValid
                               ? "var(--accent-faint)"
-                              : "oklch(0.68 0.21 25 / 0.1)",
+                              : "rgba(176, 92, 88, 0.16)",
                             pointerEvents: "none",
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
                             fontFamily: "var(--font-mono)",
-                            fontSize: 10,
+                            fontSize: 12,
                             color: hoverValid ? "var(--accent)" : "var(--color-err)",
                           }}
                         >
@@ -892,18 +892,18 @@ export function RackBuilderModule() {
                             ? draggingIid != null
                               ? `→ ${hoverDef.model} @ U${hoverPos}`
                               : `+ ${hoverDef.model} @ U${hoverPos}`
-                            : "× SLOT OCCUPIED"}
+                            : "Slot occupied"}
                         </div>
                       )}
                     </div>
                     {/* Right U-numbers */}
                     <div
                       style={{
-                        width: 22,
+                        width: 26,
                         display: "flex",
                         flexDirection: "column",
                         fontFamily: "var(--font-mono)",
-                        fontSize: 8,
+                        fontSize: 12,
                         color: "var(--color-fg-ghost)",
                       }}
                     >
@@ -943,13 +943,13 @@ export function RackBuilderModule() {
                   style={{
                     textAlign: "center",
                     fontFamily: "var(--font-mono)",
-                    fontSize: 10,
+                    fontSize: 12,
                     color: "var(--color-fg-faint)",
                     letterSpacing: "0.08em",
                     marginBottom: 8,
                   }}
                 >
-                  SIDE PROFILE
+                  Side profile
                 </div>
                 <div
                   style={{
@@ -1023,7 +1023,7 @@ export function RackBuilderModule() {
                     style={{
                       marginTop: 6,
                       fontFamily: "var(--font-mono)",
-                      fontSize: 9,
+                      fontSize: 12,
                       color: "var(--color-fg-faint)",
                       textAlign: "center",
                     }}
@@ -1036,20 +1036,20 @@ export function RackBuilderModule() {
           </div>
 
           <div className="crosshair-readout">
-            EIA-310 · 19in · {rackSize}U · DEEP {maxDepth}mm
+            EIA-310 · 19in · {rackSize}U · {maxDepth}mm deep
           </div>
         </div>
 
         {/* Bottom meter row */}
         <div className="canvas-meter">
           <div className="meter-block">
-            <div className="h">RACK USAGE</div>
+            <div className="h">Rack usage</div>
             <div
               className="v"
               style={{ color: usedPct > 85 ? "var(--color-warn)" : "var(--accent)" }}
             >
               {totalU}
-              <span style={{ fontSize: 10, color: "var(--color-fg-faint)", marginLeft: 4 }}>
+              <span style={{ fontSize: 12, color: "var(--color-fg-faint)", marginLeft: 4 }}>
                 / {rackSize}U
               </span>
             </div>
@@ -1062,18 +1062,18 @@ export function RackBuilderModule() {
                 }}
               />
             </div>
-            <div className="mono" style={{ fontSize: 10, color: "var(--color-fg-faint)" }}>
+            <div className="mono" style={{ fontSize: 12, color: "var(--color-fg-faint)" }}>
               {rackSize - totalU}U free · {items.length} devices
             </div>
           </div>
           <div className="meter-block">
-            <div className="h">WEIGHT</div>
+            <div className="h">Weight</div>
             <div
               className="v"
               style={{ color: totalW > RACK_SWL_WARN_KG ? "var(--color-warn)" : "var(--color-fg)" }}
             >
               {totalW.toFixed(1)}
-              <span style={{ fontSize: 10, color: "var(--color-fg-faint)", marginLeft: 4 }}>
+              <span style={{ fontSize: 12, color: "var(--color-fg-faint)", marginLeft: 4 }}>
                 kg
               </span>
             </div>
@@ -1086,15 +1086,15 @@ export function RackBuilderModule() {
                 }}
               />
             </div>
-            <div className="mono" style={{ fontSize: 10, color: "var(--color-fg-faint)" }}>
+            <div className="mono" style={{ fontSize: 12, color: "var(--color-fg-faint)" }}>
               SWL {RACK_SWL_KG}kg · {Math.round((totalW / RACK_SWL_KG) * 100)}% loaded
             </div>
           </div>
           <div className="meter-block">
-            <div className="h">POWER DRAW</div>
+            <div className="h">Power draw</div>
             <div className="v warn">
               {(totalWatts / 1000).toFixed(2)}
-              <span style={{ fontSize: 10, color: "var(--color-fg-faint)", marginLeft: 4 }}>
+              <span style={{ fontSize: 12, color: "var(--color-fg-faint)", marginLeft: 4 }}>
                 kW
               </span>
             </div>
@@ -1114,15 +1114,15 @@ export function RackBuilderModule() {
                 }}
               />
             </div>
-            <div className="mono" style={{ fontSize: 10, color: "var(--color-fg-faint)" }}>
+            <div className="mono" style={{ fontSize: 12, color: "var(--color-fg-faint)" }}>
               {circuits} × 15A · {amps208}A @ 208V
             </div>
           </div>
           <div className="meter-block">
-            <div className="h">THERMAL · BTU/h</div>
+            <div className="h">Thermal · BTU/h</div>
             <div className="v">
               {btu.toLocaleString()}
-              <span style={{ fontSize: 10, color: "var(--color-fg-faint)", marginLeft: 4 }}>
+              <span style={{ fontSize: 12, color: "var(--color-fg-faint)", marginLeft: 4 }}>
                 BTU/h
               </span>
             </div>
@@ -1132,7 +1132,7 @@ export function RackBuilderModule() {
                 style={{ width: `${Math.min(100, (btu / 30000) * 100)}%` }}
               />
             </div>
-            <div className="mono" style={{ fontSize: 10, color: "var(--color-fg-faint)" }}>
+            <div className="mono" style={{ fontSize: 12, color: "var(--color-fg-faint)" }}>
               ≈ {(btu / 12000).toFixed(2)} ton AC · airflow F→B
             </div>
           </div>
@@ -1142,7 +1142,7 @@ export function RackBuilderModule() {
       {/* RIGHT — inspector */}
       <div className="right-pane">
         <div className="pane-hd">
-          <span>RACK INSPECTOR</span>
+          <span>Rack inspector</span>
           <span className="spacer" />
           <span className="chip accent">{rack.id}</span>
         </div>
@@ -1233,7 +1233,7 @@ export function RackBuilderModule() {
               className="mono"
               style={{
                 padding: "0 12px 8px",
-                fontSize: 10,
+                fontSize: 12,
                 color: "var(--color-fg-faint)",
                 textAlign: "center",
               }}
@@ -1253,7 +1253,7 @@ export function RackBuilderModule() {
               <span className="k">Model id</span>
               <span className="v mono">{selected.id}</span>
             </div>
-            <div style={{ padding: "8px 12px", fontSize: 11, color: "var(--color-fg-mute)" }}>
+            <div style={{ padding: "8px 12px", fontSize: 12, color: "var(--color-fg-mute)" }}>
               This model is no longer in the equipment catalog, so its specification —
               height, weight, power and depth — is gone and it counts for nothing in the
               rack totals. Remove the item, or re-add the model to the catalog.
@@ -1272,27 +1272,17 @@ export function RackBuilderModule() {
           <div className="pane-body">
             <div className="empty" style={{ padding: 30 }}>
               <I.Inventory size={28} />
-              <span className="mono" style={{ fontSize: 11, color: "var(--color-fg-faint)" }}>
-                SELECT A DEVICE
-              </span>
-              <span
-                className="mono"
-                style={{
-                  fontSize: 10,
-                  color: "var(--color-fg-faint)",
-                  textAlign: "center",
-                  maxWidth: 200,
-                  lineHeight: 1.4,
-                }}
-              >
-                Drag from the catalog or double-click a row to auto-place. Click a placed device to inspect.
+              <span className="t">No device selected</span>
+              <span className="s">
+                Drag from the catalog or double-click a row to place a device. Click a placed
+                device to inspect it.
               </span>
             </div>
           </div>
         )}
 
         <div className="pane-hd">
-          <span>POWER BUDGET</span>
+          <span>Power budget</span>
         </div>
         <div className="pane-body">
           {Object.entries(byCat).map(([k, v]) => (
@@ -1311,13 +1301,13 @@ export function RackBuilderModule() {
             </div>
           ))}
           <div className="section-h">
-            <span>CIRCUIT MAP</span>
+            <span>Circuit map</span>
             <span className="line" />
           </div>
           {circuits === 0 ? (
             <div
               className="mono"
-              style={{ padding: "0 12px 8px", fontSize: 10, color: "var(--color-fg-faint)" }}
+              style={{ padding: "0 12px 8px", fontSize: 12, color: "var(--color-fg-faint)" }}
             >
               Nothing drawing power in this rack yet.
             </div>

@@ -1,12 +1,11 @@
 import { useEffect } from "react";
 import { I } from "@/components/Icon";
-import { ACCENTS, useApp, type Tweaks } from "@/store/useApp";
+import { useApp, type Tweaks } from "@/store/useApp";
 import { useSettings } from "@/store/useSettings";
-import type { AccentName, CanvasStyle, Density, Shell } from "@/types";
+import type { CanvasStyle, Density, Shell } from "@/types";
 
 const DEFAULT_TWEAKS: Tweaks = {
   density: "normal",
-  accent: "acid-green",
   shell: "rail",
   canvasStyle: "grid",
 };
@@ -28,8 +27,6 @@ const CANVASES: { id: CanvasStyle; label: string; sub: string }[] = [
   { id: "blueprint", label: "Blueprint", sub: "Drafting lines" },
   { id: "schematic", label: "Schematic", sub: "Flat field" },
 ];
-
-const ACCENT_NAMES: AccentName[] = ["acid-green", "amber", "cyan", "magenta", "white"];
 
 export function SettingsPanel() {
   const open = useSettings((s) => s.open);
@@ -61,7 +58,7 @@ export function SettingsPanel() {
     <div className="set-overlay" onMouseDown={() => setOpen(false)}>
       <div className="set-panel" onMouseDown={(e) => e.stopPropagation()}>
         <div className="set-hd">
-          <span className="set-hd-title">Workspace Settings</span>
+          <span className="set-hd-title">Workspace settings</span>
           <button
             className="set-close"
             type="button"
@@ -88,36 +85,12 @@ export function SettingsPanel() {
             onChange={(v) => setTweak("shell", v)}
           />
           <SettingsRow
-            label="Canvas Style"
+            label="Canvas style"
             sub="Background pattern on builders"
             options={CANVASES}
             value={tweaks.canvasStyle}
             onChange={(v) => setTweak("canvasStyle", v)}
           />
-
-          <div className="set-row">
-            <div className="set-row-meta">
-              <span className="set-row-label">Accent</span>
-              <span className="set-row-sub">UI highlight color</span>
-            </div>
-            <div className="set-swatches">
-              {ACCENT_NAMES.map((name) => {
-                const active = tweaks.accent === name;
-                return (
-                  <button
-                    key={name}
-                    type="button"
-                    className="set-swatch"
-                    data-active={active ? "1" : "0"}
-                    onClick={() => setTweak("accent", name)}
-                    aria-label={name}
-                    title={name}
-                    style={{ background: ACCENTS[name].c }}
-                  />
-                );
-              })}
-            </div>
-          </div>
         </div>
 
         <div className="set-foot">

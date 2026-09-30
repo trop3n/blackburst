@@ -13,9 +13,9 @@ import { issuesByAsset, summarizeAssetIssues, validateAssets } from "./validatio
 
 const CAT_OPTIONS = ASSET_CATEGORIES.filter((c) => c.name !== "All gear").map((c) => c.name);
 const STATUS_OPTIONS: { value: AssetStatus; label: string }[] = [
-  { value: "in", label: "IN" },
-  { value: "out", label: "OUT" },
-  { value: "maint", label: "MAINT" },
+  { value: "in", label: "In store" },
+  { value: "out", label: "Checked out" },
+  { value: "maint", label: "In maintenance" },
 ];
 
 // A show's start/end are 1-based day positions in this window, not dates.
@@ -241,7 +241,7 @@ export function InventoryModule() {
         ))}
       </datalist>
       <div className="left-pane">
-        <div className="pane-hd"><span>CATEGORIES</span></div>
+        <div className="pane-hd"><span>Categories</span></div>
         <div style={{ flex: "0 0 auto" }}>
           {["All gear", ...sidebarCats].map((name) => {
             const live = name === "All gear" ? assets.length : countByCat.get(name) ?? 0;
@@ -260,9 +260,9 @@ export function InventoryModule() {
           })}
         </div>
         <div className="pane-hd">
-          <span>MODEL CATALOG</span>
+          <span>Model catalog</span>
           <span className="spacer" />
-          <span className="mono" style={{ fontSize: 10, color: "var(--color-fg-faint)" }}>
+          <span className="mono" style={{ fontSize: 12, color: "var(--color-fg-faint)" }}>
             {visibleModels.length}
           </span>
           <button className="icon-btn" title="Add model to catalog" onClick={handleAddModel}>
@@ -272,7 +272,7 @@ export function InventoryModule() {
         <div className="search">
           <I.Search size={12} />
           <input
-            placeholder="Search models…"
+            placeholder="Search models"
             value={modelSearch}
             onChange={(e) => setModelSearch(e.target.value)}
           />
@@ -307,7 +307,7 @@ export function InventoryModule() {
             );
           })}
         </div>
-        <div className="pane-hd"><span>FLEET STATUS</span></div>
+        <div className="pane-hd"><span>Fleet status</span></div>
         <div className="pane-body">
           <div className="readout-grid">
             <div className="readout accent">
@@ -361,12 +361,12 @@ export function InventoryModule() {
               style={{
                 display: "flex",
                 justifyContent: "space-between",
-                fontSize: 11,
+                fontSize: 12,
                 color: "var(--color-fg-faint)",
                 marginBottom: 4,
               }}
             >
-              <span>AVG</span>
+              <span>Average</span>
               <span
                 style={{
                   color: avgUtilization > 85 ? "var(--color-warn)" : "var(--accent)",
@@ -387,7 +387,7 @@ export function InventoryModule() {
             <div
               className="mono"
               style={{
-                fontSize: 10,
+                fontSize: 12,
                 color: "var(--color-fg-faint)",
                 marginTop: 4,
                 textAlign: "right",
@@ -402,14 +402,14 @@ export function InventoryModule() {
       <div className="center-pane">
         <div className="canvas-toolbar">
           <div className="tg">
-            <button data-active={view === "list" ? "1" : "0"} onClick={() => setView("list")}>LIST</button>
-            <button data-active={view === "schedule" ? "1" : "0"} onClick={() => setView("schedule")}>SCHEDULE</button>
+            <button data-active={view === "list" ? "1" : "0"} onClick={() => setView("list")}>List</button>
+            <button data-active={view === "schedule" ? "1" : "0"} onClick={() => setView("schedule")}>Schedule</button>
           </div>
           <div className="divider-v" />
           <div className="search" style={{ flex: 1, border: 0, padding: 0 }}>
             <I.Search size={12} />
             <input
-              placeholder={`Filter ${filtered.length} items in ${cat}…`}
+              placeholder={`Filter ${filtered.length} items in ${cat}`}
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
             />
@@ -423,7 +423,7 @@ export function InventoryModule() {
             disabled={!asset || asset.status === "in"}
             title={asset ? `Check in ${asset.id}` : "Select an asset first"}
           >
-            <I.Plus size={13} /> Check In
+            <I.Plus size={13} /> Check in
           </button>
           <button
             className="tb-btn primary"
@@ -431,7 +431,7 @@ export function InventoryModule() {
             disabled={!asset || asset.status === "out"}
             title={asset ? `Check out ${asset.id}` : "Select an asset first"}
           >
-            <I.Export size={13} /> Check Out
+            <I.Export size={13} /> Check out
           </button>
         </div>
 
@@ -440,14 +440,14 @@ export function InventoryModule() {
             <table className="tbl">
               <thead>
                 <tr>
-                  <th>ASSET ID</th>
-                  <th>MODEL</th>
-                  <th>CATEGORY</th>
-                  <th>STATUS</th>
-                  <th>SHOW / JOB</th>
-                  <th>DUE</th>
-                  <th>UTIL</th>
-                  <th>LAST SVC</th>
+                  <th>Asset id</th>
+                  <th>Model</th>
+                  <th>Category</th>
+                  <th>Status</th>
+                  <th>Show or job</th>
+                  <th>Due</th>
+                  <th>Use</th>
+                  <th>Last service</th>
                 </tr>
               </thead>
               <tbody>
@@ -479,7 +479,7 @@ export function InventoryModule() {
           <div style={{ flex: 1, overflow: "auto", background: "var(--color-bg-2)" }}>
             <div style={{ display: "grid", gridTemplateColumns: "200px 1fr" }}>
               <div className="pane-hd" style={{ borderBottom: "1px solid var(--color-line)" }}>
-                <span>SHOW</span>
+                <span>Show</span>
                 <span className="spacer" />
                 <button className="icon-btn" onClick={handleNewShow} title="New show">
                   <I.Plus size={12} />
@@ -505,7 +505,7 @@ export function InventoryModule() {
 
       <div className="right-pane">
         <div className="pane-hd">
-          <span>ASSET DETAIL</span>
+          <span>Asset detail</span>
           <span className="spacer" />
           <span className="chip accent">{asset?.id ?? "—"}</span>
         </div>
@@ -513,20 +513,9 @@ export function InventoryModule() {
           <div className="pane-body">
             <div className="empty" style={{ padding: 30 }}>
               <I.Inventory size={28} />
-              <span className="mono" style={{ fontSize: 11, color: "var(--color-fg-faint)" }}>
-                NO ASSET SELECTED
-              </span>
-              <span
-                className="mono"
-                style={{
-                  fontSize: 10,
-                  color: "var(--color-fg-faint)",
-                  textAlign: "center",
-                  maxWidth: 200,
-                  lineHeight: 1.4,
-                }}
-              >
-                Click a row in the list, or pick an issue on the left, to inspect.
+              <span className="t">No asset selected</span>
+              <span className="s">
+                Click a row in the list, or pick an issue on the left, to inspect it.
               </span>
             </div>
           </div>
@@ -650,7 +639,7 @@ export function InventoryModule() {
               <div
                 className="mono"
                 style={{
-                  fontSize: 10,
+                  fontSize: 12,
                   color: "var(--color-fg-faint)",
                   marginTop: 6,
                   textAlign: "center",
@@ -713,7 +702,7 @@ const AssetRow = memo(function AssetRow({
       <td className="muted">{a.cat}</td>
       <td>
         <span className={`status-pill ${a.status}`}>
-          {a.status === "maint" ? "MAINT" : a.status.toUpperCase()}
+          {STATUS_OPTIONS.find((o) => o.value === a.status)?.label ?? a.status}
         </span>
       </td>
       <td>{a.show}</td>

@@ -65,34 +65,37 @@ export function StatusBar() {
 
   const saveLabel =
     saveState === "error"
-      ? "SAVE FAILED"
+      ? "Couldn't save"
       : saveState === "saving"
-        ? "SAVING…"
+        ? "Saving"
         : saveState === "pending"
-          ? "UNSAVED"
-          : savedAt
-            ? `SAVED ${new Date(savedAt).toTimeString().slice(0, 8)}`
-            : "SAVED —";
+          ? "Unsaved changes"
+          : "All changes saved";
 
   const statusLabel =
     level === "error"
-      ? `${errors} ERROR${errors === 1 ? "" : "S"}${warnings > 0 ? ` · ${warnings} WARN` : ""}`
+      ? `${errors} ${errors === 1 ? "error" : "errors"}${
+          warnings > 0 ? ` · ${warnings} ${warnings === 1 ? "warning" : "warnings"}` : ""
+        }`
       : level === "warn"
-        ? `${warnings} WARNING${warnings === 1 ? "" : "S"}`
-        : "ALL CHECKS OK";
+        ? `${warnings} ${warnings === 1 ? "warning" : "warnings"}`
+        : "All checks passed";
 
   return (
     <footer className="statusbar">
       <div className="seg">
-        <span className="dot" /> READY
+        <span className="dot" /> Ready
       </div>
-      <div className="seg">REV {String(latest?.n ?? 0).padStart(4, "0")}</div>
+      <div className="seg">{latest ? `Revision ${latest.n}` : "No revisions yet"}</div>
       {viewOnly ? (
         <div className="seg" title="Your role on this project is viewer — edits stay in this window and are not saved">
-          <span className="dot warn" /> VIEW ONLY
+          <span className="dot warn" /> View only
         </div>
       ) : (
-        <div className="seg" title={saveError ?? undefined}>
+        <div
+          className="seg"
+          title={saveError ?? (savedAt ? `Saved at ${new Date(savedAt).toTimeString().slice(0, 8)}` : undefined)}
+        >
           <span className={`dot ${saveState === "error" ? "error" : saveState === "saved" ? "ok" : ""}`} />{" "}
           {saveLabel}
         </div>
@@ -103,9 +106,7 @@ export function StatusBar() {
       <div className="spacer" />
       <div className="seg">{project.code}</div>
       <div className="seg">{tz}</div>
-      <div className="seg" style={{ color: "var(--accent)" }}>
-        {tt}
-      </div>
+      <div className="seg">{tt}</div>
     </footer>
   );
 }

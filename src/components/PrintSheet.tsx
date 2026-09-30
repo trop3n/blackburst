@@ -37,7 +37,7 @@ export function PrintSheet({ title, subtitle, children }: PrintSheetProps) {
       </header>
       {children}
       <footer className="print-ft">
-        Blackburst · {project.code} · {title}
+        SAMC AV Studio · {project.code} · {title}
       </footer>
     </div>
   );

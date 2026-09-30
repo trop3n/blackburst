@@ -139,21 +139,17 @@ export function Topbar() {
         <span style={{ color: "var(--color-fg)" }}>{project.name}</span>
         <span className="chip">{project.client}</span>
         {authConfigured && project.role === "viewer" && (
-          <span className="chip warn">view only</span>
+          <span className="chip warn">View only</span>
         )}
       </div>
       <div className="topbar-section">
-        <span className="crumb mono">PROJECTS</span>
-        <span className="crumb-sep">/</span>
-        <span className="crumb mono">{project.code}</span>
-        <span className="crumb-sep">/</span>
-        <span className="crumb-curr mono">{MODULE_LABELS[module]}</span>
+        <span className="topbar-title">{MODULE_LABELS[module]}</span>
       </div>
       <div className="spacer" />
       <div className="topbar-section" style={{ borderRight: 0, paddingRight: 0 }}>
         <button className="cmdk" type="button" onClick={() => openCmdk(true)}>
           <I.Search size={12} />
-          <span>Search assets, docs, panels…</span>
+          <span>Search</span>
           <kbd>⌘K</kbd>
         </button>
         {authConfigured && (
@@ -185,7 +181,7 @@ export function Topbar() {
           onClick={handleSaveRev}
           disabled={!canEdit}
         >
-          <I.Plus size={13} /> Save Rev
+          <I.Plus size={13} /> Save revision
         </button>
         <button
           className="icon-btn"
@@ -233,7 +229,7 @@ export function Topbar() {
           </div>
         ) : (
           <div className="user-chip">
-            <div className="avatar">BB</div>
+            <div className="avatar">AV</div>
           </div>
         )}
       </div>

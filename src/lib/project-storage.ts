@@ -192,7 +192,7 @@ export function scaffoldBucket(): ProjectStateBuckets {
   return {
     "led-wall": {
       walls: [
-        { id: "W1", name: "Wall 1", panel: "ROE-RB2.6", processor: "sx40", cols: 4, rows: 3, active: true },
+        { id: "W1", name: "Wall 1", panel: "ABS-A3PRO", processor: "vx2000pro", cols: 4, rows: 3, active: true },
       ],
       layoutId: "W1",
       selected: null,

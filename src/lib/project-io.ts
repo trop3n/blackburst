@@ -46,7 +46,7 @@ export function exportProject() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `Blackburst-${snap.project.code}-${todayStamp()}.json`;
+  a.download = `SAMC-${snap.project.code}-${todayStamp()}.json`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
@@ -57,7 +57,7 @@ export async function importProject(file: File): Promise<void> {
   const text = await file.text();
   const data = JSON.parse(text) as Partial<ProjectSnapshot>;
   if (data.format !== "blackburst-project") {
-    throw new Error("Not a Blackburst project file");
+    throw new Error("Not a SAMC AV Studio project file");
   }
   if (
     typeof data.version !== "number" ||

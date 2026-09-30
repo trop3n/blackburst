@@ -164,7 +164,7 @@ export function DeviceLink({ deviceId, onChange, defaultLabel, model, omit }: De
             {devices.length === 0 && (
               <div
                 className="mono"
-                style={{ padding: "8px 12px", fontSize: 10, color: "var(--color-fg-faint)" }}
+                style={{ padding: "8px 12px", fontSize: 12, color: "var(--color-fg-faint)" }}
               >
                 No devices in the registry yet.
               </div>

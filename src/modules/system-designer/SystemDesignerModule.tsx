@@ -157,7 +157,15 @@ const GraphNode = memo(function GraphNode({
       onMouseDown={(e) => onNodeMouseDown(e, n)}
     >
       <div className="node-hd">
-        <span style={{ color: "var(--accent)" }}>●</span>
+        <span
+          style={{
+            width: 6,
+            height: 6,
+            borderRadius: "50%",
+            background: "var(--accent)",
+            display: "inline-block",
+          }}
+        />
         <span className="typ">{n.type}</span>
         <span style={{ marginLeft: "auto", color: "var(--color-fg-faint)" }}>{n.id}</span>
       </div>
@@ -166,7 +174,7 @@ const GraphNode = memo(function GraphNode({
           style={{
             color: "var(--color-fg)",
             fontFamily: "var(--font-sans)",
-            fontSize: 11,
+            fontSize: 12,
             marginBottom: 4,
           }}
         >
@@ -220,6 +228,9 @@ function pathFor(e: SystemEdge, byId: Map<string, SystemNode>): string {
   const mx = (x1 + x2) / 2;
   return `M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}`;
 }
+
+// Lanes are stored lowercase; they read as words, not codes.
+const laneLabel = (l: string) => l.charAt(0).toUpperCase() + l.slice(1);
 
 export function SystemDesignerModule() {
   const canvasStyle = useApp((s) => s.tweaks.canvasStyle);
@@ -299,7 +310,7 @@ export function SystemDesignerModule() {
 
   const exportPatchCsv = () => {
     downloadCsv(
-      `Blackburst-${projectCode}-patch-${stamp()}.csv`,
+      `SAMC-${projectCode}-patch-${stamp()}.csv`,
       ["ID", "Lane", "Source", "Src port", "Destination", "Dest port", "Cable"],
       patchRows.map((p) => [p.id, p.lane.toUpperCase(), p.src, p.srcPort, p.dest, p.destPort, p.cable]),
     );
@@ -481,7 +492,7 @@ export function SystemDesignerModule() {
             {patchRows.map((p) => (
               <tr key={p.id}>
                 <td>{p.id}</td>
-                <td>{p.lane.toUpperCase()}</td>
+                <td>{laneLabel(p.lane)}</td>
                 <td>{p.src}</td>
                 <td>{p.srcPort}</td>
                 <td>{p.dest}</td>
@@ -494,7 +505,7 @@ export function SystemDesignerModule() {
         <div className="print-summary">
           {PATCH_LANES.map((l) => (
             <div key={l}>
-              <dt>{l.toUpperCase()}</dt>
+              <dt>{laneLabel(l)}</dt>
               <dd>{patchRows.filter((p) => p.lane === l).length}</dd>
             </div>
           ))}
@@ -504,9 +515,9 @@ export function SystemDesignerModule() {
       {/* LEFT — palette */}
       <div className="left-pane">
         <div className="pane-hd">
-          <span>DEVICE PALETTE</span>
+          <span>Device palette</span>
           <span className="spacer" />
-          <span className="mono" style={{ fontSize: 10, color: "var(--color-fg-faint)" }}>
+          <span className="mono" style={{ fontSize: 12, color: "var(--color-fg-faint)" }}>
             {visibleDevices.length}
           </span>
           <button className="icon-btn" title="Add device" onClick={addDevice}>
@@ -516,7 +527,7 @@ export function SystemDesignerModule() {
         <div className="search">
           <I.Search size={12} />
           <input
-            placeholder="Search devices…"
+            placeholder="Search devices"
             value={paletteSearch}
             onChange={(e) => setPaletteSearch(e.target.value)}
           />
@@ -575,10 +586,10 @@ export function SystemDesignerModule() {
         <div className="canvas-toolbar">
           <div className="tg">
             <button data-active={view === "graph" ? "1" : "0"} onClick={() => setView("graph")}>
-              GRAPH
+              Graph
             </button>
             <button data-active={view === "patch" ? "1" : "0"} onClick={() => setView("patch")}>
-              PATCH SHEET
+              Patch sheet
             </button>
           </div>
           {/* Graph only: LAYERS hides edges on the canvas. The patch sheet, its
@@ -588,9 +599,7 @@ export function SystemDesignerModule() {
           {view === "graph" && (
             <>
               <div className="divider-v" />
-              <span className="mono" style={{ fontSize: 10, color: "var(--color-fg-faint)" }}>
-                LAYERS
-              </span>
+              <span style={{ fontSize: 12, color: "var(--color-fg-faint)" }}>Layers</span>
               <div className="lane-toggles">
                 {LANES.map((l) => (
                   <button
@@ -600,7 +609,7 @@ export function SystemDesignerModule() {
                     onClick={() => toggleLane(l)}
                   >
                     <span className="sw" />
-                    {l.toUpperCase()}
+                    {laneLabel(l)}
                   </button>
                 ))}
               </div>
@@ -632,13 +641,13 @@ export function SystemDesignerModule() {
           >
             <div className="canvas-overlay tl">
               <div className="row">
-                <span className="k">SYSTEM</span>
+                <span className="k">System</span>
                 <span className="v">{projectName}</span>
               </div>
               <div className="row">
-                <span className="k">NODES</span>
+                <span className="k">Nodes</span>
                 <span className="v">{nodes.length}</span>
-                <span className="k">EDGES</span>
+                <span className="k">Edges</span>
                 <span className="v">
                   {visibleEdges.length}/{edges.length}
                 </span>
@@ -748,7 +757,7 @@ export function SystemDesignerModule() {
             {/* Was "GRID 16 · AUTO-ROUTE: ORTHOGONAL": there is no grid snap —
                 dragging is free to the pixel — and the wires are bézier curves. */}
             <div className="crosshair-readout">
-              SCHEMATIC · DRAG A PORT TO CONNECT · ESC CANCELS
+              Schematic · drag a port to connect · press Esc to cancel
             </div>
           </div>
         )}
@@ -757,20 +766,9 @@ export function SystemDesignerModule() {
           <div style={{ flex: 1, background: "var(--color-bg-2)" }}>
             <div className="empty" style={{ padding: 40 }}>
               <I.System size={28} />
-              <span className="mono" style={{ fontSize: 11, color: "var(--color-fg-faint)" }}>
-                NO CONNECTIONS YET
-              </span>
-              <span
-                className="mono"
-                style={{
-                  fontSize: 10,
-                  color: "var(--color-fg-faint)",
-                  textAlign: "center",
-                  maxWidth: 260,
-                  lineHeight: 1.4,
-                }}
-              >
-                Drag between node ports in the GRAPH view. Every connection you make appears here
+              <span className="t">No connections yet</span>
+              <span className="s">
+                Drag between node ports in the graph view. Every connection you make appears here
                 as a patch row.
               </span>
             </div>
@@ -783,12 +781,12 @@ export function SystemDesignerModule() {
               <thead>
                 <tr>
                   <th>ID</th>
-                  <th>LANE</th>
-                  <th>SOURCE</th>
-                  <th>SRC PORT</th>
-                  <th>DEST</th>
-                  <th>DEST PORT</th>
-                  <th>CABLE</th>
+                  <th>Lane</th>
+                  <th>Source</th>
+                  <th>Source port</th>
+                  <th>Destination</th>
+                  <th>Destination port</th>
+                  <th>Cable</th>
                   <th></th>
                 </tr>
               </thead>
@@ -806,7 +804,7 @@ export function SystemDesignerModule() {
                             borderColor: "var(--color-line-strong)",
                           }}
                         >
-                          {p.lane.toUpperCase()}
+                          {laneLabel(p.lane)}
                         </span>
                       </td>
                       <td>{p.src}</td>
@@ -843,7 +841,7 @@ export function SystemDesignerModule() {
       {/* RIGHT — Inspector */}
       <div className="right-pane">
         <div className="pane-hd">
-          <span>{view === "graph" ? "NODE INSPECTOR" : "PATCH STATS"}</span>
+          <span>{view === "graph" ? "Node inspector" : "Patch stats"}</span>
           <span className="spacer" />
           <span className="chip accent">{node?.id ?? "—"}</span>
         </div>
@@ -967,7 +965,7 @@ export function SystemDesignerModule() {
                   className="fld"
                   style={{ gridTemplateColumns: "60px 1fr 40px" }}
                 >
-                  <span className="k">{l.toUpperCase()}</span>
+                  <span className="k">{laneLabel(l)}</span>
                   <div className="bar">
                     <div
                       className="bar-fill"

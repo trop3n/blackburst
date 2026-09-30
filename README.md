@@ -1,4 +1,4 @@
-# Blackburst
+# SAMC AV Studio
 
 **AV / live-production design tooling.** Six dense, technical modules behind one keyboard-driven shell (rail · ⌘K command palette · status bar). Runs locally out of the box — every project lives in `localStorage` and exports to a portable JSON snapshot — and wires up to Supabase for accounts, per-user cloud storage, and project sharing.
 
@@ -42,7 +42,7 @@ Venues, the devices installed at each, and their service history. Entries are ty
 
 React 18 · TypeScript (strict) · Vite · Zustand · Tailwind v4 · Supabase (optional).
 
-**Local mode (default).** Each project's module state is persisted to `localStorage` and can be exported or imported as a `blackburst-project` JSON file. Switching projects snapshots the live stores and restores the target project's state.
+**Local mode (default).** Each project's module state is persisted to `localStorage` and can be exported or imported as a `blackburst-project` JSON file (that tag predates the 2026-09-22 rename and is kept so older exports still import). Switching projects snapshots the live stores and restores the target project's state.
 
 **Accounts mode.** Set the Supabase env vars and the app gates behind sign-in, stores each project as a JSONB row server-side, and shares projects between users by email with owner / editor / viewer roles — enforced by Postgres row-level security. Sign-in is **email + password**; accounts are created in the Supabase dashboard rather than by self-signup. A magic-link / one-time-code path is built and available in the UI, but needs custom SMTP to be practical — the built-in email service is rate limited to a few messages an hour. Realtime keeps collaborators in sync (last-write-wins, not a CRDT). On first sign-in, projects from this browser can be imported into the account. Setup: [`supabase/README.md`](./supabase/README.md).
 

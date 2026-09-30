@@ -29,42 +29,13 @@ import { useCatalog } from "@/store/useCatalog";
 import { useDevices } from "@/store/useDevices";
 import { useMaintenance } from "@/store/useMaintenance";
 import { useVenues } from "@/store/useVenues";
-import type { AccentName, CanvasStyle, Density, ModuleId, Project, Shell } from "@/types";
+import type { CanvasStyle, Density, ModuleId, Project, Shell } from "@/types";
 
 export interface Tweaks {
   density: Density;
-  accent: AccentName;
   shell: Shell;
   canvasStyle: CanvasStyle;
 }
-
-export const ACCENTS: Record<AccentName, { c: string; dim: string; faint: string }> = {
-  "acid-green": {
-    c: "oklch(0.86 0.19 145)",
-    dim: "oklch(0.86 0.19 145 / 0.18)",
-    faint: "oklch(0.86 0.19 145 / 0.08)",
-  },
-  amber: {
-    c: "oklch(0.82 0.17 70)",
-    dim: "oklch(0.82 0.17 70 / 0.18)",
-    faint: "oklch(0.82 0.17 70 / 0.08)",
-  },
-  cyan: {
-    c: "oklch(0.82 0.13 220)",
-    dim: "oklch(0.82 0.13 220 / 0.18)",
-    faint: "oklch(0.82 0.13 220 / 0.08)",
-  },
-  magenta: {
-    c: "oklch(0.78 0.22 330)",
-    dim: "oklch(0.78 0.22 330 / 0.18)",
-    faint: "oklch(0.78 0.22 330 / 0.08)",
-  },
-  white: {
-    c: "oklch(0.96 0 0)",
-    dim: "oklch(0.96 0 0 / 0.18)",
-    faint: "oklch(0.96 0 0 / 0.06)",
-  },
-};
 
 export interface Revision {
   n: number;
@@ -128,7 +99,6 @@ export const useApp = create<AppState>()(
       setModule: (module) => set({ module }),
       tweaks: {
         density: "normal",
-        accent: "acid-green",
         shell: "rail",
         canvasStyle: "grid",
       },
