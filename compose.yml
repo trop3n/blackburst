@@ -1,0 +1,22 @@
+# Reachable directly at http://<docker-host>:8081 and through Nginx Proxy Manager on the
+# shared "proxy" network. 8080 is the previz viewer, so this takes 8081.
+#
+# The two VITE_SUPABASE_* values come from an .env file beside this one on the host — not
+# from git. Without them the image builds in local mode.
+services:
+  samc-av-studio:
+    build:
+      context: .
+      args:
+        VITE_SUPABASE_URL: ${VITE_SUPABASE_URL:-}
+        VITE_SUPABASE_ANON_KEY: ${VITE_SUPABASE_ANON_KEY:-}
+    container_name: samc-av-studio
+    restart: unless-stopped
+    ports:
+      - "8081:80"
+    networks:
+      - proxy
+
+networks:
+  proxy:
+    external: true

@@ -1,0 +1,9 @@
+.git
+node_modules
+dist
+# Vite reads .env.local during the build and it would override the build args,
+# so it must stay out of the image context.
+.env
+.env.local
+handoff.md
+design_handoff_stagekit
