@@ -44,16 +44,18 @@
  * ## The dump holds personal data
  *
  * `profiles` and `project_invites` carry team email addresses, and the
- * maintenance log carries who did what. Keep the output directory outside
- * every repo -- the default already is -- for the same reason `history.db` is
- * gitignored in av-network-inventory.
+ * maintenance log carries who did what, so the output directory sits outside
+ * every repo -- `~/dev/` rather than `~/dev/samc/`, which IS a git repository
+ * whose .gitignore would not have matched a dated JSON file. Same reason
+ * `history.db` is gitignored in av-network-inventory, and the same reason the
+ * credentials live in `~/dev/av-private/`.
  */
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { join } from "node:path";
 
 const CREDS = join(homedir(), "dev", "av-private", "studio-supabase.json");
-const DEFAULT_OUT = join(homedir(), "dev", "samc", "studio-backups");
+const DEFAULT_OUT = join(homedir(), "dev", "studio-backups");
 const PAGE = 1000;
 
 // `order` is per-table on purpose: project_members and project_state are keyed
