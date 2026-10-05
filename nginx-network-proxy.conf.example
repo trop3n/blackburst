@@ -41,6 +41,22 @@ location = /api/network/export.json {
     proxy_set_header Content-Length "";
     proxy_set_header Cookie "";
     proxy_hide_header Set-Cookie;
+
+    # Cloudflare Pages answers with `Access-Control-Allow-Origin: *`. Passed
+    # through, that lets ANY page on the internet read this response from the
+    # browser of anyone who can reach this host — turning a same-origin
+    # convenience into a cross-origin disclosure of the whole inventory. Studio
+    # only ever fetches it same-origin, where CORS is not consulted at all, so
+    # the header buys nothing here and costs that.
+    proxy_hide_header Access-Control-Allow-Origin;
+
+    # Cloudflare's own telemetry and protocol advertisements. `alt-svc` offers
+    # HTTP/3 on a plain-HTTP LAN endpoint that does not speak it, and the rest
+    # just names the upstream.
+    proxy_hide_header Report-To;
+    proxy_hide_header Nel;
+    proxy_hide_header CF-RAY;
+    proxy_hide_header alt-svc;
 }
 
 # Deliberately not cached here. proxy_cache_valid without a proxy_cache_path and
