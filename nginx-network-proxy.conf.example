@@ -25,7 +25,35 @@
 # header inherited from the server block, which would silently drop the CSP and
 # the rest. See the comment at the top of nginx.conf.
 
+# Does this caller hold a valid Supabase session? nginx cannot read a JWT on
+# its own, so it asks the issuer: Supabase answers 200 for a live session and
+# 401 otherwise, and auth_request turns that into allow or deny.
+#
+# Without this the export is readable by anything that can reach this host.
+# Studio has no network-level auth — it is LAN-only behind Nginx Proxy Manager,
+# with Supabase gating the UI rather than the paths nginx serves — so a static
+# path would sit at a lower bar than every other piece of data in the app. This
+# puts it at the same bar.
+#
+# The apikey below is the **publishable anon key**, the one already baked into
+# the client bundle. It is not the service_role key and must never be.
+#
+# When Access lands in front of Studio (Phase 1) this becomes belt and braces
+# rather than the only gate, and can be reconsidered then.
+location = /_supabase_session {
+    internal;
+    proxy_pass https://REPLACE_WITH_PROJECT_REF.supabase.co/auth/v1/user;
+    proxy_ssl_server_name on;
+    proxy_set_header Host REPLACE_WITH_PROJECT_REF.supabase.co;
+    proxy_set_header apikey REPLACE_WITH_SUPABASE_ANON_KEY;
+    # The caller's own bearer token, forwarded for Supabase to judge.
+    proxy_set_header Authorization $http_authorization;
+    proxy_pass_request_body off;
+    proxy_set_header Content-Length "";
+}
+
 location = /api/network/export.json {
+    auth_request /_supabase_session;
     limit_except GET { deny all; }
 
     proxy_pass https://samc-av-inventory.pages.dev/export.json;

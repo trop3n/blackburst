@@ -4,6 +4,7 @@ import { subscribeGlobalTables, unsubscribeGlobalTables } from "@/lib/global-rea
 import { hoistLegacyDevicesRemote } from "@/lib/migrate-devices";
 import { migrateLocalProjects } from "@/lib/migrate-local";
 import { seedCanonicalVenuesRemote } from "@/lib/migrate-venues";
+import { useNetwork } from "@/store/useNetwork";
 import { useDocs } from "@/modules/docs/store";
 import {
   claimInvites,
@@ -316,6 +317,9 @@ export const useApp = create<AppState>()(
             // best-effort: the maintenance log stays empty if its tables aren't
             // reachable (e.g. migration not yet run)
           }
+          // Needs a session, so it cannot run before this point. Fire and
+          // forget: the Network app being unreachable must never stall a boot.
+          void useNetwork.getState().hydrate();
           // Subscribe after the initial hydrate so the first payload can't race
           // the load it would be refreshing.
           subscribeGlobalTables();

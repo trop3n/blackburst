@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 import type { NetDevice } from "@/types";
 
 // Served same-origin by this container's nginx, which proxies the one file from
@@ -38,9 +39,30 @@ export const useNetwork = create<NetworkState>()((set, get) => ({
   hydrate: async () => {
     if (get().status === "loading") return;
     set({ status: "loading" });
+
+    // nginx gates the export on a live Supabase session (auth_request against
+    // /auth/v1/user), so without one there is nothing to ask for. Local mode
+    // has no identity at all, which is why this feature is accounts-mode only
+    // — the same honest default as an image built without Supabase coming out
+    // in local mode.
+    let token: string | undefined;
+    if (isSupabaseConfigured) {
+      try {
+        token = (await supabase.auth.getSession()).data.session?.access_token;
+      } catch {
+        token = undefined;
+      }
+    }
+    if (!token) {
+      set({ status: "off" });
+      return;
+    }
+
     let res: Response;
     try {
-      res = await fetch(EXPORT_URL, { headers: { accept: "application/json" } });
+      res = await fetch(EXPORT_URL, {
+        headers: { accept: "application/json", authorization: `Bearer ${token}` },
+      });
     } catch {
       set({ status: "error" });
       return;
@@ -48,7 +70,10 @@ export const useNetwork = create<NetworkState>()((set, get) => ({
     // nginx answers 404 when the snippet is absent, which is the configured-off
     // case rather than a fault. A 403 is different and stays an error: it means
     // the proxy is there and Access rejected the service token.
-    if (res.status === 404) {
+    // 404: no proxy snippet mounted. 401: the snippet is there and Supabase
+    // rejected the token — an expired session, not a fault worth shouting
+    // about, and the next sign-in fixes it. Both mean "nothing to show".
+    if (res.status === 404 || res.status === 401) {
       set({ status: "off" });
       return;
     }
