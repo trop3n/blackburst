@@ -60,10 +60,19 @@ location = /_supabase_session {
     # endpoint. Through a variable, resolution happens per request: a bad value
     # fails this path and leaves Studio serving.
     resolver 127.0.0.11 1.1.1.1 valid=30s ipv6=off;
-    set $supabase_host REPLACE_WITH_PROJECT_REF.supabase.co;
+    # Hostname ONLY. No https://, no trailing slash, no path -- the scheme is
+    # already on the proxy_pass line below, and pasting a full URL here yields
+    # https://https://... which nginx reads as host "https" and port "//..."
+    # ("invalid port in upstream").
+    #
+    #   .env says  VITE_SUPABASE_URL=https://abcdefgh.supabase.co
+    #   so this is                    abcdefgh.supabase.co
+    set $supabase_host REPLACE_WITH_SUPABASE_HOSTNAME_ONLY;
     proxy_pass https://$supabase_host/auth/v1/user;
     proxy_ssl_server_name on;
     proxy_set_header Host $supabase_host;
+    # The publishable anon key, same value as VITE_SUPABASE_ANON_KEY in that
+    # .env. Never the service_role key.
     proxy_set_header apikey REPLACE_WITH_SUPABASE_ANON_KEY;
     # The caller's own bearer token, forwarded for Supabase to judge.
     proxy_set_header Authorization $http_authorization;
