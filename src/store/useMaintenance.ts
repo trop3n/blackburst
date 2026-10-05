@@ -9,9 +9,10 @@ import { createDebouncedFlush } from "@/lib/debounced-write";
 import { loadEntries, saveEntries } from "@/lib/maintenance-storage";
 import { isSupabaseConfigured } from "@/lib/supabase";
 import { useAuth } from "@/store/useAuth";
-import type { MaintenanceEntry, MaintenanceKind } from "@/types";
+import type { MaintenanceDomain, MaintenanceEntry, MaintenanceKind } from "@/types";
 
 export type KindFilter = MaintenanceKind | "all";
+export type DomainFilter = MaintenanceDomain | "all";
 
 interface MaintenanceState {
   entries: MaintenanceEntry[];
@@ -25,12 +26,14 @@ interface MaintenanceState {
   selectedEntryId: string;
   selectedDeviceId: string;
   kindFilter: KindFilter;
+  domainFilter: DomainFilter;
   openOnly: boolean;
   search: string;
   setSelectedVenueId: (id: string) => void;
   setSelectedEntryId: (id: string) => void;
   setSelectedDeviceId: (id: string) => void;
   setKindFilter: (k: KindFilter) => void;
+  setDomainFilter: (d: DomainFilter) => void;
   setOpenOnly: (v: boolean) => void;
   setSearch: (v: string) => void;
   addEntry: (entry: MaintenanceEntry) => void;
@@ -65,6 +68,7 @@ export const useMaintenance = create<MaintenanceState>()((set, get) => ({
   selectedEntryId: "",
   selectedDeviceId: "",
   kindFilter: "all",
+  domainFilter: "all",
   openOnly: false,
   search: "",
 
@@ -73,6 +77,7 @@ export const useMaintenance = create<MaintenanceState>()((set, get) => ({
   setSelectedEntryId: (selectedEntryId) => set({ selectedEntryId }),
   setSelectedDeviceId: (selectedDeviceId) => set({ selectedDeviceId }),
   setKindFilter: (kindFilter) => set({ kindFilter }),
+  setDomainFilter: (domainFilter) => set({ domainFilter }),
   setOpenOnly: (openOnly) => set({ openOnly }),
   setSearch: (search) => set({ search }),
 

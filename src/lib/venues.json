@@ -31,7 +31,7 @@
     "MaintenanceEntry.venueId, Device.venueId and `venue:` key that points at it.",
     "Change `name` freely; never change `slug`."
   ],
-  "updated": "2026-10-02",
+  "updated": "2026-10-05",
   "venues": [
     { "slug": "hasley",       "name": "Hasley Chapel",        "match": "exact",  "locations": ["Hasley"] },
     { "slug": "swc",          "name": "Smith Worship Center", "match": "exact",  "locations": ["SWC"] },
@@ -39,6 +39,8 @@
     { "slug": "piro-hall",    "name": "Piro Hall",            "match": "exact",  "locations": ["Piro Hall"] },
     { "slug": "playspace",    "name": "Playspace",            "match": "exact",  "locations": ["Playspace"] },
     { "slug": "ollies-place", "name": "Ollie's Place",        "match": "exact",  "locations": ["Ollie's Place"] },
+    { "slug": "gymnasiums",   "name": "Gymnasiums",           "match": "exact",  "locations": ["Gymnasiums"] },
+    { "slug": "festival-hall","name": "Festival Hall",        "match": "exact",  "locations": ["Festival Hall"] },
     { "slug": "sanctuary",    "name": "Sanctuary",            "match": "prefix", "locations": ["Sanctuary"] }
   ]
 }

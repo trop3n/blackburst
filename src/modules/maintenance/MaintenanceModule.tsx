@@ -6,9 +6,9 @@ import { canDeleteShared } from "@/lib/ownership";
 import { useAuth } from "@/store/useAuth";
 import { useDevices } from "@/store/useDevices";
 import { confirmDialog, promptDialog } from "@/store/useDialog";
-import { newEntryId, useMaintenance, type KindFilter } from "@/store/useMaintenance";
+import { newEntryId, useMaintenance, type DomainFilter, type KindFilter } from "@/store/useMaintenance";
 import { newVenueId, useVenues } from "@/store/useVenues";
-import type { MaintenanceKind } from "@/types";
+import type { MaintenanceDomain, MaintenanceKind } from "@/types";
 
 const KINDS: MaintenanceKind[] = [
   "repair",
@@ -27,6 +27,24 @@ const KIND_CHIP: Record<MaintenanceKind, string> = {
   config: "accent",
   calibrate: "ok",
   inspect: "",
+};
+
+// av-network-inventory's Domain vocabulary verbatim, so the two apps describe a
+// subsystem the same way and the Network app can render what is logged here.
+// Order follows DOM_LABEL there.
+const DOMAINS: MaintenanceDomain[] = [
+  "audio", "video", "control", "display", "light", "infra", "compute", "other",
+];
+
+const DOMAIN_LABEL: Record<MaintenanceDomain, string> = {
+  audio: "Audio",
+  video: "Video",
+  control: "Control",
+  display: "Display",
+  light: "Lighting",
+  infra: "Infrastructure",
+  compute: "Compute",
+  other: "Other",
 };
 
 // The stored value stays the short code; only what a person reads changes.
@@ -82,6 +100,8 @@ export function MaintenanceModule() {
   const selectedDeviceId = useMaintenance((s) => s.selectedDeviceId);
   const setSelectedDeviceId = useMaintenance((s) => s.setSelectedDeviceId);
   const kindFilter = useMaintenance((s) => s.kindFilter);
+  const domainFilter = useMaintenance((s) => s.domainFilter);
+  const setDomainFilter = useMaintenance((s) => s.setDomainFilter);
   const setKindFilter = useMaintenance((s) => s.setKindFilter);
   const openOnly = useMaintenance((s) => s.openOnly);
   const setOpenOnly = useMaintenance((s) => s.setOpenOnly);
@@ -104,6 +124,7 @@ export function MaintenanceModule() {
   const visible = venueEntries
     .filter((e) => (selectedDeviceId ? e.deviceId === selectedDeviceId : true))
     .filter((e) => (kindFilter === "all" ? true : e.kind === kindFilter))
+    .filter((e) => (domainFilter === "all" ? true : e.domain === domainFilter))
     .filter((e) => (openOnly ? !e.resolved : true))
     .filter((e) => (q ? `${e.summary} ${e.who} ${e.body}`.toLowerCase().includes(q) : true))
     .sort((a, b) => b.at.localeCompare(a.at));
@@ -339,6 +360,19 @@ export function MaintenanceModule() {
               </option>
             ))}
           </select>
+          <select
+            className="tb-select"
+            aria-label="Subsystem"
+            value={domainFilter}
+            onChange={(e) => setDomainFilter(e.target.value as DomainFilter)}
+          >
+            <option value="all">All subsystems</option>
+            {DOMAINS.map((d) => (
+              <option key={d} value={d}>
+                {DOMAIN_LABEL[d]}
+              </option>
+            ))}
+          </select>
           <label className="checkbox" title="Show only unresolved entries">
             <input type="checkbox" checked={openOnly} onChange={(e) => setOpenOnly(e.target.checked)} />
             <span className="box" />
@@ -445,6 +479,7 @@ export function MaintenanceModule() {
                     <td className="mono">{dayOf(e.at)}</td>
                     <td>
                       <span className={`chip ${KIND_CHIP[e.kind]}`}>{KIND_LABEL[e.kind]}</span>
+                      {e.domain && <span className="chip">{DOMAIN_LABEL[e.domain]}</span>}
                     </td>
                     <td style={{ whiteSpace: "normal" }}>{deviceLabel(e.deviceId)}</td>
                     <td style={{ whiteSpace: "normal", minWidth: 180 }}>{e.summary}</td>
@@ -471,6 +506,7 @@ export function MaintenanceModule() {
                 <tr>
                   <th>When</th>
                   <th>Work type</th>
+                  <th>Subsystem</th>
                   <th>Equipment</th>
                   <th>Serial</th>
                   <th>What was done</th>
@@ -485,6 +521,7 @@ export function MaintenanceModule() {
                     <tr key={e.id}>
                       <td>{dayOf(e.at)}</td>
                       <td>{KIND_LABEL[e.kind]}</td>
+                      <td>{e.domain ? DOMAIN_LABEL[e.domain] : "—"}</td>
                       <td>{d?.label ?? "—"}</td>
                       <td>{d?.serial || "—"}</td>
                       <td>{e.summary}</td>
@@ -545,6 +582,24 @@ export function MaintenanceModule() {
                 {KINDS.map((k) => (
                   <option key={k} value={k}>
                     {KIND_LABEL[k]}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="fld">
+              <span className="k">Subsystem</span>
+              <select
+                value={entry.domain ?? ""}
+                onChange={(ev) =>
+                  updateEntry(entry.id, {
+                    domain: ev.target.value ? (ev.target.value as MaintenanceDomain) : undefined,
+                  })
+                }
+              >
+                <option value="">Not specified</option>
+                {DOMAINS.map((d) => (
+                  <option key={d} value={d}>
+                    {DOMAIN_LABEL[d]}
                   </option>
                 ))}
               </select>

@@ -151,6 +151,27 @@ export interface Venue {
   notes: string;
 }
 
+// Which subsystem the work touched, on a separate axis from the room. This is
+// av-network-inventory's `Domain` vocabulary verbatim (reconcile.domain_key /
+// DOM_LABEL), because that estate already answers this question for every
+// networked device and a second taxonomy would drift from it within a month.
+//
+// Deliberately NOT modelled as a venue. A venue is a physical room; "Sanctuary
+// Audio" is a subsystem within one, and making it a venue splits a room's
+// history across several records and breaks the join to the Network app, which
+// knows one `sanctuary`. The inventory makes the same call -- reconcile.py's
+// LOC_FIX maps "sanctuary audio" to the sub-location `Sanctuary — Audio`, not
+// to a room of its own.
+export type MaintenanceDomain =
+  | "audio"
+  | "video"
+  | "control"
+  | "display"
+  | "light"
+  | "infra"
+  | "compute"
+  | "other";
+
 export type MaintenanceKind =
   | "repair"
   | "replace"
@@ -168,6 +189,9 @@ export interface MaintenanceEntry {
   at: string;
   who: string;
   kind: MaintenanceKind;
+  // Unset means nobody said, which is honest for older entries and for work
+  // that spans subsystems.
+  domain?: MaintenanceDomain;
   summary: string;
   body: string;
   resolved: boolean;
