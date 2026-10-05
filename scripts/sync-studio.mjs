@@ -131,7 +131,10 @@ for (const t of TABLES) {
   }
 }
 
-const stamp = new Date().toISOString().slice(0, 10);
+// Stamped to the second, not the day. A date-only name means the second run
+// of any day silently overwrites the first -- which is precisely the run you
+// want back when you have just discovered something is missing.
+const stamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
 const path = join(outDir, `studio-${stamp}.json`);
 await mkdir(outDir, { recursive: true });
 await writeFile(
