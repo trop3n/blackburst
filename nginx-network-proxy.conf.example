@@ -7,6 +7,17 @@
 #   mkdir -p nginx-snippets
 #   cp nginx-network-proxy.conf.example nginx-snippets/network-proxy.conf
 #   $EDITOR nginx-snippets/network-proxy.conf
+#
+# **Check it before restarting.** A broken snippet stops nginx starting, which
+# takes the whole app down, not just this endpoint. This catches an unknown
+# directive, a missing semicolon and an unresolvable upstream, in a throwaway
+# container, without touching the running one:
+#
+#   sudo docker run --rm \
+#     -v /opt/samc-av-studio/nginx.conf:/etc/nginx/conf.d/default.conf:ro \
+#     -v /opt/samc-av-studio/nginx-snippets:/etc/nginx/snippets:ro \
+#     nginx:1.30-alpine nginx -t
+#
 #   sudo docker compose up -d --build
 #
 # The credentials are a Cloudflare Access **service token** for the Access
@@ -42,9 +53,17 @@
 # rather than the only gate, and can be reconsidered then.
 location = /_supabase_session {
     internal;
-    proxy_pass https://REPLACE_WITH_PROJECT_REF.supabase.co/auth/v1/user;
+    # Both upstreams go through a variable, which is load-bearing rather than
+    # style. nginx resolves a LITERAL hostname in proxy_pass once, at startup,
+    # and refuses to start if it cannot -- so a placeholder left unreplaced, or
+    # a DNS hiccup at boot, takes the entire app down rather than this one
+    # endpoint. Through a variable, resolution happens per request: a bad value
+    # fails this path and leaves Studio serving.
+    resolver 127.0.0.11 1.1.1.1 valid=30s ipv6=off;
+    set $supabase_host REPLACE_WITH_PROJECT_REF.supabase.co;
+    proxy_pass https://$supabase_host/auth/v1/user;
     proxy_ssl_server_name on;
-    proxy_set_header Host REPLACE_WITH_PROJECT_REF.supabase.co;
+    proxy_set_header Host $supabase_host;
     proxy_set_header apikey REPLACE_WITH_SUPABASE_ANON_KEY;
     # The caller's own bearer token, forwarded for Supabase to judge.
     proxy_set_header Authorization $http_authorization;
@@ -56,8 +75,10 @@ location = /api/network/export.json {
     auth_request /_supabase_session;
     limit_except GET { deny all; }
 
-    proxy_pass https://samc-av-inventory.pages.dev/export.json;
-    proxy_set_header Host samc-av-inventory.pages.dev;
+    resolver 127.0.0.11 1.1.1.1 valid=30s ipv6=off;
+    set $network_host samc-av-inventory.pages.dev;
+    proxy_pass https://$network_host/export.json;
+    proxy_set_header Host $network_host;
     proxy_ssl_server_name on;
 
     proxy_set_header CF-Access-Client-Id     REPLACE_WITH_CLIENT_ID;
