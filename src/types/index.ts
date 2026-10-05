@@ -114,6 +114,31 @@ export interface Device {
   // Home venue for installed gear. Unset means fleet / touring stock that isn't
   // tied to one room.
   venueId?: string;
+  // Canonical `AA:BB:CC:DD:EE:FF`. The join key to the Network app's export,
+  // because an address moves and a MAC does not — the same reason
+  // reservation_worklist.py pins DHCP leases by MAC over there. Optional
+  // because plenty of real gear has no network interface at all: patchbays,
+  // passive splitters, a projector lamp module.
+  mac?: string;
+}
+
+// One row of the Network app's export (av-network-inventory). Read-only and
+// never persisted: these are observations from the wire, and the only place
+// they can be corrected is that app's own edit form.
+export interface NetDevice {
+  ip: string;
+  mac: string;
+  name: string;
+  hostname: string;
+  vendor: string;
+  category: string;
+  domain: string;
+  status: string;
+  statusLabel: string;
+  venue: string;
+  location: string;
+  ports: string;
+  triage: string;
 }
 
 // A physical place with a permanent install. Venues are global and outlive

@@ -14,6 +14,13 @@ services:
     restart: unless-stopped
     ports:
       - "8081:80"
+    # A directory rather than a single file: Docker creates an empty one if the
+    # host path is missing, and an empty directory is a wildcard include that
+    # matches nothing. Mounting a file that did not exist would instead create a
+    # directory with that name and break the config. Contents are gitignored —
+    # the snippet carries an Access service token.
+    volumes:
+      - ./nginx-snippets:/etc/nginx/snippets:ro
     networks:
       - proxy
 

@@ -17,4 +17,7 @@ RUN npm run build
 
 FROM nginx:1.30-alpine
 COPY nginx.conf /etc/nginx/conf.d/default.conf
+# nginx.conf includes /etc/nginx/snippets/*.conf. The directory has to exist for
+# that wildcard to resolve to nothing on a deployment with no snippet mounted.
+RUN mkdir -p /etc/nginx/snippets
 COPY --from=build /app/dist /usr/share/nginx/html

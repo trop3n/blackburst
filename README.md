@@ -2,7 +2,7 @@
 
 **AV / live-production design tooling.** Six dense, technical modules behind one keyboard-driven shell (rail · ⌘K command palette · status bar). Runs locally out of the box — every project lives in `localStorage` and exports to a portable JSON snapshot — and wires up to Supabase for accounts, per-user cloud storage, and project sharing.
 
-🔗 **Deployed at https://blackburst.vercel.app** — running in accounts mode, so it requires credentials; there is no open demo. Accounts are created in the Supabase dashboard.
+🔗 **Self-hosted at `http://10.10.5.201:8081`** on the internal network — running in accounts mode, so it requires credentials; there is no open demo. Accounts are created in the Supabase dashboard.
 
 ---
 
@@ -66,6 +66,6 @@ env VITE_SUPABASE_URL="" VITE_SUPABASE_ANON_KEY="" npx vite --port 5174
 
 ## Deployment
 
-Deployed on [Vercel](https://vercel.com): importing the GitHub repo auto-detects the Vite preset and, on every push to `main`, runs `npm run build` and serves `dist` from Vercel's CDN — with preview deployments for each pull request. Build settings are pinned in [`vercel.json`](./vercel.json).
+Self-hosted on an internal Proxmox host: a git clone at `/opt/samc-av-studio` on the docker VM, built by [`Dockerfile`](./Dockerfile) — a Vite build stage feeding an nginx image — and run by [`compose.yml`](./compose.yml) behind Nginx Proxy Manager. Deploying an update is `git pull && sudo docker compose up -d --build`.
 
-`VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` are set on **Production only**. Preview deployments deliberately have no vars, so branch builds run in local mode and can't write to the live Supabase project.
+`VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` live in an `.env` beside `compose.yml` and are passed as **build args**, because Vite bakes them into the bundle at build time. An image built without them runs in local mode and cannot touch the live Supabase project. Security headers, including the CSP, are served by [`nginx.conf`](./nginx.conf).

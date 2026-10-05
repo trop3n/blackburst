@@ -3,6 +3,7 @@ import { persist } from "zustand/middleware";
 import { subscribeGlobalTables, unsubscribeGlobalTables } from "@/lib/global-realtime";
 import { hoistLegacyDevicesRemote } from "@/lib/migrate-devices";
 import { migrateLocalProjects } from "@/lib/migrate-local";
+import { seedCanonicalVenuesRemote } from "@/lib/migrate-venues";
 import { useDocs } from "@/modules/docs/store";
 import {
   claimInvites,
@@ -306,6 +307,10 @@ export const useApp = create<AppState>()(
           }
           try {
             await useVenues.getState().hydrateFromServer();
+            // Seeds from the list just hydrated, so it costs no extra fetch,
+            // and only re-reads when it actually inserted something.
+            if (await seedCanonicalVenuesRemote(useVenues.getState().venues))
+              await useVenues.getState().hydrateFromServer();
             await useMaintenance.getState().hydrateFromServer();
           } catch {
             // best-effort: the maintenance log stays empty if its tables aren't

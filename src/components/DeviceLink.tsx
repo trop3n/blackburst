@@ -6,8 +6,9 @@ import { useInventory } from "@/modules/inventory/store";
 import { useRack } from "@/modules/rack-builder/store";
 import { useSystem } from "@/modules/system-designer/store";
 import { useMaintenance } from "@/store/useMaintenance";
-import { confirmDialog, promptDialog } from "@/store/useDialog";
+import { alertDialog, confirmDialog, promptDialog } from "@/store/useDialog";
 import { newDeviceId, useDevices } from "@/store/useDevices";
+import { canonicalMac, isMac, normalizeMac, useNetwork } from "@/store/useNetwork";
 
 interface Usage {
   kind: RefKind;
@@ -35,9 +36,14 @@ export function DeviceLink({ deviceId, onChange, defaultLabel, model, omit }: De
   const nodes = useSystem((s) => s.nodes);
   const assets = useInventory((s) => s.assets);
   const entries = useMaintenance((s) => s.entries);
+  const netStatus = useNetwork((s) => s.status);
+  const byMac = useNetwork((s) => s.byMac);
   const [picking, setPicking] = useState(false);
 
   const device = deviceId ? devices.find((d) => d.id === deviceId) : undefined;
+  // Only ever a lookup: the registry says which box this is, the export says
+  // what that box is doing on the wire, and neither writes to the other.
+  const onNetwork = device?.mac ? byMac[normalizeMac(device.mac)] : undefined;
 
   const usages: Usage[] = [];
   if (device) {
@@ -69,6 +75,20 @@ export function DeviceLink({ deviceId, onChange, defaultLabel, model, omit }: De
     const serial = (await promptDialog("Serial number?", device.serial))?.trim();
     if (serial == null) return;
     updateDevice(device.id, { serial });
+  };
+
+  const editMac = async () => {
+    if (!device) return;
+    const raw = await promptDialog("MAC address? (optional)", device.mac ?? "");
+    if (raw == null) return;
+    const mac = raw.trim();
+    if (mac && !isMac(mac)) {
+      await alertDialog(
+        "That is not a MAC address. Twelve hex digits with any separator, or none — or leave it empty to clear it.",
+      );
+      return;
+    }
+    updateDevice(device.id, { mac: mac ? canonicalMac(mac) : "" });
   };
 
   // A device's name was write-once: set at creation and never editable again,
@@ -117,7 +137,42 @@ export function DeviceLink({ deviceId, onChange, defaultLabel, model, omit }: De
             <span className="v">{device.label}</span>
             <span className="k">Serial</span>
             <span className="v">{device.serial || "—"}</span>
+            <span className="k">MAC</span>
+            <span className="v mono">{device.mac || "—"}</span>
           </div>
+          {netStatus === "ready" && device.mac && (
+            <>
+              <div className="section-h">
+                <span>ON THE NETWORK</span>
+                <span className="line" />
+              </div>
+              {onNetwork ? (
+                <div className="kv">
+                  <span className="k">Address</span>
+                  <span className="v mono">{onNetwork.ip}</span>
+                  <span className="k">Status</span>
+                  <span className="v">{onNetwork.statusLabel}</span>
+                  {onNetwork.location && (
+                    <>
+                      <span className="k">Location</span>
+                      <span className="v">{onNetwork.location}</span>
+                    </>
+                  )}
+                  {onNetwork.ports && (
+                    <>
+                      <span className="k">Ports</span>
+                      <span className="v mono">{onNetwork.ports}</span>
+                    </>
+                  )}
+                </div>
+              ) : (
+                <div className="kv">
+                  <span className="k">Address</span>
+                  <span className="v">Not in the inventory</span>
+                </div>
+              )}
+            </>
+          )}
           {otherUsages.length > 0 && (
             <>
               <div className="section-h">
@@ -139,6 +194,9 @@ export function DeviceLink({ deviceId, onChange, defaultLabel, model, omit }: De
             </button>
             <button className="tb-btn" style={{ flex: 1, justifyContent: "center" }} onClick={editSerial}>
               <I.Edit size={12} /> Serial
+            </button>
+            <button className="tb-btn" style={{ flex: 1, justifyContent: "center" }} onClick={editMac}>
+              <I.Edit size={12} /> MAC
             </button>
           </div>
           <div style={{ padding: "0 12px 8px", display: "flex", gap: 6 }}>

@@ -18,6 +18,7 @@ import { SystemDesignerModule } from "@/modules/system-designer/SystemDesignerMo
 import { useApp } from "@/store/useApp";
 import { useAuth } from "@/store/useAuth";
 import { useCmdk } from "@/store/useCmdk";
+import { useNetwork } from "@/store/useNetwork";
 
 export default function App() {
   const module = useApp((s) => s.module);
@@ -30,6 +31,12 @@ export default function App() {
 
   useEffect(() => {
     useAuth.getState().init();
+  }, []);
+
+  // Independent of auth mode: the Network export is proxied server-side, so it
+  // is reachable (or not) the same way whether this build has Supabase or not.
+  useEffect(() => {
+    void useNetwork.getState().hydrate();
   }, []);
 
   useEffect(() => {

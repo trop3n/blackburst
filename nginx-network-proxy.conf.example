@@ -1,0 +1,49 @@
+# Studio's read-only window onto the Network app (av-network-inventory).
+#
+# Copy to  nginx-snippets/network-proxy.conf  beside compose.yml, fill in the two
+# values, and redeploy. That directory is gitignored and mounted at runtime, so
+# the token is never built into the image and never committed.
+#
+#   mkdir -p nginx-snippets
+#   cp nginx-network-proxy.conf.example nginx-snippets/network-proxy.conf
+#   $EDITOR nginx-snippets/network-proxy.conf
+#   sudo docker compose up -d --build
+#
+# The credentials are a Cloudflare Access **service token** for the Access
+# application in front of samc-av-inventory.pages.dev — the same kind
+# sync_overrides.py already uses, kept with the estate's other secrets in
+# av-inventory-private/cf-access.json. The Network app's _middleware.js verifies
+# the signed assertion and resolves a service token to its client id rather than
+# to an email, so nothing there needs changing.
+#
+# **Exact match on one file, never a prefix.** `location /api/network/` would make
+# this an open proxy onto the whole inventory app while carrying a token that
+# authenticates as the team — any signed-in Studio user could then read the edit
+# API through it. One location, one upstream path, GET only.
+#
+# No add_header here on purpose: an add_header inside a location replaces every
+# header inherited from the server block, which would silently drop the CSP and
+# the rest. See the comment at the top of nginx.conf.
+
+location = /api/network/export.json {
+    limit_except GET { deny all; }
+
+    proxy_pass https://samc-av-inventory.pages.dev/export.json;
+    proxy_set_header Host samc-av-inventory.pages.dev;
+    proxy_ssl_server_name on;
+
+    proxy_set_header CF-Access-Client-Id     REPLACE_WITH_CLIENT_ID;
+    proxy_set_header CF-Access-Client-Secret REPLACE_WITH_CLIENT_SECRET;
+
+    # Nothing travels outbound but the request line and those two headers, and
+    # nothing comes back to the browser that could carry upstream identity.
+    proxy_pass_request_body off;
+    proxy_set_header Content-Length "";
+    proxy_set_header Cookie "";
+    proxy_hide_header Set-Cookie;
+}
+
+# Deliberately not cached here. proxy_cache_valid without a proxy_cache_path and
+# a proxy_cache is accepted by nginx and does nothing, which would read like a
+# cache that is not one; a real zone belongs in the http context, and 60 KB for a
+# small team does not earn it. The upstream's Cache-Control: no-store stands.

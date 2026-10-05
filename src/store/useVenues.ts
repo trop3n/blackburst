@@ -7,6 +7,7 @@ import {
 } from "@/lib/maintenance-remote";
 import { createDebouncedFlush } from "@/lib/debounced-write";
 import { loadVenues, saveVenues } from "@/lib/maintenance-storage";
+import { seedCanonicalVenues } from "@/lib/migrate-venues";
 import { isSupabaseConfigured } from "@/lib/supabase";
 import { useAuth } from "@/store/useAuth";
 import type { Venue } from "@/types";
@@ -41,10 +42,19 @@ const pendingWrites = createDebouncedFlush((ids) => {
 
 export const hasPendingVenueWrites = pendingWrites.hasPending;
 
+// Local mode seeds the canonical rooms before the store's first read, so they
+// are present on the very first render. Accounts mode leaves this empty and
+// bootstrap() seeds the server instead — same split as useDevices.
+function initialVenues(): Venue[] {
+  if (isSupabaseConfigured) return [];
+  seedCanonicalVenues();
+  return loadVenues();
+}
+
 // Global and project-independent, like the device registry: a venue outlives
 // every project that touches it, so this must never become a SPECS key.
 export const useVenues = create<VenuesState>()((set, get) => ({
-  venues: isSupabaseConfigured ? [] : loadVenues(),
+  venues: initialVenues(),
   owners: {},
 
   addVenue: (venue) => {

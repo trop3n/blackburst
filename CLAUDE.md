@@ -20,9 +20,11 @@ Stack: React 18 + TypeScript (strict) + Vite + Zustand + Tailwind v4, plus **Sup
 **The app was called Blackburst until 2026-09-22.** The name survives on purpose in
 things no user sees and that carry data: the `blackburst:*` `localStorage` keys, the
 `blackburst-project` export tag (`project-io.ts` still rejects anything else, so older
-export files keep importing), the `application/x-blackburst-*` drag MIMEs, and the repo,
-package and Vercel project names. Renaming those would orphan saved workspaces and refuse
-existing export files, so leave them. **Blackburst Calm**, the design system, keeps its
+export files keep importing), and the `application/x-blackburst-*` drag MIMEs. Renaming
+those would orphan saved workspaces and refuse existing export files, so leave them. The
+repo and its GitHub remote are still `blackburst`, which is cosmetic rather than
+load-bearing; `package.json` reads `samc-av-studio`, which is safe precisely because a
+package name carries no data. **Blackburst Calm**, the design system, keeps its
 name too — it is vendored as delivered. Everything a person reads says SAMC AV Studio.
 
 ## Commands
@@ -38,9 +40,9 @@ There is **no test runner and no separate linter/formatter** (no ESLint/Prettier
 
 The app uses **in-app dialogs, not native ones** — drive them through the DOM (`.dialog-panel`, `.dialog-input`, the confirm/cancel buttons in `.dialog-actions`); overriding `window.prompt`/`confirm`/`alert` in an `evaluate` no longer intercepts anything.
 
-Deployed on Vercel from `main` (`vercel.json` pins the Vite preset + `dist`); accounts mode needs the two `VITE_SUPABASE_*` vars set in the Vercel project.
+Self-hosted on the internal Proxmox host at `http://10.10.5.201:8081` — a git clone at `/opt/samc-av-studio` on the docker VM, built by `Dockerfile` (a Vite build stage feeding an nginx image) and run by `compose.yml` on the shared `proxy` network, behind Nginx Proxy Manager. Deploying an update is `git pull && sudo docker compose up -d --build`. Accounts mode needs the two `VITE_SUPABASE_*` vars in an `.env` beside `compose.yml`: Vite bakes them into the bundle at **build** time, so they are docker build args rather than runtime env, and an image built without them comes out in local mode.
 
-`vercel.json` also sends the security headers, including a CSP. Two directives are load-bearing and non-obvious: **`font-src` needs `data:`** — `@fontsource` inlines a dozen subset faces as `data:font/woff` URIs, and without it the whole UI silently falls back to system fonts — and **`connect-src` must keep `https://*.supabase.co wss://*.supabase.co`**, or accounts mode is fully blocked (REST *and* realtime). Local `vite preview` does **not** apply these headers, so to test a CSP change, build and inject it as a `<meta http-equiv>` into `dist/index.html` (drop `frame-ancestors`, which is ignored in meta) and serve `dist` statically.
+`nginx.conf` sends the security headers, including a CSP, and is the only place they exist. Two directives are load-bearing and non-obvious: **`font-src` needs `data:`** — `@fontsource` inlines a dozen subset faces as `data:font/woff` URIs, and without it the whole UI silently falls back to system fonts — and **`connect-src` must keep `https://*.supabase.co wss://*.supabase.co`**, or accounts mode is fully blocked (REST *and* realtime). Two nginx traps guard that file. An `add_header` inside a `location` block **replaces** every header inherited from the `server` block rather than adding to it, which is why all of them sit at server level and `Cache-Control` is computed by a `map` instead — and `nginx -t` passes happily on a config that sends no headers at all. So verify a CSP change by curling the running container (`curl -sI http://10.10.5.201:8081/`), never by checking syntax. Local `vite preview` applies none of this.
 
 Path alias: `@/` → `src/` (set in both `vite.config.ts` and `tsconfig.app.json`).
 

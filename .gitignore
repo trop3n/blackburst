@@ -25,13 +25,15 @@ dist-ssr
 # durable record. CLAUDE.md is the checked-in reference.
 handoff.md
 
+# Mounted nginx snippets. nginx-network-proxy.conf carries the Cloudflare Access
+# service token that lets Studio read the Network app's export — a credential that
+# authenticates as the team, so it is mounted at runtime and never committed.
+# The .example at the repo root is the template and is tracked.
+nginx-snippets/
+
 # Supabase database connection strings — contain the postgres password, which is
 # NOT the publishable anon key and must never be committed or shipped to a client.
 supabase-conn
 .supabase-conn
 *.pgpass
 
-# Vercel CLI. `.vercel` is project/org ids written by `vercel link`; the token
-# file is an account credential — same rule as the Supabase connection strings.
-.vercel
-.vercel-token

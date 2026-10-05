@@ -41,9 +41,9 @@ add `{{ .Token }}` to the template under **Authentication → Email Templates**;
 the stock template omits it, so no code is actually delivered.
 
 If you enable that path, also set **Authentication → URL Configuration**:
-- **Site URL** — your production origin (e.g. `https://blackburst.vercel.app`).
-- **Redirect URLs** — add `http://localhost:5173` and your Vercel origin so the
-  link returns to the app.
+- **Site URL** — your deployed origin (e.g. `http://10.10.5.201:8081`).
+- **Redirect URLs** — add `http://localhost:5173` and that same deployed origin,
+  so the link returns to the app.
 
 ## 4. Set env vars
 Copy `.env.example` to `.env.local` in the repo root and fill in:
@@ -53,9 +53,9 @@ VITE_SUPABASE_URL=https://YOUR-REF.supabase.co
 VITE_SUPABASE_ANON_KEY=YOUR-PUBLISHABLE-ANON-KEY
 ```
 
-Restart `npm run dev` (Vite reads env only at startup). For production, add the
-same two variables in **Vercel → Project Settings → Environment Variables** and
-redeploy.
+Restart `npm run dev` (Vite reads env only at startup). For the deployed copy, put
+the same two variables in an `.env` beside `compose.yml` on the docker VM and
+rebuild — they are docker build args, since Vite bakes them in at build time.
 
 ## 5. First sign-in
 Enter the email and password of an account created in step 3. The app bootstraps
