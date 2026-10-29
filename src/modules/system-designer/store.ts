@@ -16,15 +16,21 @@ interface SystemState {
   updateNode: (id: string, patch: Partial<SystemNode>) => void;
   addNode: (seed: Omit<SystemNode, "id">) => string;
   removeNode: (id: string) => void;
-  addEdge: (edge: SystemEdge) => void;
-  removeEdge: (from: string, to: string, lane: Lane) => void;
-  updateEdge: (from: string, to: string, lane: Lane, patch: Partial<SystemEdge>) => void;
+  addEdge: (seed: Omit<SystemEdge, "id">) => string;
+  removeEdge: (id: string) => void;
+  updateEdge: (id: string, patch: Partial<SystemEdge>) => void;
 }
 
 function nextNodeId(existing: SystemNode[]): string {
   let n = existing.length + 1;
   while (existing.some((x) => x.id === `n${n}`)) n++;
   return `n${n}`;
+}
+
+function nextEdgeId(existing: SystemEdge[]): string {
+  let n = existing.length + 1;
+  while (existing.some((x) => x.id === `e${n}`)) n++;
+  return `e${n}`;
 }
 
 export const useSystem = create<SystemState>()((set) => ({
@@ -58,28 +64,22 @@ export const useSystem = create<SystemState>()((set) => ({
           edges: s.edges.filter((e) => e.from !== id && e.to !== id),
           selectedNodeId: s.selectedNodeId === id ? "" : s.selectedNodeId,
         })),
-      addEdge: (edge) =>
+      // Deliberately does not dedupe: a second cable between the same two
+      // devices on the same lane is a real second run, and refusing it was the
+      // old lane-shaped identity talking. Two cables that genuinely land on one
+      // pair of sockets are reported by validation, not prevented here.
+      addEdge: (seed) => {
+        let newId = "";
         set((s) => {
-          if (
-            s.edges.some(
-              (e) => e.from === edge.from && e.to === edge.to && e.lane === edge.lane,
-            )
-          )
-            return s;
-          return { edges: [...s.edges, edge] };
-        }),
-      removeEdge: (from, to, lane) =>
+          newId = nextEdgeId(s.edges);
+          return { edges: [...s.edges, { ...seed, id: newId }] };
+        });
+        return newId;
+      },
+      removeEdge: (id) => set((s) => ({ edges: s.edges.filter((e) => e.id !== id) })),
+      updateEdge: (id, patch) =>
         set((s) => ({
-          edges: s.edges.filter(
-            (e) => !(e.from === from && e.to === to && e.lane === lane),
-          ),
-        })),
-      // addEdge dedupes on from/to/lane, so that triple identifies one edge.
-      updateEdge: (from, to, lane, patch) =>
-        set((s) => ({
-          edges: s.edges.map((e) =>
-            e.from === from && e.to === to && e.lane === lane ? { ...e, ...patch } : e,
-          ),
+          edges: s.edges.map((e) => (e.id === id ? { ...e, ...patch } : e)),
         })),
     }),
 );

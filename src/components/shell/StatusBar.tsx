@@ -4,6 +4,8 @@ import { computeWallCalc } from "@/modules/led-wall/calculations";
 import { useLedWall } from "@/modules/led-wall/store";
 import { summarize, validateWall } from "@/modules/led-wall/validation";
 import { useInventory } from "@/modules/inventory/store";
+import { useSystem } from "@/modules/system-designer/store";
+import { summarizeSystemIssues, validateSystem } from "@/modules/system-designer/validation";
 import { summarizeAssetIssues, validateAssets } from "@/modules/inventory/validation";
 import { useApp } from "@/store/useApp";
 import { useAuth } from "@/store/useAuth";
@@ -19,6 +21,8 @@ export function StatusBar() {
   const viewOnly = authConfigured && project.role === "viewer";
   const walls = useLedWall((s) => s.walls);
   const layoutId = useLedWall((s) => s.layoutId);
+  const systemNodes = useSystem((s) => s.nodes);
+  const systemEdges = useSystem((s) => s.edges);
   const inventoryAssets = useInventory((s) => s.assets);
   const inventoryShows = useInventory((s) => s.shows);
   const customPanels = useCatalog((s) => s.panel);
@@ -58,8 +62,12 @@ export function StatusBar() {
     () => summarizeAssetIssues(validateAssets(inventoryAssets, inventoryShows)),
     [inventoryAssets, inventoryShows],
   );
-  const errors = wall.errors + assets.errors;
-  const warnings = wall.warnings + assets.warnings;
+  const system = useMemo(
+    () => summarizeSystemIssues(validateSystem(systemNodes, systemEdges)),
+    [systemNodes, systemEdges],
+  );
+  const errors = wall.errors + assets.errors + system.errors;
+  const warnings = wall.warnings + assets.warnings + system.warnings;
   const level: "ok" | "warn" | "error" =
     errors > 0 ? "error" : warnings > 0 ? "warn" : "ok";
 

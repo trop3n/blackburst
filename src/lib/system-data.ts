@@ -1,4 +1,5 @@
 import type { SystemDeviceDef } from "@/types";
+import { dante, dviIn, dviOut, ethernet, lineOut, micIn, sdiIn, sdiOut } from "@/lib/ports";
 
 // Built-in device palette — the gear St Andrew actually has. Every entry traces
 // to the AV network inventory (`RECONCILED.csv`), the 2017 CLAIR bid equipment
@@ -27,10 +28,10 @@ export const SYSTEM_BUILTIN: SystemDeviceDef[] = [
 
   // ── Switching and routing ─────────────────────────────────────────────
   { id: "mix-carbonite", cat: "MIXERS", type: "MIXER", name: "Ross Carbonite Black Plus", in: ["video", "video"], out: ["video"], details: { mes: "2 M/E" } },
-  { id: "rte-nd3g64", cat: "ROUTING", type: "ROUTER", name: "Ross ND3G64", in: ["video"], out: ["video"], details: { size: "64×64", signal: "3G/HD/SD SDI" } },
+  { id: "rte-nd3g64", cat: "ROUTING", type: "ROUTER", name: "Ross ND3G64", in: ["video"], out: ["video"], ports: [...sdiIn(64), ...sdiOut(64)], source: "details: size 64×64 and signal '3G/HD/SD SDI' on this entry", details: { size: "64×64", signal: "3G/HD/SD SDI" } },
   { id: "rte-nk3g64", cat: "ROUTING", type: "ROUTER", name: "Ross NK-3G64", in: ["video"], out: ["video"], details: { size: "64×64" } },
-  { id: "bmd-videohub-20x20", cat: "ROUTING", type: "ROUTER", name: "BMD Smart Videohub 20×20", in: ["video"], out: ["video"], details: { size: "20×20" } },
-  { id: "rte-lightware", cat: "ROUTING", type: "ROUTER", name: "Lightware MX12×12 DVI", in: ["video"], out: ["video"], details: { size: "12×12", signal: "DVI" } },
+  { id: "bmd-videohub-20x20", cat: "ROUTING", type: "ROUTER", name: "BMD Smart Videohub 20×20", in: ["video"], out: ["video"], ports: [...sdiIn(20), ...sdiOut(20)], source: "model designation (Smart Videohub 20×20), SDI router", details: { size: "20×20" } },
+  { id: "rte-lightware", cat: "ROUTING", type: "ROUTER", name: "Lightware MX12×12 DVI", in: ["video"], out: ["video"], ports: [...dviIn(12), ...dviOut(12)], source: "model designation (MX12×12 DVI) and details: signal 'DVI'", details: { size: "12×12", signal: "DVI" } },
   { id: "rte-dtpcp84", cat: "ROUTING", type: "ROUTER", name: "Extron DTP CrossPoint 84 4K", in: ["video"], out: ["video"], details: { size: "8×4" } },
 
   // ── LED ───────────────────────────────────────────────────────────────
@@ -92,15 +93,15 @@ export const SYSTEM_BUILTIN: SystemDeviceDef[] = [
   { id: "aud-cl5", cat: "AUDIO", type: "AUDIO", name: "Yamaha CL5", in: ["audio", "network"], out: ["audio", "network"], details: {} },
   { id: "aud-ql5", cat: "AUDIO", type: "AUDIO", name: "Yamaha QL5", in: ["audio", "network"], out: ["audio", "network"], details: {} },
   { id: "aud-ql1", cat: "AUDIO", type: "AUDIO", name: "Yamaha QL1", in: ["audio", "network"], out: ["audio", "network"], details: {} },
-  { id: "aud-rio3224", cat: "AUDIO", type: "AUDIO", name: "Yamaha Rio3224-D", in: ["audio", "network"], out: ["audio", "network"], details: { io: "32×24" } },
-  { id: "aud-rio1608", cat: "AUDIO", type: "AUDIO", name: "Yamaha Rio1608-D", in: ["audio", "network"], out: ["audio", "network"], details: { io: "16×8" } },
-  { id: "aud-ri8", cat: "AUDIO", type: "AUDIO", name: "Yamaha Ri8-D", in: ["audio"], out: ["network"], details: { io: "8 in" } },
-  { id: "aud-ro8", cat: "AUDIO", type: "AUDIO", name: "Yamaha Ro8-D", in: ["network"], out: ["audio"], details: { io: "8 out" } },
+  { id: "aud-rio3224", cat: "AUDIO", type: "AUDIO", name: "Yamaha Rio3224-D", in: ["audio", "network"], out: ["audio", "network"], ports: [...micIn(32), ...lineOut(24), ...dante()], source: "model designation (Rio3224-D: 32 analogue in, 24 analogue out) plus two Dante etherCON", details: { io: "32×24" } },
+  { id: "aud-rio1608", cat: "AUDIO", type: "AUDIO", name: "Yamaha Rio1608-D", in: ["audio", "network"], out: ["audio", "network"], ports: [...micIn(16), ...lineOut(8), ...dante()], source: "model designation (Rio1608-D: 16 analogue in, 8 analogue out) plus two Dante etherCON", details: { io: "16×8" } },
+  { id: "aud-ri8", cat: "AUDIO", type: "AUDIO", name: "Yamaha Ri8-D", in: ["audio", "network"], out: ["network"], ports: [...micIn(8), ...dante()], source: "model designation (Ri8-D: 8 analogue in) plus two Dante etherCON", details: { io: "8 in" } },
+  { id: "aud-ro8", cat: "AUDIO", type: "AUDIO", name: "Yamaha Ro8-D", in: ["network"], out: ["audio", "network"], ports: [...lineOut(8), ...dante()], source: "model designation (Ro8-D: 8 analogue out) plus two Dante etherCON", details: { io: "8 out" } },
   { id: "aud-core510i", cat: "AUDIO", type: "AUDIO", name: "QSC Q-SYS Core 510i", in: ["audio", "network"], out: ["audio", "network"], details: { io: "128 network channels" } },
   { id: "aud-core110f", cat: "AUDIO", type: "AUDIO", name: "QSC Q-SYS Core 110f", in: ["audio", "network"], out: ["audio", "network"], details: {} },
   { id: "aud-core500i", cat: "AUDIO", type: "AUDIO", name: "QSC Q-SYS Core 500i", in: ["audio", "network"], out: ["audio", "network"], details: {} },
   { id: "aud-nv32h", cat: "AUDIO", type: "AUDIO", name: "QSC NV-32-H", in: ["video", "network"], out: ["video", "network"], details: {} },
-  { id: "aud-cdn64", cat: "AUDIO", type: "AUDIO", name: "QSC CDN64 Dante card", in: ["network"], out: ["network"], details: { io: "64×64" } },
+  { id: "aud-cdn64", cat: "AUDIO", type: "AUDIO", name: "QSC CDN64 Dante card", in: ["network"], out: ["network"], ports: [...dante(2, 64)], source: "model designation (CDN64) and details: io '64×64' Dante channels", details: { io: "64×64" } },
   { id: "aud-ulxd", cat: "AUDIO", type: "AUDIO", name: "Shure ULXD4Q", in: ["network"], out: ["audio", "network"], details: { channels: "4" } },
   { id: "aud-ad4q", cat: "AUDIO", type: "AUDIO", name: "Shure Axient AD4Q", in: ["network"], out: ["audio", "network"], details: { channels: "4" } },
   { id: "aud-ad611", cat: "AUDIO", type: "AUDIO", name: "Shure AD611", out: ["audio", "network"], details: {} },
@@ -126,7 +127,7 @@ export const SYSTEM_BUILTIN: SystemDeviceDef[] = [
   { id: "net-sonicwall", cat: "NETWORK", type: "NETWORK", name: "SonicWall NSa 2700", in: ["network"], out: ["network"], details: {} },
   { id: "net-sg300", cat: "NETWORK", type: "NETWORK", name: "Cisco SG300", in: ["network"], out: ["network"], details: {} },
   { id: "net-araknis", cat: "NETWORK", type: "NETWORK", name: "Araknis switch", in: ["network"], out: ["network"], details: {} },
-  { id: "net-pakedge", cat: "NETWORK", type: "NETWORK", name: "Pakedge SE-8-EP", in: ["network"], out: ["network"], details: { ports: "8" } },
+  { id: "net-pakedge", cat: "NETWORK", type: "NETWORK", name: "Pakedge SE-8-EP", in: ["network"], out: ["network"], ports: [...ethernet(8)], source: "details: ports '8' on this entry", details: { ports: "8" } },
   { id: "net-masterclock", cat: "NETWORK", type: "NETWORK", name: "Masterclock time system", in: ["network"], out: ["network"], details: {} },
 
   // ── Power ─────────────────────────────────────────────────────────────

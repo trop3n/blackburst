@@ -50,6 +50,56 @@ export interface WallLayout {
 export type Lane = "video" | "audio" | "network" | "power";
 export type PatchLane = "video" | "audio" | "net" | "pwr";
 
+// `bidi` is one socket that carries both ways — an etherCON or RJ45, which a
+// patch sheet must count once but which feeds and is fed. Two ports would
+// double every network row.
+export type PortDirection = "in" | "out" | "bidi";
+
+// What travels on the port, not what it plugs into: `line` and `aes3` both sit
+// on XLR3, and the pair is what decides whether a link is sane. `Lane` is
+// derived from this by `portLane` rather than stored twice.
+export type SignalId =
+  | "sdi"
+  | "hdmi"
+  | "dvi"
+  | "video_analog"
+  | "mic"
+  | "line"
+  | "speaker"
+  | "aes3"
+  | "ethernet"
+  | "dante"
+  | "mains";
+
+export type ConnectorId =
+  | "bnc"
+  | "hdmi"
+  | "dvi_d"
+  | "hd15"
+  | "xlr3"
+  | "nl4"
+  | "euroblock"
+  | "rj45"
+  | "ethercon"
+  | "lc_duplex"
+  | "iec_c14"
+  | "edison";
+
+// One physical socket. Built by the factories in `lib/ports.ts` — writing these
+// out by hand is what makes a 32-input stage box unmaintainable.
+export interface Port {
+  // Unique within its device; derived from the label so it reads in a patch row.
+  id: string;
+  label: string;
+  dir: PortDirection;
+  signal: SignalId;
+  connector: ConnectorId;
+  // Channels carried by one socket, where the figure is known: a Dante pair
+  // carries the card's whole count, an analogue socket carries one. Unset means
+  // nobody has sourced it — capacity checks must skip the port, not assume 1.
+  channels?: number;
+}
+
 export interface SystemNode {
   id: string;
   type: string;
@@ -58,11 +108,19 @@ export interface SystemNode {
   y: number;
   in?: Lane[];
   out?: Lane[];
+  // Copied from the catalogue def at drop time, like `in` / `out` / `details`,
+  // so an instance keeps the sockets it was placed with even if the def later
+  // changes. Unset for the defs that carry no sourced port list yet.
+  ports?: Port[];
   details: Record<string, string>;
   deviceId?: string;
 }
 
 export interface SystemEdge {
+  // Edges carry their own identity because a device pair can be joined by many
+  // cables — 24 line outs into 8 mic ins is one pair and many runs. Deriving a
+  // key from from/to/lane capped that at one.
+  id: string;
   from: string;
   to: string;
   lane: Lane;
@@ -73,6 +131,11 @@ export interface SystemEdge {
   srcPort?: string;
   destPort?: string;
   cable?: string;
+  // Which socket the cable actually lands on, once both ends have a port list.
+  // This is structural — it is what makes a port countable as occupied — while
+  // srcPort / destPort above stay free text and still win as the display label.
+  srcPortId?: string;
+  destPortId?: string;
 }
 
 export interface SystemDeviceDef {
@@ -82,6 +145,18 @@ export interface SystemDeviceDef {
   name: string;
   in?: Lane[];
   out?: Lane[];
+  // Real sockets, where the model's figures are on file. Unset means nobody has
+  // sourced them yet, so `in`/`out` remain the only thing the graph knows about
+  // this model — the two coexist until every def carries ports.
+  ports?: Port[];
+  // Where this entry's figures came from, in words a person can re-check: a
+  // spec page, an export in av-network-inventory, or the model designation
+  // itself. Unset means nobody wrote it down, which is not the same as none.
+  source?: string;
+  // True only when the figures were checked against the manufacturer's
+  // published spec. A count inferred from the model name is a good guess, not a
+  // verification, so it stays false.
+  verified?: boolean;
   details: Record<string, string>;
 }
 

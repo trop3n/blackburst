@@ -4,13 +4,15 @@ import { I } from "@/components/Icon";
 import { PrintSheet } from "@/components/PrintSheet";
 import { downloadCsv, stamp } from "@/lib/export-csv";
 import { canDeleteShared } from "@/lib/ownership";
+import { findPort, occupiedPortIds, portsFacing } from "@/lib/ports";
 import { SYSTEM_DEVICES } from "@/lib/system-data";
 import { useApp } from "@/store/useApp";
 import { useAuth } from "@/store/useAuth";
 import { useCatalog } from "@/store/useCatalog";
 import { confirmDialog, promptDialog } from "@/store/useDialog";
-import type { Lane, PatchEntry, PatchLane, SystemEdge, SystemNode } from "@/types";
+import type { Lane, PatchEntry, PatchLane, SystemDeviceDef, SystemEdge, SystemNode } from "@/types";
 import { useSystem } from "./store";
+import { validateSystem } from "./validation";
 
 const DRAG_THRESHOLD_PX = 3;
 
@@ -47,6 +49,9 @@ const LANE_CABLE: Record<Lane, string> = {
 // A patch row is an edge plus the fields it doesn't carry itself. Ports are
 // numbered per node per lane in the order connections were made; any of the
 // three editable fields falls back to that derivation when not overridden.
+// Stands in for a socket nobody has named on a device whose panel we know.
+const UNNAMED_PORT = "—";
+
 interface PatchRow extends PatchEntry {
   edge: SystemEdge;
   custom: { srcPort: boolean; destPort: boolean; cable: boolean };
@@ -62,18 +67,29 @@ function buildPatchRows(byId: Map<string, SystemNode>, edges: SystemEdge[]): Pat
     const inN = (inSeen.get(inKey) ?? 0) + 1;
     outSeen.set(outKey, outN);
     inSeen.set(inKey, inN);
+    // Three tiers, strongest first: the designer's own words, then the socket
+    // they picked, then the positional guess this sheet has always made. The
+    // guess is withheld once the node has a real port list — counting cables
+    // would invent "IN 9" on an eight-input box, and a named socket that does
+    // not exist is worse than saying nothing.
+    const srcNode = byId.get(e.from);
+    const destNode = byId.get(e.to);
+    const srcLabel = findPort(srcNode, e.srcPortId)?.label;
+    const destLabel = findPort(destNode, e.destPortId)?.label;
+    const srcGuess = srcNode?.ports?.length ? UNNAMED_PORT : `OUT ${outN}`;
+    const destGuess = destNode?.ports?.length ? UNNAMED_PORT : `IN ${inN}`;
     return {
       id: `P${String(i + 1).padStart(3, "0")}`,
-      src: byId.get(e.from)?.name ?? e.from,
-      srcPort: e.srcPort ?? `OUT ${outN}`,
-      dest: byId.get(e.to)?.name ?? e.to,
-      destPort: e.destPort ?? `IN ${inN}`,
+      src: srcNode?.name ?? e.from,
+      srcPort: e.srcPort ?? srcLabel ?? srcGuess,
+      dest: destNode?.name ?? e.to,
+      destPort: e.destPort ?? destLabel ?? destGuess,
       lane: LANE_TO_PATCH_LANE[e.lane],
       cable: e.cable ?? LANE_CABLE[e.lane],
       edge: e,
       custom: {
-        srcPort: e.srcPort != null,
-        destPort: e.destPort != null,
+        srcPort: e.srcPort != null || srcLabel != null,
+        destPort: e.destPort != null || destLabel != null,
         cable: e.cable != null,
       },
     };
@@ -124,6 +140,50 @@ function PatchCell({
         }
       }}
     />
+  );
+}
+
+type PatchEnd = "src" | "dest";
+
+// Shown in place of the free-text cell once the node at that end carries a port
+// list: a socket is a choice from the panel, not a string. Sockets already
+// taken elsewhere are disabled rather than hidden, so the sheet shows why a
+// port can't be picked. Empty means "no socket named" and the cell falls back
+// to the text override or the positional guess.
+function PortCell({
+  row,
+  end,
+  node,
+  edges,
+  onCommit,
+}: {
+  row: PatchRow;
+  end: PatchEnd;
+  node: SystemNode;
+  edges: SystemEdge[];
+  onCommit: (row: PatchRow, end: PatchEnd, portId: string) => void;
+}) {
+  const chosen = (end === "src" ? row.edge.srcPortId : row.edge.destPortId) ?? "";
+  const facing = portsFacing(node.ports ?? [], end === "src" ? "out" : "in", row.edge.lane);
+  // A socket already named on this cable stays listed even when the lane filter
+  // would drop it — a bad choice the dropdown hides is one nobody can correct.
+  const current = findPort(node, chosen || undefined);
+  const options = current && !facing.some((p) => p.id === current.id) ? [current, ...facing] : facing;
+  const taken = occupiedPortIds(node, edges);
+  return (
+    <select
+      className="tbl-input"
+      data-custom={chosen ? "1" : "0"}
+      value={chosen}
+      onChange={(e) => onCommit(row, end, e.target.value)}
+    >
+      <option value="">{row[end === "src" ? "srcPort" : "destPort"]}</option>
+      {options.map((p) => (
+        <option key={p.id} value={p.id} disabled={p.id !== chosen && taken.has(p.id)}>
+          {p.label}
+        </option>
+      ))}
+    </select>
   );
 }
 
@@ -212,6 +272,19 @@ const GraphNode = memo(function GraphNode({
   );
 });
 
+// Whether a palette entry's sockets are on file, and on whose word. The data
+// pass that fills the catalogue runs for a while, so "not recorded yet" has to
+// read differently from "this device has none".
+function provenance(d: SystemDeviceDef): string {
+  const sockets = d.ports?.length
+    ? `${d.ports.length} ${d.ports.length === 1 ? "socket" : "sockets"} on file`
+    : "Sockets not recorded yet";
+  const checked = d.verified
+    ? "Checked against the manufacturer spec"
+    : "Not checked against a manufacturer spec";
+  return [sockets, d.source ? `From ${d.source}` : "Source not recorded", checked].join("\n");
+}
+
 const PALETTE_MIME = "application/x-blackburst-palette";
 
 const LANES: Lane[] = ["video", "audio", "network", "power"];
@@ -286,6 +359,7 @@ export function SystemDesignerModule() {
   const node = nodeById.get(selectedId);
   const visibleEdges = useMemo(() => edges.filter((e) => lanes[e.lane]), [edges, lanes]);
   const patchRows = useMemo(() => buildPatchRows(nodeById, edges), [nodeById, edges]);
+  const issues = useMemo(() => validateSystem(nodes, edges), [nodes, edges]);
 
   // Scroll extent of the graph. Node coordinates are unbounded above zero, so
   // without this a node dragged past the canvas edge was clipped away with no
@@ -298,14 +372,30 @@ export function SystemDesignerModule() {
 
   const commitPatchField = (p: PatchRow, field: PatchField, raw: string) => {
     const next = raw.trim();
-    const { from, to, lane } = p.edge;
     // An empty field means "go back to the derived value", not "blank it out".
-    updateEdge(from, to, lane, { [field]: next === "" ? undefined : next });
+    updateEdge(p.edge.id, { [field]: next === "" ? undefined : next });
+  };
+
+  // Naming a socket also drops the free-text override at that end, or the
+  // typed words would keep masking the port the designer just picked.
+  const commitPatchPort = (p: PatchRow, end: PatchEnd, portId: string) => {
+    const next = portId === "" ? undefined : portId;
+    updateEdge(
+      p.edge.id,
+      end === "src"
+        ? { srcPortId: next, srcPort: undefined }
+        : { destPortId: next, destPort: undefined },
+    );
   };
 
   const resetPatchRow = (p: PatchRow) => {
-    const { from, to, lane } = p.edge;
-    updateEdge(from, to, lane, { srcPort: undefined, destPort: undefined, cable: undefined });
+    updateEdge(p.edge.id, {
+      srcPort: undefined,
+      destPort: undefined,
+      cable: undefined,
+      srcPortId: undefined,
+      destPortId: undefined,
+    });
   };
 
   const exportPatchCsv = () => {
@@ -456,6 +546,7 @@ export function SystemDesignerModule() {
       y,
       in: dev.in,
       out: dev.out,
+      ports: dev.ports,
       details: { ...dev.details },
     });
   };
@@ -548,6 +639,7 @@ export function SystemDesignerModule() {
                       key={d.id}
                       className="list-row"
                       style={{ cursor: "grab" }}
+                      title={provenance(d)}
                       draggable
                       onDragStart={(e) => {
                         e.dataTransfer.setData(PALETTE_MIME, d.id);
@@ -556,6 +648,11 @@ export function SystemDesignerModule() {
                     >
                       <I.Move size={12} />
                       <span className="lbl">{d.name}</span>
+                      {d.ports?.length ? (
+                        <span className="meta mono" style={{ marginLeft: "auto" }}>
+                          {d.ports.length}
+                        </span>
+                      ) : null}
                       {isCustom && canDeleteShared(catalogOwners[d.id], myId) && (
                         <button
                           className="icon-btn"
@@ -683,8 +780,8 @@ export function SystemDesignerModule() {
                       <path d="M0,0 L10,5 L0,10" fill="currentColor" />
                     </marker>
                   </defs>
-                  {visibleEdges.map((e, i) => (
-                    <g key={`p${i}`} style={{ color: LANE_COLOR[e.lane] }}>
+                  {visibleEdges.map((e) => (
+                    <g key={e.id} style={{ color: LANE_COLOR[e.lane] }}>
                       <path
                         d={pathFor(e, nodeById)}
                         fill="none"
@@ -695,14 +792,14 @@ export function SystemDesignerModule() {
                       />
                     </g>
                   ))}
-                  {visibleEdges.map((e, i) => {
+                  {visibleEdges.map((e) => {
                     const a = nodeById.get(e.from);
                     const b = nodeById.get(e.to);
                     if (!a || !b) return null;
                     const mx = (a.x + NODE_W + b.x) / 2;
                     const my = (a.y + b.y) / 2 + NODE_H_BASE / 2;
                     return (
-                      <g key={`l${i}`}>
+                      <g key={e.id}>
                         <rect
                           x={mx - 28}
                           y={my - 8}
@@ -793,6 +890,8 @@ export function SystemDesignerModule() {
               <tbody>
                 {patchRows.map((p) => {
                   const lane = PATCH_LANE_TO_LANE[p.lane];
+                  const srcNode = nodeById.get(p.edge.from);
+                  const destNode = nodeById.get(p.edge.to);
                   return (
                     <tr key={p.id}>
                       <td className="muted">{p.id}</td>
@@ -809,11 +908,31 @@ export function SystemDesignerModule() {
                       </td>
                       <td>{p.src}</td>
                       <td>
-                        <PatchCell row={p} field="srcPort" onCommit={commitPatchField} />
+                        {srcNode?.ports?.length ? (
+                          <PortCell
+                            row={p}
+                            end="src"
+                            node={srcNode}
+                            edges={edges}
+                            onCommit={commitPatchPort}
+                          />
+                        ) : (
+                          <PatchCell row={p} field="srcPort" onCommit={commitPatchField} />
+                        )}
                       </td>
                       <td>{p.dest}</td>
                       <td>
-                        <PatchCell row={p} field="destPort" onCommit={commitPatchField} />
+                        {destNode?.ports?.length ? (
+                          <PortCell
+                            row={p}
+                            end="dest"
+                            node={destNode}
+                            edges={edges}
+                            onCommit={commitPatchPort}
+                          />
+                        ) : (
+                          <PatchCell row={p} field="destPort" onCommit={commitPatchField} />
+                        )}
                       </td>
                       <td>
                         <PatchCell row={p} field="cable" onCommit={commitPatchField} />
@@ -894,21 +1013,24 @@ export function SystemDesignerModule() {
             </div>
             {edges
               .filter((e) => e.from === node.id || e.to === node.id)
-              .map((e, i) => {
+              .map((e) => {
                 const isOut = e.from === node.id;
                 const peer = nodes.find((n) => n.id === (isOut ? e.to : e.from));
                 if (!peer) return null;
+                // Several cables can run to the same peer on the same lane, so
+                // the socket at this end is what tells them apart.
+                const here = findPort(node, isOut ? e.srcPortId : e.destPortId)?.label;
                 return (
-                  <div key={`c${i}`} className="list-row">
+                  <div key={e.id} className="list-row">
                     <span className="chip" style={{ color: LANE_COLOR[e.lane] }}>
                       {isOut ? "→" : "←"}
                     </span>
                     <span className="lbl">{peer.name}</span>
-                    <span className="meta">{e.label}</span>
+                    <span className="meta">{here ?? e.label}</span>
                     <button
                       className="icon-btn"
-                      aria-label={`Remove edge to ${peer.name}`}
-                      onClick={() => removeEdge(e.from, e.to, e.lane)}
+                      aria-label={`Remove ${here ? `${here} ` : ""}${isOut ? "edge to" : "edge from"} ${peer.name}`}
+                      onClick={() => removeEdge(e.id)}
                       style={{ marginLeft: 4 }}
                     >
                       <I.Cross size={11} />
@@ -948,6 +1070,33 @@ export function SystemDesignerModule() {
                 <div className="val">{nodes.length}</div>
               </div>
             </div>
+            <div className="section-h">
+              <span>ALERTS</span>
+              <span className="line" />
+            </div>
+            {issues.length === 0 ? (
+              <div className="issue-row" data-level="ok">
+                <span className="dot ok" />
+                <div>
+                  <div className="title mono">All checks passing</div>
+                  <div className="detail">
+                    {nodes.some((n) => n.ports?.length)
+                      ? "No wiring errors on the devices whose sockets are on file."
+                      : "No device here carries a socket list yet, so there is nothing to check."}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              issues.map((iss) => (
+                <div key={iss.id} className="issue-row" data-level={iss.level}>
+                  <span className={`dot ${iss.level}`} />
+                  <div>
+                    <div className="title mono">{iss.title}</div>
+                    <div className="detail">{iss.detail}</div>
+                  </div>
+                </div>
+              ))
+            )}
             <div className="section-h">
               <span>BY LANE</span>
               <span className="line" />

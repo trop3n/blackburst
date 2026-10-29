@@ -245,7 +245,7 @@ export function scaffoldBucket(): ProjectStateBuckets {
 
 // Upgrade older persisted shapes before they merge with defaults. Every load
 // path funnels through applyState, so this is the one place a migration lives.
-function migrateBucket(buckets: ProjectStateBuckets): ProjectStateBuckets {
+function migrateRack(buckets: ProjectStateBuckets): ProjectStateBuckets {
   const rack = buckets.rack;
   if (!rack || Array.isArray(rack.racks)) return buckets;
   // Pre-multi-rack projects stored a single `items` array plus `rackSize`.
@@ -260,6 +260,27 @@ function migrateBucket(buckets: ProjectStateBuckets): ProjectStateBuckets {
       filter: rack.filter ?? "All",
     },
   };
+}
+
+// Edges were keyed by their from/to/lane triple before a device pair could
+// carry more than one cable. Backfill the identity they now need; positional
+// ids are safe because the old triple was unique, so no two edges collide.
+function migrateEdgeIds(buckets: ProjectStateBuckets): ProjectStateBuckets {
+  const system = buckets.system;
+  if (!system || !Array.isArray(system.edges)) return buckets;
+  const edges = system.edges as Record<string, unknown>[];
+  if (edges.every((e) => typeof e?.id === "string")) return buckets;
+  return {
+    ...buckets,
+    system: {
+      ...system,
+      edges: edges.map((e, i) => (typeof e?.id === "string" ? e : { ...e, id: `e${i + 1}` })),
+    },
+  };
+}
+
+function migrateBucket(buckets: ProjectStateBuckets): ProjectStateBuckets {
+  return migrateEdgeIds(migrateRack(buckets));
 }
 
 // Shallow shape guard: an imported file or server row whose field type
