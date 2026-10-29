@@ -203,21 +203,56 @@ ports exist, so the migration is additive.
 
 ## Upgrade Path
 
-1. **Ports + factories** — `Port` type, ~15 factories for our gear, `Lane` derived from the port's
-   signal so every existing consumer keeps working. *(started — `src/lib/ports.ts`)*
-2. **Port-aware edges** — `SystemEdge` gains `srcPortId` / `destPortId`; the free-text fields stay as
-   display overrides, so saved projects keep loading.
-3. **Patch sheet as a real derivation** — rewrite `buildPatchRows()` as per-device port occupancy
-   with a free count.
-4. **Alerts panel** — ship the six rules that need nothing beyond steps 1–2 (two-inputs, two-outputs,
-   duplicate, self-loop, input occupied, output occupied), then add the connector registry for
-   incompatible / adapter-required. Pure and store-free, like `led-wall/validation.ts`.
-5. **`source` + `verified` as fields** — the provenance discipline asserted in the `system-data.ts`
-   header comment, promoted from prose to data so the inspector can show it.
+1. **Ports + factories** — ✅ `Port` type, 16 factories in `src/lib/ports.ts`, `Lane` derived from
+   the port's signal so every existing consumer keeps working.
+2. **Port-aware edges** — ✅ `SystemEdge` gains its own `id` plus `srcPortId` / `destPortId`; the
+   free-text fields stay display overrides, so saved projects keep loading. The old
+   `from | to | lane` identity capped a device pair at one cable per lane and had to go.
+3. **Patch sheet as a real derivation** — ◐ labels resolve in three tiers and the socket picker is
+   lane-filtered and occupancy-aware. Still to do: the per-device view Technipatch shows
+   (`Rio3224-D — 37 free`), which is a different layout of the same data.
+4. **Alerts panel** — ✅ six rules in `src/modules/system-designer/validation.ts`, pure and
+   store-free like `led-wall/validation.ts`, surfaced in the patch pane and the global status bar.
+   `connector-mismatch` is still open — it needs the adapter registry below.
+5. **`source` + `verified` as fields** — ✅ on `SystemDeviceDef`, shown in the palette.
+
+Two things remain, both blocked on data rather than code: **ports for the other 85 defs** (see
+below) and the **connector/adapter registry** that `connector-mismatch` needs — Technipatch's is 94
+entries deep with named adapter parts, and inventing ours would break the no-fabricated-readouts
+rule.
 
 Cheap wins independent of the port model: the documents **dock** as a permanent rail rather than a
 `view: "graph" | "patch"` toggle; an **`instances`** multiplier on a node; a **hint line on every
 diagnostic**; and a **title block** on the printed sheet.
+
+---
+
+## Filling the catalogue
+
+`port-worksheet.csv` lists the 85 defs that carry no sockets yet, sorted by category, with the
+lanes each one declares and whatever its `details` already states. Regenerate it after a batch
+lands — it is derived from `system-data.ts`, so it should never be edited as the source of truth.
+
+Fill `ports_to_fill` in plain words (`32 mic in; 24 line out; 2 dante`), `source` with something a
+person can re-check, and `verified` with `yes` **only** where the figures came from the
+manufacturer's published spec. A count inferred from the model designation is a good guess and
+should be left unverified — all nine defs ported so far are in exactly that state.
+
+The vocabulary those words map onto, from `src/lib/ports.ts`:
+
+| | |
+|---|---|
+| **Factories** | `sdiIn` `sdiOut` `hdmiIn` `hdmiOut` `dviIn` `dviOut` `vgaIn` `micIn` `lineIn` `lineOut` `speakerOut` `aes3Out` `dante` `ethernet` `fibre` `powerIn` |
+| **Signals** | `sdi` `hdmi` `dvi` `video_analog` · `mic` `line` `speaker` `aes3` · `ethernet` `dante` · `mains` |
+| **Connectors** | `bnc` `hd15` `hdmi` `dvi_d` · `xlr3` `nl4` `euroblock` · `rj45` `ethercon` `lc_duplex` · `iec_c14` `edison` |
+
+Each factory takes a count and an optional label: `lineOut(16, "OMNI OUT")` yields `OMNI OUT 1…16`.
+A socket that carries both ways — etherCON, Dante — is `bidi`, and is treated as a shared medium:
+never occupied, never exhausted. Add a signal or connector id only alongside a device that needs
+it; the vocabulary is deliberately scoped to gear we own, not Technipatch's 94 connectors.
+
+`AUDIO` (15 defs) is worth most per entry — point-to-point sockets are where occupancy and
+exhaustion actually bite. `CONTROL PANELS` (17) is the largest group but mostly single-RJ45 devices.
 
 ---
 
