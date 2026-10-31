@@ -10,8 +10,12 @@ import { useApp, type Revision } from "@/store/useApp";
 import type { Project } from "@/types";
 
 // v4 moved the rack module from a single `items` array to a `racks` list.
-// Older files still import — applyState migrates the shape on load.
-export const SUPPORTED_SNAPSHOT_VERSIONS = [2, 3, 4] as const;
+// v5 gave each system edge its own `id`, replacing the from/to/lane triple.
+// Older files still import — applyState migrates the shape on load. The bump
+// is for readers, not for the migration: `migrateEdgeIds` keys off the absent
+// field rather than the version, so a v4 file written either side of that
+// change lands correctly without anything here having to tell them apart.
+export const SUPPORTED_SNAPSHOT_VERSIONS = [2, 3, 4, 5] as const;
 export type SnapshotVersion = (typeof SUPPORTED_SNAPSHOT_VERSIONS)[number];
 
 export interface ProjectSnapshot {
@@ -32,7 +36,7 @@ function buildSnapshot(): ProjectSnapshot {
   const app = useApp.getState();
   return {
     format: "blackburst-project",
-    version: 4,
+    version: 5,
     exportedAt: new Date().toISOString(),
     project: app.project,
     revisions: app.revisions,

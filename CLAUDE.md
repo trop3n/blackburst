@@ -67,7 +67,7 @@ Per-project state spans three layers; how they interact is the one thing you can
 
    ⚠️ **When you add a persisted field to a module store, also add it to that store's `SPECS.<key>.fields` and `defaults` — and to the matching module in `scaffoldBucket()`.** Otherwise it is wiped on every project switch, never hydrated on load, and missing from newly-created projects. Conversely, **transient fields are deliberately omitted from `SPECS.fields`** (e.g. `measureFrom`, `panelSearch`, drag state) so they never persist or travel between projects — keep new ephemeral state out of the registry too.
 
-`src/lib/project-io.ts` exports/imports a whole project as a `blackburst-project` JSON snapshot (writes `version` 4, reads 2–4 — `SUPPORTED_SNAPSHOT_VERSIONS`) via `snapshotCurrent()` / `applyState()` / `writeBucket()`. Import re-persists `snapshotCurrent()` rather than the raw file, so an older bucket lands already upgraded by `migrateBucket()`.
+`src/lib/project-io.ts` exports/imports a whole project as a `blackburst-project` JSON snapshot (writes `version` 5, reads 2–5 — `SUPPORTED_SNAPSHOT_VERSIONS`) via `snapshotCurrent()` / `applyState()` / `writeBucket()`. Import re-persists `snapshotCurrent()` rather than the raw file, so an older bucket lands already upgraded by `migrateBucket()`.
 
 ## Hardware catalog (global, not per-project)
 
